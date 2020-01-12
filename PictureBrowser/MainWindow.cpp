@@ -77,7 +77,7 @@ namespace PictureBrowser
 		WNDCLASSEXW windowClass = { 0 };
 
 		windowClass.cbSize = sizeof(WNDCLASSEX);
-		windowClass.style = CS_HREDRAW | CS_VREDRAW;
+		windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
 		windowClass.lpfnWndProc = WindowProcedure;
 		windowClass.cbClsExtra = 0;
 		windowClass.cbWndExtra = 0;
@@ -268,6 +268,14 @@ namespace PictureBrowser
 		EndPaint(m_window, &ps);
 	}
 
+	void MainWindow::OnDoubleClick()
+	{
+		if (ShowWindow(m_window, m_maximized ? SW_NORMAL : SW_SHOWMAXIMIZED))
+		{
+			m_maximized = !m_maximized;
+		}
+	}
+
 	void MainWindow::OnKeyUp(WPARAM wParam)
 	{
 		constexpr auto isEmpty = [](HWND window, const auto& list) -> bool
@@ -426,6 +434,12 @@ namespace PictureBrowser
 			case WM_KEYUP:
 			{
 				g_mainWindow->OnKeyUp(wParam);
+				break;
+			}
+			case WM_LBUTTONDBLCLK:
+			case WM_RBUTTONDBLCLK:
+			{
+				g_mainWindow->OnDoubleClick();
 				break;
 			}
 			case WM_COMMAND:

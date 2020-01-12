@@ -19,6 +19,7 @@ namespace PictureBrowser
 		void OnCreate();
 		void OnResize();
 		void OnPaint() const;
+		void OnDoubleClick();
 		void OnKeyUp(WPARAM);
 		void OnCommand(WPARAM);
 		void OnFileDrop(WPARAM);
@@ -34,6 +35,7 @@ namespace PictureBrowser
 		HWND m_nextButton = nullptr;
 		HINSTANCE m_instance = nullptr;
 		RECT m_canvasSize = { 0 };
+		bool m_maximized = false;
 
 		std::unique_ptr<Gdiplus::Image> m_image;
 		std::vector<std::filesystem::path> m_files;
