@@ -16,7 +16,7 @@ namespace PictureBrowser
 		bool LoadStrings();
 		ATOM Register() const;
 
-		void OnCreate();
+		void OnCreate(HWND);
 		void OnResize();
 		void OnPaint() const;
 		void OnDoubleClick();

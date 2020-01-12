@@ -192,9 +192,9 @@ namespace PictureBrowser
 		}
 	}
 
-	void MainWindow::OnCreate()
+	void MainWindow::OnCreate(HWND window)
 	{
-		g_mainWindow->m_prevButton = CreateWindow(
+		m_prevButton = CreateWindow(
 			WC_BUTTON,
 			L"<",
 			WS_CHILD | WS_VISIBLE | WS_BORDER,
@@ -202,12 +202,12 @@ namespace PictureBrowser
 			710,
 			ButtonWidth,
 			ButtonHeight,
-			m_window,
+			window,
 			reinterpret_cast<HMENU>(IDC_PREV_BUTTON),
 			m_instance,
 			nullptr);
 
-		g_mainWindow->m_nextButton = CreateWindow(
+		m_nextButton = CreateWindow(
 			WC_BUTTON,
 			L">",
 			WS_CHILD | WS_VISIBLE | WS_BORDER,
@@ -215,7 +215,7 @@ namespace PictureBrowser
 			710,
 			ButtonWidth,
 			ButtonHeight,
-			m_window,
+			window,
 			reinterpret_cast<HMENU>(IDC_NEXT_BUTTON),
 			m_instance,
 			nullptr);
@@ -232,8 +232,8 @@ namespace PictureBrowser
 			SetWindowPos(
 				m_prevButton,
 				HWND_TOP,
-				m_canvasSize.left + ButtonWidth,
-				m_canvasSize.bottom - ButtonHeight * 2,
+				m_canvasSize.left,
+				m_canvasSize.bottom - ButtonHeight,
 				0,
 				0,
 				SWP_NOSIZE | SWP_NOZORDER);
@@ -241,8 +241,8 @@ namespace PictureBrowser
 			SetWindowPos(
 				m_nextButton,
 				HWND_TOP,
-				m_canvasSize.right - ButtonWidth * 2,
-				m_canvasSize.bottom - ButtonHeight * 2,
+				m_canvasSize.right - ButtonWidth,
+				m_canvasSize.bottom - ButtonHeight,
 				0,
 				0,
 				SWP_NOSIZE | SWP_NOZORDER);
@@ -413,7 +413,7 @@ namespace PictureBrowser
 		{
 			case WM_CREATE:
 			{
-				g_mainWindow->OnCreate();
+				g_mainWindow->OnCreate(window);
 				break;
 			}
 			case WM_DESTROY:
