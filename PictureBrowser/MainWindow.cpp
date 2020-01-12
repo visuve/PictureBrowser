@@ -106,7 +106,7 @@ namespace PictureBrowser
 			return false;
 		}
 
-		HWND window = CreateWindowEx(
+		m_window = CreateWindowEx(
 			WS_EX_ACCEPTFILES,
 			m_windowClassName.c_str(),
 			m_title.c_str(),
@@ -120,19 +120,79 @@ namespace PictureBrowser
 			m_instance,
 			nullptr);
 
-		if (!window)
+		if (!m_window)
 		{
 			return false;
 		}
 
-		ShowWindow(window, showCommand);
-		UpdateWindow(window);
-		OnResize(window);
+		ShowWindow(m_window, showCommand);
+		UpdateWindow(m_window);
+		OnResize();
 
 		return true;
 	}
 
-	void MainWindow::OnCreate(HWND window)
+	bool MainWindow::LoadFileList(const std::filesystem::path& path)
+	{
+		if (!std::filesystem::exists(path))
+		{
+			const std::wstring message = 
+				L"The file you have entered does not appear to exist:\n" + path.wstring();
+
+			MessageBox(m_window,
+				message.c_str(),
+				L"File not found!",
+				MB_OK | MB_ICONINFORMATION);
+
+			return false;
+		}
+
+		if (_wcsicmp(path.extension().c_str(), L".jpg") != 0)
+		{
+			MessageBox(m_window,
+				L"Only the picture format of the future is supported.",
+				L"Unsupported file format!",
+				MB_OK | MB_ICONINFORMATION);
+
+			return false;
+		}
+
+		m_files.clear();
+
+		const auto parentPath = std::filesystem::path(path).parent_path();
+
+		WIN32_FIND_DATA findFileData = { 0 };
+		const std::wstring searchString = parentPath.wstring() + L"\\*.jpg";
+
+		std::unique_ptr<void, FindCloseGuard> finder(FindFirstFile(searchString.c_str(), &findFileData));
+
+		if (finder.get() != INVALID_HANDLE_VALUE)
+		{
+			do
+			{
+				m_files.emplace_back(parentPath / findFileData.cFileName);
+			} while (FindNextFile(finder.get(), &findFileData));
+
+			m_iter = std::find(m_files.cbegin(), m_files.cend(), path);
+		}
+
+		return !m_files.empty();
+	}
+
+	void MainWindow::ShowImage(const std::filesystem::path& path)
+	{
+		m_image.reset(Gdiplus::Image::FromFile(path.c_str()));
+
+		if (m_image)
+		{
+			InvalidateRect(m_window, nullptr, true);
+
+			std::wstring title = m_title + L" - " + path.filename().wstring();
+			SetWindowText(m_window, title.c_str());
+		}
+	}
+
+	void MainWindow::OnCreate()
 	{
 		g_mainWindow->m_prevButton = CreateWindow(
 			WC_BUTTON,
@@ -142,7 +202,7 @@ namespace PictureBrowser
 			710,
 			ButtonWidth,
 			ButtonHeight,
-			window,
+			m_window,
 			reinterpret_cast<HMENU>(IDC_PREV_BUTTON),
 			m_instance,
 			nullptr);
@@ -155,17 +215,17 @@ namespace PictureBrowser
 			710,
 			ButtonWidth,
 			ButtonHeight,
-			window,
+			m_window,
 			reinterpret_cast<HMENU>(IDC_NEXT_BUTTON),
 			m_instance,
 			nullptr);
 	}
 
-	void MainWindow::OnResize(HWND window)
+	void MainWindow::OnResize()
 	{
 		RECT canvasSize = { 0 };
 
-		if (GetClientRect(window, &canvasSize))
+		if (GetClientRect(m_window, &canvasSize))
 		{
 			std::swap(m_canvasSize, canvasSize);
 
@@ -189,10 +249,10 @@ namespace PictureBrowser
 		}
 	}
 
-	void MainWindow::OnPaint(HWND window) const
+	void MainWindow::OnPaint() const
 	{
 		PAINTSTRUCT ps = { 0 };
-		HDC hdc = BeginPaint(window, &ps);
+		HDC hdc = BeginPaint(m_window, &ps);
 
 		if (m_image)
 		{
@@ -205,16 +265,16 @@ namespace PictureBrowser
 			graphics.DrawImage(m_image.get(), rect);
 		}
 
-		EndPaint(window, &ps);
+		EndPaint(m_window, &ps);
 	}
 
-	void MainWindow::OnKeyUp(HWND window, WPARAM wParam)
+	void MainWindow::OnKeyUp(WPARAM wParam)
 	{
 		constexpr auto isEmpty = [](HWND window, const auto& list) -> bool
 		{
 			if (list.empty())
 			{
-				MessageBox(nullptr,
+				MessageBox(window,
 					L"Please drag & drop a file or open from the menu!",
 					L"No image selected!",
 					MB_OK | MB_ICONINFORMATION);
@@ -228,7 +288,7 @@ namespace PictureBrowser
 		{
 			case VK_LEFT:
 			{
-				if (isEmpty(window, m_files))
+				if (isEmpty(m_window, m_files))
 				{
 					return;
 				}
@@ -236,14 +296,14 @@ namespace PictureBrowser
 				if (m_iter > m_files.cbegin())
 				{
 					--m_iter;
-					ChangeImage(window, *m_iter);
+					ShowImage(*m_iter);
 				}
 
 				return;
 			}
 			case VK_RIGHT:
 			{
-				if (isEmpty(window, m_files))
+				if (isEmpty(m_window, m_files))
 				{
 					return;
 				}
@@ -251,7 +311,7 @@ namespace PictureBrowser
 				if (m_iter < --m_files.cend())
 				{
 					++m_iter;
-					ChangeImage(window, *m_iter);
+					ShowImage(*m_iter);
 				}
 
 				return;
@@ -259,44 +319,44 @@ namespace PictureBrowser
 		}
 	}
 
-	void MainWindow::OnCommand(HWND window, WPARAM wParam)
+	void MainWindow::OnCommand(WPARAM wParam)
 	{
 		switch (LOWORD(wParam))
 		{
 			case IDM_EXIT:
 			{
-				DestroyWindow(window);
+				DestroyWindow(m_window);
 				break;
 			}
 			case IDM_ABOUT:
 			{
-				DialogBox(g_mainWindow->m_instance, MAKEINTRESOURCE(IDD_ABOUT), window, GenericOkDialog);
+				DialogBox(g_mainWindow->m_instance, MAKEINTRESOURCE(IDD_ABOUT), m_window, GenericOkDialog);
 				break;
 			}
 			case IDM_KEYBOARD:
 			{
-				DialogBox(g_mainWindow->m_instance, MAKEINTRESOURCE(IDD_KEYBOARD), window, GenericOkDialog);
+				DialogBox(g_mainWindow->m_instance, MAKEINTRESOURCE(IDD_KEYBOARD), m_window, GenericOkDialog);
 				break;
 			}
 			case IDM_OPEN:
 			{
-				OnOpen(window);
+				OnOpenMenu();
 				break;
 			}
 			case IDC_PREV_BUTTON:
 			{
-				OnKeyUp(window, VK_LEFT);
+				OnKeyUp(VK_LEFT);
 				break;
 			}
 			case IDC_NEXT_BUTTON:
 			{
-				OnKeyUp(window, VK_RIGHT);
+				OnKeyUp(VK_RIGHT);
 				break;
 			}
 		}
 	}
 
-	void MainWindow::OnFileDrop(HWND window, WPARAM wParam)
+	void MainWindow::OnFileDrop(WPARAM wParam)
 	{
 		HDROP dropInfo = reinterpret_cast<HDROP>(wParam);
 		UINT required = DragQueryFile(dropInfo, 0, nullptr, 0);
@@ -309,22 +369,21 @@ namespace PictureBrowser
 			path.resize(result);
 		}
 
-		if (!path.empty())
+		if (!path.empty() && LoadFileList(path))
 		{
-			ChangeImage(window, path);
-			LoadFileList(path);
+			ShowImage(path);
 		}
 
 		DragFinish(dropInfo);
 	}
 
-	void MainWindow::OnOpen(HWND window)
+	void MainWindow::OnOpenMenu()
 	{
 		OPENFILENAME openFile = { 0 };
 		wchar_t filePath[0x1000] = { 0 };
 
 		openFile.lStructSize = sizeof(openFile);
-		openFile.hwndOwner = window;
+		openFile.hwndOwner = m_window;
 		openFile.lpstrFile = filePath;
 		openFile.nMaxFile = 0xFFF;
 		openFile.lpstrFilter = L"Picture format of the future (*.jpg)\0*.jpg\0";
@@ -334,45 +393,9 @@ namespace PictureBrowser
 		openFile.lpstrInitialDir = nullptr;
 		openFile.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
-		if (GetOpenFileName(&openFile))
+		if (GetOpenFileName(&openFile) && LoadFileList(openFile.lpstrFile))
 		{
-			LoadFileList(openFile.lpstrFile);
-			ChangeImage(window, openFile.lpstrFile);
-		}
-	}
-
-	void MainWindow::LoadFileList(const std::filesystem::path& path)
-	{
-		m_files.clear();
-
-		const auto parentPath = std::filesystem::path(path).parent_path();
-
-		WIN32_FIND_DATA findFileData = { 0 };
-		const std::wstring searchString = parentPath.wstring() + L"\\*.jpg";
-
-		std::unique_ptr<void, FindCloseGuard> finder(FindFirstFile(searchString.c_str(), &findFileData));
-
-		if (finder.get() != INVALID_HANDLE_VALUE)
-		{
-			do
-			{
-				m_files.emplace_back(parentPath / findFileData.cFileName);
-			} while (FindNextFile(finder.get(), &findFileData));
-
-			m_iter = std::find(m_files.cbegin(), m_files.cend(), path);
-		}
-	}
-
-	void MainWindow::ChangeImage(HWND window, const std::filesystem::path& path)
-	{
-		m_image.reset(Gdiplus::Image::FromFile(path.c_str()));
-
-		if (m_image)
-		{
-			InvalidateRect(window, nullptr, true);
-
-			std::wstring title = m_title + L" - " + path.filename().wstring();
-			SetWindowText(window, title.c_str());
+			ShowImage(openFile.lpstrFile);
 		}
 	}
 
@@ -382,7 +405,7 @@ namespace PictureBrowser
 		{
 			case WM_CREATE:
 			{
-				g_mainWindow->OnCreate(window);
+				g_mainWindow->OnCreate();
 				break;
 			}
 			case WM_DESTROY:
@@ -392,27 +415,27 @@ namespace PictureBrowser
 			}
 			case WM_SIZE:
 			{
-				g_mainWindow->OnResize(window);
+				g_mainWindow->OnResize();
 				break;
 			}
 			case WM_PAINT:
 			{
-				g_mainWindow->OnPaint(window);
+				g_mainWindow->OnPaint();
 				break;
 			}
 			case WM_KEYUP:
 			{
-				g_mainWindow->OnKeyUp(window, wParam);
+				g_mainWindow->OnKeyUp(wParam);
 				break;
 			}
 			case WM_COMMAND:
 			{
-				g_mainWindow->OnCommand(window, wParam);
+				g_mainWindow->OnCommand(wParam);
 				break;
 			}
 			case WM_DROPFILES:
 			{
-				g_mainWindow->OnFileDrop(window, wParam);
+				g_mainWindow->OnFileDrop(wParam);
 				break;
 			}
 			default:

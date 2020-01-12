@@ -27,6 +27,20 @@ private:
 	Gdiplus::Status m_status;
 };
 
+std::filesystem::path TrimQuotes(const std::wstring& path)
+{
+	std::wstring copy = path;
+
+	if (path.front() == '"' && path.back() == '"')
+	{
+		copy.pop_back();
+		copy.erase(copy.cbegin());
+		return copy;
+	}
+
+	return path;
+}
+
 int APIENTRY wWinMain(
 	_In_ HINSTANCE instance,
 	_In_opt_ HINSTANCE previousInstance,
@@ -34,7 +48,6 @@ int APIENTRY wWinMain(
 	_In_ int showCommand)
 {
 	UNREFERENCED_PARAMETER(previousInstance);
-	UNREFERENCED_PARAMETER(commandLine);
 
 	InitCommonControls();
 
@@ -44,6 +57,16 @@ int APIENTRY wWinMain(
 	if (!gdiGuard || !mainWindow.InitInstance(instance, showCommand))
 	{
 		return GetLastError();
+	}
+
+	if (commandLine)
+	{
+		std::filesystem::path path = TrimQuotes(commandLine);
+
+		if (mainWindow.LoadFileList(path))
+		{
+			mainWindow.ShowImage(path);
+		}
 	}
 
 	MSG message = { 0 };

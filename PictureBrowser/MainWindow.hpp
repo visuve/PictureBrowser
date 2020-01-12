@@ -9,27 +9,27 @@ namespace PictureBrowser
 		~MainWindow();
 
 		bool InitInstance(HINSTANCE, int);
+		bool LoadFileList(const std::filesystem::path&);
+		void ShowImage(const std::filesystem::path&);
 
 	private:
 		bool LoadStrings();
 		ATOM Register() const;
 
-		void OnCreate(HWND);
-		void OnResize(HWND);
-		void OnPaint(HWND) const;
-		void OnKeyUp(HWND, WPARAM);
-		void OnCommand(HWND, WPARAM);
-		void OnFileDrop(HWND, WPARAM);
-		void OnOpen(HWND);
-
-		void LoadFileList(const std::filesystem::path&);
-		void ChangeImage(HWND, const std::filesystem::path&);
+		void OnCreate();
+		void OnResize();
+		void OnPaint() const;
+		void OnKeyUp(WPARAM);
+		void OnCommand(WPARAM);
+		void OnFileDrop(WPARAM);
+		void OnOpenMenu();
 
 		static LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
 		static INT_PTR CALLBACK GenericOkDialog(HWND, UINT, WPARAM, LPARAM);
 
 		std::wstring m_title;
 		std::wstring m_windowClassName;
+		HWND m_window = nullptr;
 		HWND m_prevButton = nullptr;
 		HWND m_nextButton = nullptr;
 		HINSTANCE m_instance = nullptr;
