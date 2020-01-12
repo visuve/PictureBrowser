@@ -36,6 +36,8 @@ int APIENTRY wWinMain(
 	UNREFERENCED_PARAMETER(previousInstance);
 	UNREFERENCED_PARAMETER(commandLine);
 
+	InitCommonControls();
+
 	GdiPlusGuard gdiGuard;
 	PictureBrowser::MainWindow mainWindow;
 

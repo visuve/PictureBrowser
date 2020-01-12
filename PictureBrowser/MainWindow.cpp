@@ -64,15 +64,15 @@ namespace PictureBrowser
 		}
 	}
 
-	bool MainWindow::LoadStrings(HINSTANCE instance)
+	bool MainWindow::LoadStrings()
 	{
-		m_title = LoadStdString(instance, IDS_PICTURE_BROWSER);
-		m_windowClassName = LoadStdString(instance, IDC_PICTURE_BROWSER);
+		m_title = LoadStdString(m_instance, IDS_PICTURE_BROWSER);
+		m_windowClassName = LoadStdString(m_instance, IDC_PICTURE_BROWSER);
 
 		return !(m_title.empty() || m_windowClassName.empty());
 	}
 
-	ATOM MainWindow::Register(HINSTANCE instance)
+	ATOM MainWindow::Register() const
 	{
 		WNDCLASSEXW windowClass = { 0 };
 
@@ -81,13 +81,13 @@ namespace PictureBrowser
 		windowClass.lpfnWndProc = WindowProcedure;
 		windowClass.cbClsExtra = 0;
 		windowClass.cbWndExtra = 0;
-		windowClass.hInstance = instance;
-		windowClass.hIcon = LoadIcon(instance, MAKEINTRESOURCE(IDI_PICTURE_BROWSER));
+		windowClass.hInstance = m_instance;
+		windowClass.hIcon = LoadIcon(m_instance, MAKEINTRESOURCE(IDI_PICTURE_BROWSER));
 		windowClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
 		windowClass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
 		windowClass.lpszMenuName = MAKEINTRESOURCEW(IDC_MENU);
 		windowClass.lpszClassName = m_windowClassName.c_str();
-		windowClass.hIconSm = LoadIcon(instance, MAKEINTRESOURCE(IDI_PICTURE_BROWSER));
+		windowClass.hIconSm = LoadIcon(m_instance, MAKEINTRESOURCE(IDI_PICTURE_BROWSER));
 
 		return RegisterClassEx(&windowClass);
 	}
@@ -96,12 +96,12 @@ namespace PictureBrowser
 	{
 		m_instance = instance;
 
-		if (!LoadStrings(instance))
+		if (!LoadStrings())
 		{
 			return false;
 		}
 
-		if (!Register(instance))
+		if (!Register())
 		{
 			return false;
 		}
@@ -117,7 +117,7 @@ namespace PictureBrowser
 			800,
 			nullptr,
 			nullptr,
-			instance,
+			m_instance,
 			nullptr);
 
 		if (!window)
@@ -144,7 +144,7 @@ namespace PictureBrowser
 			ButtonHeight,
 			window,
 			reinterpret_cast<HMENU>(IDC_PREV_BUTTON),
-			nullptr,
+			m_instance,
 			nullptr);
 
 		g_mainWindow->m_nextButton = CreateWindow(
@@ -157,7 +157,7 @@ namespace PictureBrowser
 			ButtonHeight,
 			window,
 			reinterpret_cast<HMENU>(IDC_NEXT_BUTTON),
-			nullptr,
+			m_instance,
 			nullptr);
 	}
 
@@ -210,27 +210,51 @@ namespace PictureBrowser
 
 	void MainWindow::OnKeyUp(HWND window, WPARAM wParam)
 	{
+		constexpr auto isEmpty = [](HWND window, const auto& list) -> bool
+		{
+			if (list.empty())
+			{
+				MessageBox(nullptr,
+					L"Please drag & drop a file or open from the menu!",
+					L"No image selected!",
+					MB_OK | MB_ICONINFORMATION);
+				return true;
+			}
+
+			return false;
+		};
+
 		switch (wParam)
 		{
 			case VK_LEFT:
 			{
+				if (isEmpty(window, m_files))
+				{
+					return;
+				}
+
 				if (m_iter > m_files.cbegin())
 				{
 					--m_iter;
 					ChangeImage(window, *m_iter);
 				}
 
-				break;
+				return;
 			}
 			case VK_RIGHT:
 			{
+				if (isEmpty(window, m_files))
+				{
+					return;
+				}
+
 				if (m_iter < --m_files.cend())
 				{
 					++m_iter;
 					ChangeImage(window, *m_iter);
 				}
 
-				break;
+				return;
 			}
 		}
 	}

@@ -11,8 +11,8 @@ namespace PictureBrowser
 		bool InitInstance(HINSTANCE, int);
 
 	private:
-		bool LoadStrings(HINSTANCE);
-		ATOM Register(HINSTANCE);
+		bool LoadStrings();
+		ATOM Register() const;
 
 		void OnCreate(HWND);
 		void OnResize(HWND);
@@ -21,8 +21,8 @@ namespace PictureBrowser
 		void OnCommand(HWND, WPARAM);
 		void OnFileDrop(HWND, WPARAM);
 		void OnOpen(HWND);
-		void LoadFileList(const std::filesystem::path&);
 
+		void LoadFileList(const std::filesystem::path&);
 		void ChangeImage(HWND, const std::filesystem::path&);
 
 		static LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
