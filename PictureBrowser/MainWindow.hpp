@@ -25,6 +25,8 @@ namespace PictureBrowser
 		void OnFileDrop(WPARAM);
 		void OnOpenMenu();
 
+		void ChangeSelection(LONG_PTR);
+
 		static LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
 		static INT_PTR CALLBACK GenericOkDialog(HWND, UINT, WPARAM, LPARAM);
 
@@ -33,12 +35,11 @@ namespace PictureBrowser
 		HWND m_window = nullptr;
 		HWND m_prevButton = nullptr;
 		HWND m_nextButton = nullptr;
+		HWND m_fileListBox = nullptr;
 		HINSTANCE m_instance = nullptr;
 		RECT m_canvasSize = { 0 };
 		bool m_maximized = false;
 
 		std::unique_ptr<Gdiplus::Image> m_image;
-		std::vector<std::filesystem::path> m_files;
-		std::vector<std::filesystem::path>::const_iterator m_iter;
 	};
 }

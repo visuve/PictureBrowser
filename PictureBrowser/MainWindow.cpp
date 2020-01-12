@@ -8,11 +8,7 @@ namespace PictureBrowser
 
 	constexpr UINT ButtonWidth = 50;
 	constexpr UINT ButtonHeight = 25;
-
-	struct FindCloseGuard
-	{
-		void operator()(HANDLE handle) { FindClose(handle); }
-	};
+	constexpr UINT FileListWidth = 250;
 
 	std::wstring LoadStdString(HINSTANCE instance, UINT id)
 	{
@@ -30,8 +26,8 @@ namespace PictureBrowser
 
 	Gdiplus::Rect Adjust(RECT canvasSize, float imageWidth, float imageHeight)
 	{
-		float canvasWidth = static_cast<float>(canvasSize.right);
-		float canvasHeight = static_cast<float>(canvasSize.bottom);
+		float canvasWidth = static_cast<float>(canvasSize.right - canvasSize.left);
+		float canvasHeight = static_cast<float>(canvasSize.bottom - canvasSize.top);
 
 		float aspectRatio = min(
 			canvasWidth / imageWidth,
@@ -42,7 +38,7 @@ namespace PictureBrowser
 		UINT w = UINT(imageWidth * aspectRatio);
 		UINT h = UINT(imageHeight * aspectRatio);
 
-		return Gdiplus::Rect(x, y, w, h);
+		return Gdiplus::Rect(x + canvasSize.left, y + canvasSize.top, w, h);
 	}
 
 	Gdiplus::Rect Adjust(RECT canvasSize, UINT imageWidth, UINT imageHeight)
@@ -129,6 +125,8 @@ namespace PictureBrowser
 		UpdateWindow(m_window);
 		OnResize();
 
+		// SetWindowTheme(m_window, L" ", L" "); // This will make even worse looks
+
 		return true;
 	}
 
@@ -157,26 +155,10 @@ namespace PictureBrowser
 			return false;
 		}
 
-		m_files.clear();
-
-		const auto parentPath = std::filesystem::path(path).parent_path();
-
-		WIN32_FIND_DATA findFileData = { 0 };
-		const std::wstring searchString = parentPath.wstring() + L"\\*.jpg";
-
-		std::unique_ptr<void, FindCloseGuard> finder(FindFirstFile(searchString.c_str(), &findFileData));
-
-		if (finder.get() != INVALID_HANDLE_VALUE)
-		{
-			do
-			{
-				m_files.emplace_back(parentPath / findFileData.cFileName);
-			} while (FindNextFile(finder.get(), &findFileData));
-
-			m_iter = std::find(m_files.cbegin(), m_files.cend(), path);
-		}
-
-		return !m_files.empty();
+		std::wstring filter = path.parent_path().wstring() + L"\\*.jpg";
+		bool list = DlgDirList(m_window, &filter.front(), IDC_LISTBOX, 0, DDL_READWRITE);
+		bool send = SendMessage(m_fileListBox, LB_SELECTSTRING, 0, reinterpret_cast<LPARAM>(path.filename().c_str()));
+		return list && send;
 	}
 
 	void MainWindow::ShowImage(const std::filesystem::path& path)
@@ -197,7 +179,7 @@ namespace PictureBrowser
 		m_prevButton = CreateWindow(
 			WC_BUTTON,
 			L"<",
-			WS_CHILD | WS_VISIBLE | WS_BORDER,
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
 			300,
 			710,
 			ButtonWidth,
@@ -210,13 +192,26 @@ namespace PictureBrowser
 		m_nextButton = CreateWindow(
 			WC_BUTTON,
 			L">",
-			WS_CHILD | WS_VISIBLE | WS_BORDER,
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
 			450,
 			710,
 			ButtonWidth,
 			ButtonHeight,
 			window,
 			reinterpret_cast<HMENU>(IDC_NEXT_BUTTON),
+			m_instance,
+			nullptr);
+
+		m_fileListBox = CreateWindow(
+			WC_LISTBOX,
+			L"Filelist...",
+			WS_VISIBLE | WS_CHILD | WS_EX_NOACTIVATE,
+			0,
+			0,
+			FileListWidth,
+			800,
+			window,
+			reinterpret_cast<HMENU>(IDC_LISTBOX),
 			m_instance,
 			nullptr);
 	}
@@ -228,6 +223,7 @@ namespace PictureBrowser
 		if (GetClientRect(m_window, &canvasSize))
 		{
 			std::swap(m_canvasSize, canvasSize);
+			m_canvasSize.left += FileListWidth;
 
 			SetWindowPos(
 				m_prevButton,
@@ -246,6 +242,15 @@ namespace PictureBrowser
 				0,
 				0,
 				SWP_NOSIZE | SWP_NOZORDER);
+
+			SetWindowPos(
+				m_fileListBox,
+				HWND_TOP,
+				0,
+				0,
+				FileListWidth,
+				m_canvasSize.bottom, // TODO: there remains some weird gap
+				SWP_NOMOVE | SWP_NOZORDER);
 		}
 	}
 
@@ -278,48 +283,40 @@ namespace PictureBrowser
 
 	void MainWindow::OnKeyUp(WPARAM wParam)
 	{
-		constexpr auto isEmpty = [](HWND window, const auto& list) -> bool
-		{
-			if (list.empty())
-			{
-				MessageBox(window,
-					L"Please drag & drop a file or open from the menu!",
-					L"No image selected!",
-					MB_OK | MB_ICONINFORMATION);
-				return true;
-			}
+		LONG_PTR count = SendMessage(m_fileListBox, LB_GETCOUNT, 0, 0);
 
-			return false;
-		};
+		if (!count)
+		{
+			MessageBox(
+				m_window,
+				L"Please drag & drop a file or open from the menu!",
+				L"No image selected!",
+				MB_OK | MB_ICONINFORMATION);
+
+			return;
+		}
 
 		switch (wParam)
 		{
 			case VK_LEFT:
 			{
-				if (isEmpty(m_window, m_files))
-				{
-					return;
-				}
+				LONG_PTR current = SendMessage(m_fileListBox, LB_GETCURSEL, 0, 0);
 
-				if (m_iter > m_files.cbegin())
+				if (current > 0)
 				{
-					--m_iter;
-					ShowImage(*m_iter);
+					ChangeSelection(--current);
 				}
 
 				return;
 			}
 			case VK_RIGHT:
 			{
-				if (isEmpty(m_window, m_files))
-				{
-					return;
-				}
+				LONG_PTR lastIndex = count -1;
+				LONG_PTR current = SendMessage(m_fileListBox, LB_GETCURSEL, 0, 0);
 
-				if (m_iter < --m_files.cend())
+				if (current < lastIndex)
 				{
-					++m_iter;
-					ShowImage(*m_iter);
+					ChangeSelection(++current);
 				}
 
 				return;
@@ -407,6 +404,22 @@ namespace PictureBrowser
 		}
 	}
 
+	void MainWindow::ChangeSelection(LONG_PTR current)
+	{
+		if (SendMessage(m_fileListBox, LB_SETCURSEL, current, 0) < 0)
+		{
+			return;
+		}
+
+		size_t length = static_cast<size_t>(SendMessage(m_fileListBox, LB_GETTEXTLEN, current, 0));
+		std::wstring buffer(length, '\0');
+
+		if (SendMessage(m_fileListBox, LB_GETTEXT, current, reinterpret_cast<LPARAM>(&buffer.front())) == length)
+		{
+			ShowImage(buffer);
+		}
+	}
+
 	LRESULT CALLBACK MainWindow::WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		switch (message)
@@ -430,6 +443,10 @@ namespace PictureBrowser
 			{
 				g_mainWindow->OnPaint();
 				break;
+			}
+			case WM_INITDIALOG:
+			{
+				InitCommonControls();
 			}
 			case WM_KEYUP:
 			{
