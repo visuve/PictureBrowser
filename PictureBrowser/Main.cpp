@@ -5,11 +5,11 @@
 class GdiPlusGuard
 {
 public:
-	GdiPlusGuard()
+	GdiPlusGuard() :
+		m_status(Gdiplus::GdiplusStartup(&m_gdiPlusToken, &gdiPlusStartupInput, nullptr))
 	{
-		Gdiplus::GdiplusStartupInput gdiPlusStartupInput = { 0 };
-		m_status = Gdiplus::GdiplusStartup(&m_gdiPlusToken, &gdiPlusStartupInput, nullptr);
 	}
+
 	~GdiPlusGuard()
 	{
 		if (m_gdiPlusToken)
@@ -23,6 +23,7 @@ public:
 		return m_status == Gdiplus::Status::Ok;
 	}
 private:
+	Gdiplus::GdiplusStartupInput gdiPlusStartupInput = { 0 };
 	UINT_PTR m_gdiPlusToken = 0;
 	Gdiplus::Status m_status;
 };
@@ -49,7 +50,7 @@ int APIENTRY wWinMain(
 {
 	UNREFERENCED_PARAMETER(previousInstance);
 
-	GdiPlusGuard gdiGuard;
+	const GdiPlusGuard gdiGuard;
 	PictureBrowser::MainWindow mainWindow;
 
 	if (!gdiGuard || !mainWindow.InitInstance(instance, showCommand))
@@ -59,12 +60,7 @@ int APIENTRY wWinMain(
 
 	if (commandLine)
 	{
-		std::filesystem::path path = TrimQuotes(commandLine);
-
-		if (mainWindow.LoadFileList(path))
-		{
-			mainWindow.ShowImage(path);
-		}
+		mainWindow.Display(TrimQuotes(commandLine));
 	}
 
 	MSG message = { 0 };

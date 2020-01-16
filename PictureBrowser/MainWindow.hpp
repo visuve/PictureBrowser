@@ -9,10 +9,11 @@ namespace PictureBrowser
 		~MainWindow();
 
 		bool InitInstance(HINSTANCE, int);
-		bool LoadFileList(const std::filesystem::path&);
-		void ShowImage(const std::filesystem::path&);
+		void Display(const std::filesystem::path&);
 
 	private:
+		std::filesystem::file_type LoadFileList(const std::filesystem::path&);
+		void ShowImage(const std::filesystem::path&);
 		bool LoadStrings();
 		ATOM Register() const;
 
@@ -28,7 +29,7 @@ namespace PictureBrowser
 
 		std::filesystem::path ImageFromIndex(LONG_PTR) const;
 		std::filesystem::path SelectedImage() const;
-		void ChangeSelection(LONG_PTR);
+		void SelectImage(LONG_PTR);
 
 		static LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
 		static INT_PTR CALLBACK GenericOkDialog(HWND, UINT, WPARAM, LPARAM);

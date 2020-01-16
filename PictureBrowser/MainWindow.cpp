@@ -1,6 +1,7 @@
 #include "PCH.hpp"
 #include "Resource.h"
 #include "MainWindow.hpp"
+#include "LogWrap.hpp"
 
 namespace PictureBrowser
 {
@@ -13,18 +14,25 @@ namespace PictureBrowser
 	std::wstring LoadStdString(HINSTANCE instance, UINT id)
 	{
 		std::wstring buffer(1, L'\0');
-		int length = LoadString(instance, id, &buffer.front(), 0);
+		const int length = LoadString(instance, id, &buffer.front(), 0);
 
-		if (length > 0)
+		if (length <= 0)
 		{
-			buffer.resize(static_cast<size_t>(length));
-			LoadString(instance, id, &buffer.front(), length + 1);
+			LOGD << L"Failed to load string ID: " << id;
+			return {};
+		}
+
+		buffer.resize(static_cast<size_t>(length));
+		
+		if (LoadString(instance, id, &buffer.front(), length + 1) != length)
+		{
+			return {};
 		}
 
 		return buffer;
 	}
 
-	Gdiplus::Rect Adjust(RECT canvasSize, float imageWidth, float imageHeight)
+	Gdiplus::Rect Adjust(const RECT& canvasSize, float imageWidth, float imageHeight)
 	{
 		float canvasWidth = static_cast<float>(canvasSize.right - canvasSize.left);
 		float canvasHeight = static_cast<float>(canvasSize.bottom - canvasSize.top);
@@ -41,7 +49,7 @@ namespace PictureBrowser
 		return Gdiplus::Rect(x + canvasSize.left, y + canvasSize.top, w, h);
 	}
 
-	Gdiplus::Rect Adjust(RECT canvasSize, UINT imageWidth, UINT imageHeight)
+	Gdiplus::Rect Adjust(const RECT& canvasSize, UINT imageWidth, UINT imageHeight)
 	{
 		return Adjust(canvasSize, float(imageWidth), float(imageHeight));
 	}
@@ -55,8 +63,14 @@ namespace PictureBrowser
 	{
 		if (g_mainWindow)
 		{
-			UnregisterClass(m_windowClassName.c_str(), m_instance);
-			g_mainWindow = nullptr;
+			if (!UnregisterClass(m_windowClassName.c_str(), m_instance))
+			{
+				LOGD << L"Failed to unregister main window!";
+			}
+			else
+			{
+				g_mainWindow = nullptr;
+			}
 		}
 	}
 
@@ -94,11 +108,13 @@ namespace PictureBrowser
 
 		if (!LoadStrings())
 		{
+			LOGD << L"Failed to load strings!";
 			return false;
 		}
 
 		if (!Register())
 		{
+			LOGD << L"Failed to register main window!";
 			return false;
 		}
 
@@ -118,11 +134,20 @@ namespace PictureBrowser
 
 		if (!m_window)
 		{
+			LOGD << L"Failed to create main window!";
 			return false;
 		}
 
-		ShowWindow(m_window, showCommand);
-		UpdateWindow(m_window);
+		if (!ShowWindow(m_window, showCommand))
+		{
+			LOGD << L"Failed to show window!";
+		}
+
+		if (!UpdateWindow(m_window))
+		{
+			LOGD << L"Failed to update window!";
+		}
+
 		OnResize();
 
 		// SetWindowTheme(m_window, L" ", L" "); // This will make even worse looks
@@ -130,41 +155,133 @@ namespace PictureBrowser
 		return true;
 	}
 
-	bool MainWindow::LoadFileList(const std::filesystem::path& path)
+	void MainWindow::Display(const std::filesystem::path& path)
 	{
-		if (!std::filesystem::exists(path))
+		switch (LoadFileList(path))
 		{
-			const std::wstring message = 
-				L"The file you have entered does not appear to exist:\n" + path.wstring();
+			case std::filesystem::file_type::regular:
+			{
+				ShowImage(path);
+				break;
+			}
+			case std::filesystem::file_type::directory:
+			{
+				SelectImage(0);
+				break;
+			}
+			default:
+			{
+				if (m_image)
+				{
+					m_image.reset();
+					InvalidateRect(m_window, &m_canvasSize, true);
+				}
+			}
 
-			MessageBox(m_window,
+			break;
+		}
+	}
+
+
+
+	std::filesystem::file_type MainWindow::LoadFileList(const std::filesystem::path& path)
+	{
+		std::wstring filter = L"\\*.jpg";
+
+		const std::filesystem::file_type status = std::filesystem::status(path).type();
+
+		switch (status)
+		{
+			case std::filesystem::file_type::none:
+			case std::filesystem::file_type::not_found:
+			case std::filesystem::file_type::unknown:
+			{
+				const std::wstring message =
+					L"The path you have entered does not appear to exist:\n" + path.wstring();
+
+				MessageBox(m_window,
+					message.c_str(),
+					L"I/O error!",
+					MB_OK | MB_ICONINFORMATION);
+
+				return status;
+			}
+			case std::filesystem::file_type::regular:
+			{
+				if (_wcsicmp(path.extension().c_str(), L".jpg") != 0)
+				{
+					MessageBox(m_window,
+						L"Only the picture format of the future is supported.",
+						L"Unsupported file format!",
+						MB_OK | MB_ICONINFORMATION);
+
+					return std::filesystem::file_type::none;
+				}
+
+				filter.insert(0, path.parent_path().wstring());
+				break;
+			}
+			case std::filesystem::file_type::directory:
+			{
+				filter.insert(0, path.wstring());
+				break;
+			}
+			default:
+			{
+				const std::wstring message =
+					L"The path you have entered does not appear to be a file or a folder:\n" + path.wstring();
+
+				MessageBox(m_window,
+					message.c_str(),
+					L"FUBAR",
+					MB_OK | MB_ICONINFORMATION);
+
+				return status;
+			}
+		}
+
+		if (!DlgDirList(m_window, &filter.front(), IDC_LISTBOX, 0, DDL_READWRITE))
+		{
+			LOGD << L"DlgDirList failed with filter: " << filter;
+			return std::filesystem::file_type::none;
+		}
+
+		const LONG_PTR count = SendMessage(m_fileListBox, LB_GETCOUNT, 0, 0);
+
+		if (!count)
+		{
+			const std::wstring message =
+				L"The path you have entered does not appear to have JPG files!\n" + path.wstring();
+
+			MessageBox(
+				m_window,
 				message.c_str(),
-				L"File not found!",
+				L"Empty directory!",
 				MB_OK | MB_ICONINFORMATION);
 
-			return false;
+			return std::filesystem::file_type::none;
 		}
 
-		if (_wcsicmp(path.extension().c_str(), L".jpg") != 0)
+		if (!SendMessage(m_fileListBox, LB_SELECTSTRING, 0, reinterpret_cast<LPARAM>(path.filename().c_str())))
 		{
-			MessageBox(m_window,
-				L"Only the picture format of the future is supported.",
-				L"Unsupported file format!",
-				MB_OK | MB_ICONINFORMATION);
-
-			return false;
+			LOGD << L"Failed to send message LB_SELECTSTRING!";
 		}
 
-		std::wstring filter = path.parent_path().wstring() + L"\\*.jpg";
-		bool list = DlgDirList(m_window, &filter.front(), IDC_LISTBOX, 0, DDL_READWRITE);
-		bool send = SendMessage(m_fileListBox, LB_SELECTSTRING, 0, reinterpret_cast<LPARAM>(path.filename().c_str()));
-		return list && send;
+		return status;
 	}
 
 	void MainWindow::ShowImage(const std::filesystem::path& path)
 	{
 		if (!std::filesystem::is_regular_file(path))
 		{
+			const std::wstring message =
+				path.wstring() + L" does not appear to be a file!";
+
+			MessageBox(m_window,
+				message.c_str(),
+				L"Unsupported file format!",
+				MB_OK | MB_ICONINFORMATION);
+
 			return;
 		}
 
@@ -172,10 +289,18 @@ namespace PictureBrowser
 
 		if (!m_image)
 		{
+			const std::wstring message =
+				L"Failed to load:\n" + path.wstring();
+
+			MessageBox(m_window,
+				message.c_str(),
+				L"FUBAR",
+				MB_OK | MB_ICONINFORMATION);
+
 			return;
 		}
 
-		InvalidateRect(m_window, nullptr, true);
+		InvalidateRect(m_window, &m_canvasSize, false);
 
 		const std::wstring title = m_title + L" - " + path.filename().wstring();
 		SetWindowText(m_window, title.c_str());
@@ -232,48 +357,56 @@ namespace PictureBrowser
 			std::swap(m_canvasSize, canvasSize);
 			m_canvasSize.left += FileListWidth;
 
-			SetWindowPos(
+			if (!SetWindowPos(
 				m_prevButton,
 				HWND_TOP,
 				m_canvasSize.left,
 				m_canvasSize.bottom - ButtonHeight,
 				0,
 				0,
-				SWP_NOSIZE | SWP_NOZORDER);
+				SWP_NOSIZE | SWP_NOZORDER))
+			{
+				LOGD << L"Failed move previous button!";
+			}
 
-			SetWindowPos(
+			if (!SetWindowPos(
 				m_nextButton,
 				HWND_TOP,
 				m_canvasSize.right - ButtonWidth,
 				m_canvasSize.bottom - ButtonHeight,
 				0,
 				0,
-				SWP_NOSIZE | SWP_NOZORDER);
+				SWP_NOSIZE | SWP_NOZORDER))
+			{
+				LOGD << L"Failed to move next button!";
+			}
 
-			SetWindowPos(
+			if (!SetWindowPos(
 				m_fileListBox,
 				HWND_TOP,
 				0,
 				0,
 				FileListWidth,
 				m_canvasSize.bottom, // TODO: there remains some weird gap
-				SWP_NOMOVE | SWP_NOZORDER);
+				SWP_NOMOVE | SWP_NOZORDER))
+			{
+				LOGD << L"Failed to move file list!";
+			}
 		}
 	}
 
 	void MainWindow::OnPaint() const
 	{
 		PAINTSTRUCT ps = { 0 };
-		HDC hdc = BeginPaint(m_window, &ps);
+		const HDC hdc = BeginPaint(m_window, &ps);
+
+		Gdiplus::Graphics graphics(hdc);
+		const Gdiplus::SolidBrush mySolidBrush(Gdiplus::Color::DarkGray);
+		graphics.FillRectangle(&mySolidBrush, m_canvasSize.left, m_canvasSize.top, m_canvasSize.right, m_canvasSize.bottom);
 
 		if (m_image)
 		{
-			Gdiplus::Graphics graphics(hdc);
-
-			Gdiplus::SolidBrush mySolidBrush(Gdiplus::Color::DarkGray);
-			graphics.FillRectangle(&mySolidBrush, 0, 0, m_canvasSize.right, m_canvasSize.bottom);
-
-			Gdiplus::Rect rect = Adjust(m_canvasSize, m_image->GetWidth(), m_image->GetHeight());
+			const Gdiplus::Rect rect = Adjust(m_canvasSize, m_image->GetWidth(), m_image->GetHeight());
 			graphics.DrawImage(m_image.get(), rect);
 		}
 
@@ -290,7 +423,7 @@ namespace PictureBrowser
 
 	void MainWindow::OnKeyUp(WPARAM wParam)
 	{
-		LONG_PTR count = SendMessage(m_fileListBox, LB_GETCOUNT, 0, 0);
+		const LONG_PTR count = SendMessage(m_fileListBox, LB_GETCOUNT, 0, 0);
 
 		if (!count)
 		{
@@ -312,7 +445,7 @@ namespace PictureBrowser
 
 				if (current > 0)
 				{
-					ChangeSelection(--current);
+					SelectImage(--current);
 				}
 
 				return;
@@ -320,12 +453,12 @@ namespace PictureBrowser
 			case VK_RIGHT:
 			case VK_DOWN:
 			{
-				LONG_PTR lastIndex = count -1;
+				const LONG_PTR lastIndex = count -1;
 				LONG_PTR current = SendMessage(m_fileListBox, LB_GETCURSEL, 0, 0);
 
 				if (current < lastIndex)
 				{
-					ChangeSelection(++current);
+					SelectImage(++current);
 				}
 
 				return;
@@ -382,22 +515,21 @@ namespace PictureBrowser
 	void MainWindow::OnFileDrop(WPARAM wParam)
 	{
 		const HDROP dropInfo = reinterpret_cast<HDROP>(wParam);
-		UINT required = DragQueryFile(dropInfo, 0, nullptr, 0);
+		const UINT required = DragQueryFile(dropInfo, 0, nullptr, 0);
 		std::wstring path(required, L'\0');
 
 		if (required)
 		{
 			path.resize(required);
-			UINT result = DragQueryFile(dropInfo, 0, &path.front(), required + 1); // null terminator can be overwritten
-			path.resize(result);
-		}
 
-		if (!path.empty() && LoadFileList(path))
-		{
-			ShowImage(path);
+			if (DragQueryFile(dropInfo, 0, &path.front(), required + 1))
+			{
+				Display(path);
+			}
 		}
 
 		DragFinish(dropInfo);
+		SetFocus(m_window); // Somehow loses focus without
 	}
 
 	void MainWindow::OnOpenMenu()
@@ -416,15 +548,19 @@ namespace PictureBrowser
 		openFile.lpstrInitialDir = nullptr;
 		openFile.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
-		if (GetOpenFileName(&openFile) && LoadFileList(openFile.lpstrFile))
+		if (GetOpenFileName(&openFile))
 		{
-			ShowImage(openFile.lpstrFile);
+			Display(openFile.lpstrFile);
+		}
+		else
+		{
+			LOGD << L"Failed to get path!";
 		}
 	}
 
 	void MainWindow::OnSelectionChanged()
 	{
-		std::filesystem::path path = SelectedImage();
+		const std::filesystem::path path = SelectedImage();
 
 		if (path.empty())
 		{
@@ -436,11 +572,12 @@ namespace PictureBrowser
 
 	std::filesystem::path MainWindow::ImageFromIndex(LONG_PTR index) const
 	{
-		size_t length = static_cast<size_t>(SendMessage(m_fileListBox, LB_GETTEXTLEN, index, 0));
+		const size_t length = static_cast<size_t>(SendMessage(m_fileListBox, LB_GETTEXTLEN, index, 0));
 		std::wstring buffer(length, '\0');
 
-		if (!SendMessage(m_fileListBox, LB_GETTEXT, index, reinterpret_cast<LPARAM>(&buffer.front())) == length)
+		if (SendMessage(m_fileListBox, LB_GETTEXT, index, reinterpret_cast<LPARAM>(&buffer.front())) != length)
 		{
+			LOGD << L"Failed to send LB_GETTEXT!";
 			return {};
 		}
 
@@ -451,18 +588,20 @@ namespace PictureBrowser
 	{
 		const LONG_PTR current = SendMessage(m_fileListBox, LB_GETCURSEL, 0, 0);
 
-		if (!current)
+		if (current < 0)
 		{
+			LOGD << L"Failed to get current index or nothing selected. Got: " << current;
 			return {};
 		}
 
 		return ImageFromIndex(current);
 	}
 
-	void MainWindow::ChangeSelection(LONG_PTR current)
+	void MainWindow::SelectImage(LONG_PTR current)
 	{
 		if (SendMessage(m_fileListBox, LB_SETCURSEL, current, 0) < 0)
 		{
+			LOGD << L"Failed to send LB_SETCURSEL!";
 			return;
 		}
 
@@ -499,10 +638,6 @@ namespace PictureBrowser
 			{
 				g_mainWindow->OnPaint();
 				break;
-			}
-			case WM_INITDIALOG:
-			{
-				InitCommonControls();
 			}
 			case WM_KEYUP:
 			{

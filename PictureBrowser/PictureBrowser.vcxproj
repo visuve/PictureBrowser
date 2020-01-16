@@ -11,15 +11,17 @@
   <ItemDefinitionGroup>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>Comctl32.lib;Gdiplus.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Gdiplus.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="LogWrap.hpp" />
     <ClInclude Include="PCH.hpp" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="MainWindow.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="LogWrap.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="PCH.cpp">
