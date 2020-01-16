@@ -24,7 +24,10 @@ namespace PictureBrowser
 		void OnCommand(WPARAM);
 		void OnFileDrop(WPARAM);
 		void OnOpenMenu();
+		void OnSelectionChanged();
 
+		std::filesystem::path ImageFromIndex(LONG_PTR) const;
+		std::filesystem::path SelectedImage() const;
 		void ChangeSelection(LONG_PTR);
 
 		static LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);

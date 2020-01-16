@@ -15,9 +15,9 @@ namespace PictureBrowser
 		std::wstring buffer(1, L'\0');
 		int length = LoadString(instance, id, &buffer.front(), 0);
 
-		if (length)
+		if (length > 0)
 		{
-			buffer.resize(length);
+			buffer.resize(static_cast<size_t>(length));
 			LoadString(instance, id, &buffer.front(), length + 1);
 		}
 
@@ -163,15 +163,22 @@ namespace PictureBrowser
 
 	void MainWindow::ShowImage(const std::filesystem::path& path)
 	{
+		if (!std::filesystem::is_regular_file(path))
+		{
+			return;
+		}
+
 		m_image.reset(Gdiplus::Image::FromFile(path.c_str()));
 
-		if (m_image)
+		if (!m_image)
 		{
-			InvalidateRect(m_window, nullptr, true);
-
-			std::wstring title = m_title + L" - " + path.filename().wstring();
-			SetWindowText(m_window, title.c_str());
+			return;
 		}
+
+		InvalidateRect(m_window, nullptr, true);
+
+		const std::wstring title = m_title + L" - " + path.filename().wstring();
+		SetWindowText(m_window, title.c_str());
 	}
 
 	void MainWindow::OnCreate(HWND window)
@@ -205,7 +212,7 @@ namespace PictureBrowser
 		m_fileListBox = CreateWindow(
 			WC_LISTBOX,
 			L"Filelist...",
-			WS_VISIBLE | WS_CHILD | WS_EX_NOACTIVATE,
+			WS_VISIBLE | WS_CHILD | LBS_NOTIFY,
 			0,
 			0,
 			FileListWidth,
@@ -299,6 +306,7 @@ namespace PictureBrowser
 		switch (wParam)
 		{
 			case VK_LEFT:
+			case VK_UP:
 			{
 				LONG_PTR current = SendMessage(m_fileListBox, LB_GETCURSEL, 0, 0);
 
@@ -310,6 +318,7 @@ namespace PictureBrowser
 				return;
 			}
 			case VK_RIGHT:
+			case VK_DOWN:
 			{
 				LONG_PTR lastIndex = count -1;
 				LONG_PTR current = SendMessage(m_fileListBox, LB_GETCURSEL, 0, 0);
@@ -359,11 +368,20 @@ namespace PictureBrowser
 				break;
 			}
 		}
+
+		switch (HIWORD(wParam))
+		{
+			case LBN_SELCHANGE:
+			{
+				OnSelectionChanged();
+				break;
+			}
+		}
 	}
 
 	void MainWindow::OnFileDrop(WPARAM wParam)
 	{
-		HDROP dropInfo = reinterpret_cast<HDROP>(wParam);
+		const HDROP dropInfo = reinterpret_cast<HDROP>(wParam);
 		UINT required = DragQueryFile(dropInfo, 0, nullptr, 0);
 		std::wstring path(required, L'\0');
 
@@ -404,6 +422,43 @@ namespace PictureBrowser
 		}
 	}
 
+	void MainWindow::OnSelectionChanged()
+	{
+		std::filesystem::path path = SelectedImage();
+
+		if (path.empty())
+		{
+			return;
+		}
+
+		ShowImage(path);
+	}
+
+	std::filesystem::path MainWindow::ImageFromIndex(LONG_PTR index) const
+	{
+		size_t length = static_cast<size_t>(SendMessage(m_fileListBox, LB_GETTEXTLEN, index, 0));
+		std::wstring buffer(length, '\0');
+
+		if (!SendMessage(m_fileListBox, LB_GETTEXT, index, reinterpret_cast<LPARAM>(&buffer.front())) == length)
+		{
+			return {};
+		}
+
+		return buffer;
+	}
+
+	std::filesystem::path MainWindow::SelectedImage() const
+	{
+		const LONG_PTR current = SendMessage(m_fileListBox, LB_GETCURSEL, 0, 0);
+
+		if (!current)
+		{
+			return {};
+		}
+
+		return ImageFromIndex(current);
+	}
+
 	void MainWindow::ChangeSelection(LONG_PTR current)
 	{
 		if (SendMessage(m_fileListBox, LB_SETCURSEL, current, 0) < 0)
@@ -411,13 +466,14 @@ namespace PictureBrowser
 			return;
 		}
 
-		size_t length = static_cast<size_t>(SendMessage(m_fileListBox, LB_GETTEXTLEN, current, 0));
-		std::wstring buffer(length, '\0');
+		const std::filesystem::path path = ImageFromIndex(current);
 
-		if (SendMessage(m_fileListBox, LB_GETTEXT, current, reinterpret_cast<LPARAM>(&buffer.front())) == length)
+		if (path.empty())
 		{
-			ShowImage(buffer);
+			return;
 		}
+
+		ShowImage(path);
 	}
 
 	LRESULT CALLBACK MainWindow::WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
