@@ -176,9 +176,8 @@ namespace PictureBrowser
 					m_image.reset();
 					InvalidateRect(m_window, &m_canvasSize, true);
 				}
+				break;
 			}
-
-			break;
 		}
 	}
 

@@ -58,7 +58,7 @@ int APIENTRY wWinMain(
 		return GetLastError();
 	}
 
-	if (commandLine)
+	if (commandLine && commandLine[0] != '\0')
 	{
 		mainWindow.Display(TrimQuotes(commandLine));
 	}
