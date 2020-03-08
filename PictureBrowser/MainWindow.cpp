@@ -336,7 +336,7 @@ namespace PictureBrowser
 		m_fileListBox = CreateWindow(
 			WC_LISTBOX,
 			L"Filelist...",
-			WS_VISIBLE | WS_CHILD | LBS_NOTIFY,
+			WS_VISIBLE | WS_CHILD | LBS_NOTIFY | LBS_SORT,
 			0,
 			0,
 			FileListWidth,
