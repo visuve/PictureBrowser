@@ -54,6 +54,84 @@ namespace PictureBrowser
 		return Adjust(canvasSize, float(imageWidth), float(imageHeight));
 	}
 
+	class PropertyWrapper
+	{
+	public:
+		PropertyWrapper(Gdiplus::Image* image, PROPID propertyId)
+		{
+			UINT propertySize = image->GetPropertyItemSize(propertyId);
+
+			if (propertySize)
+			{
+				m_property = reinterpret_cast<Gdiplus::PropertyItem*>(malloc(propertySize));
+				m_status = image->GetPropertyItem(propertyId, propertySize, m_property);
+			}
+		}
+
+		~PropertyWrapper()
+		{
+			if (m_property)
+			{
+				free(m_property);
+				m_property = nullptr;
+			}
+		}
+
+		bool IsValid() const
+		{
+			return m_property && m_status == Gdiplus::Status::Ok;
+		}
+
+		Gdiplus::PropertyItem* Get() const
+		{
+			return m_property;
+		}
+
+	private:
+		Gdiplus::Status m_status = Gdiplus::Status::PropertyNotFound;
+		Gdiplus::PropertyItem* m_property = nullptr;
+	};
+
+	Gdiplus::RotateFlipType PropertyToRotateFlipType(Gdiplus::PropertyItem* prop)
+	{
+		uint16_t* ptr = reinterpret_cast<uint16_t*>(prop->value);
+		uint16_t value = static_cast<uint16_t>(*ptr);
+
+		switch (value)
+		{
+			case 1:
+				return Gdiplus::RotateFlipType::RotateNoneFlipNone;
+			case 2:
+				return Gdiplus::RotateFlipType::RotateNoneFlipX;
+			case 3:
+				return Gdiplus::RotateFlipType::Rotate180FlipNone;
+			case 4:
+				return Gdiplus::RotateFlipType::Rotate180FlipX;
+			case 5:
+				return Gdiplus::RotateFlipType::Rotate90FlipX;
+			case 6:
+				return Gdiplus::RotateFlipType::Rotate90FlipNone;
+			case 7:
+				return Gdiplus::RotateFlipType::Rotate270FlipX;
+			case 8:
+				return Gdiplus::RotateFlipType::Rotate270FlipNone;
+		}
+
+		return Gdiplus::RotateFlipType::RotateNoneFlipNone;
+	}
+
+	Gdiplus::RotateFlipType GetRotation(Gdiplus::Image* image)
+	{
+		const PropertyWrapper prop(image, PropertyTagOrientation);
+
+		if (!prop.IsValid())
+		{
+			return Gdiplus::RotateFlipType::RotateNoneFlipNone;
+		}
+
+		return PropertyToRotateFlipType(prop.Get());
+	}
+
 	MainWindow::MainWindow()
 	{
 		g_mainWindow = this;
@@ -285,6 +363,13 @@ namespace PictureBrowser
 				MB_OK | MB_ICONINFORMATION);
 
 			return;
+		}
+
+		auto rotation = GetRotation(m_image.get());
+
+		if (rotation != Gdiplus::RotateFlipType::RotateNoneFlipNone)
+		{
+			m_image->RotateFlip(rotation);
 		}
 
 		InvalidateRect(m_window, &m_canvasSize, false);
