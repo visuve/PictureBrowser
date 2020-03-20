@@ -26,6 +26,7 @@ namespace PictureBrowser
 		void OnFileDrop(WPARAM);
 		void OnOpenMenu();
 		void OnSelectionChanged();
+		void OnDestroy();
 
 		std::filesystem::path ImageFromIndex(LONG_PTR) const;
 		std::filesystem::path SelectedImage() const;

@@ -1,6 +1,7 @@
 #include "PCH.hpp"
 #include "MainWindow.hpp"
 #include "Resource.h"
+#include "LogWrap.hpp"
 
 class GdiPlusGuard
 {
@@ -51,9 +52,15 @@ int APIENTRY wWinMain(
 	UNREFERENCED_PARAMETER(previousInstance);
 
 	const GdiPlusGuard gdiGuard;
+
+	if (!gdiGuard)
+	{
+		return GetLastError();
+	}
+
 	PictureBrowser::MainWindow mainWindow;
 
-	if (!gdiGuard || !mainWindow.InitInstance(instance, showCommand))
+	if (!mainWindow.InitInstance(instance, showCommand))
 	{
 		return GetLastError();
 	}
@@ -63,13 +70,24 @@ int APIENTRY wWinMain(
 		mainWindow.Display(TrimQuotes(commandLine));
 	}
 
-	MSG message = { 0 };
+	int run = 0;
+	MSG msg = { 0 };
 
-	while (GetMessage(&message, nullptr, 0, 0))
+	do
 	{
-		TranslateMessage(&message);
-		DispatchMessage(&message);
-	}
+		run = GetMessage(&msg, nullptr, 0, 0);
 
-	return static_cast<int>(message.wParam);
+		if (run == -1)
+		{
+			LOGD << uint32_t(GetLastError());
+			break;
+		}
+		else
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	} while (run != 0);
+
+	return static_cast<int>(msg.wParam);
 }

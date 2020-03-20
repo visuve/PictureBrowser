@@ -61,17 +61,7 @@ namespace PictureBrowser
 
 	MainWindow::~MainWindow()
 	{
-		if (g_mainWindow)
-		{
-			if (!UnregisterClass(m_windowClassName.c_str(), m_instance))
-			{
-				LOGD << L"Failed to unregister main window!";
-			}
-			else
-			{
-				g_mainWindow = nullptr;
-			}
-		}
+		g_mainWindow = nullptr;
 	}
 
 	bool MainWindow::LoadStrings()
@@ -180,8 +170,6 @@ namespace PictureBrowser
 			}
 		}
 	}
-
-
 
 	std::filesystem::file_type MainWindow::LoadFileList(const std::filesystem::path& path)
 	{
@@ -569,6 +557,11 @@ namespace PictureBrowser
 		ShowImage(path);
 	}
 
+	void MainWindow::OnDestroy()
+	{
+		g_mainWindow->m_image.reset();
+	}
+
 	std::filesystem::path MainWindow::ImageFromIndex(LONG_PTR index) const
 	{
 		const size_t length = static_cast<size_t>(SendMessage(m_fileListBox, LB_GETTEXTLEN, index, 0));
@@ -625,6 +618,7 @@ namespace PictureBrowser
 			}
 			case WM_DESTROY:
 			{
+				g_mainWindow->OnDestroy();
 				PostQuitMessage(0);
 				break;
 			}
