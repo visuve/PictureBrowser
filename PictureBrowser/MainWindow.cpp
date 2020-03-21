@@ -421,21 +421,25 @@ namespace PictureBrowser
 
 	void MainWindow::OnPaint() const
 	{
-		PAINTSTRUCT ps = { 0 };
-		const HDC hdc = BeginPaint(m_window, &ps);
+		GdiExtensions::ContextWrapper context(m_window);
 
-		Gdiplus::Graphics graphics(hdc);
+		if (!context.IsValid())
+		{
+			return;
+		}
+
+		Gdiplus::Graphics& graphics = context.Get();
 		const Gdiplus::SolidBrush mySolidBrush(Gdiplus::Color::DarkGray);
 		graphics.FillRectangle(&mySolidBrush, m_canvasSize.left, m_canvasSize.top, m_canvasSize.right, m_canvasSize.bottom);
 
-		if (m_image)
+		if (!m_image)
 		{
-			Gdiplus::Rect rect = GdiExtensions::ScaleToCanvasSize(m_canvasSize, m_image->GetWidth(), m_image->GetHeight());
-			GdiExtensions::Zoom(rect, m_zoomPercent);
-			graphics.DrawImage(m_image.get(), rect);
+			return;
 		}
 
-		EndPaint(m_window, &ps);
+		Gdiplus::Rect rect = GdiExtensions::ScaleToCanvasSize(m_canvasSize, m_image->GetWidth(), m_image->GetHeight());
+		GdiExtensions::Zoom(rect, m_zoomPercent);
+		graphics.DrawImage(m_image.get(), rect);
 	}
 
 	void MainWindow::OnDoubleClick()

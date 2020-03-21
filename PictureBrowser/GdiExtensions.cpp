@@ -3,6 +3,43 @@
 
 namespace GdiExtensions
 {
+	Gdiplus::RotateFlipType GetRotation(Gdiplus::Image* image)
+	{
+		const PropertyWrapper prop(image, PropertyTagOrientation);
+
+		if (!prop.IsValid())
+		{
+			return Gdiplus::RotateFlipType::RotateNoneFlipNone;
+		}
+
+		return PropertyToRotateFlipType(prop.Get());
+	}
+
+	ContextWrapper::ContextWrapper(HWND window) :
+		m_window(window),
+		m_deviceContext(BeginPaint(m_window, &m_paintScruct)),
+		m_graphics(m_deviceContext)
+	{
+	}
+
+	ContextWrapper::~ContextWrapper()
+	{
+		if (m_deviceContext)
+		{
+			EndPaint(m_window, &m_paintScruct);
+		}
+	}
+
+	bool ContextWrapper::IsValid() const
+	{
+		return m_deviceContext;
+	}
+
+	Gdiplus::Graphics& ContextWrapper::Get()
+	{
+		return m_graphics;
+	}
+
 	PropertyWrapper::PropertyWrapper(Gdiplus::Image* image, PROPID propertyId)
 	{
 		UINT propertySize = image->GetPropertyItemSize(propertyId);
@@ -92,17 +129,5 @@ namespace GdiExtensions
 		}
 
 		return Gdiplus::RotateFlipType::RotateNoneFlipNone;
-	}
-
-	Gdiplus::RotateFlipType GetRotation(Gdiplus::Image* image)
-	{
-		const PropertyWrapper prop(image, PropertyTagOrientation);
-
-		if (!prop.IsValid())
-		{
-			return Gdiplus::RotateFlipType::RotateNoneFlipNone;
-		}
-
-		return PropertyToRotateFlipType(prop.Get());
 	}
 }
