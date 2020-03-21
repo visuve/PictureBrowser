@@ -40,10 +40,10 @@ namespace PictureBrowser
 		std::wstring m_windowClassName;
 		int m_zoomPercent = 0;
 		HWND m_window = nullptr;
-		HWND m_minusButton = nullptr;
-		HWND m_plusButton = nullptr;
-		HWND m_prevButton = nullptr;
-		HWND m_nextButton = nullptr;
+		HWND m_zoomOutButton = nullptr;
+		HWND m_zoomInButton = nullptr;
+		HWND m_previousPictureButton = nullptr;
+		HWND m_nextPictureButton = nullptr;
 		HWND m_fileListBox = nullptr;
 		HINSTANCE m_instance = nullptr;
 		RECT m_canvasSize = { 0 };

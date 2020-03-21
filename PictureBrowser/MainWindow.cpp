@@ -282,7 +282,7 @@ namespace PictureBrowser
 
 	void MainWindow::OnCreate(HWND window)
 	{
-		m_minusButton = CreateWindow(
+		m_zoomOutButton = CreateWindow(
 			WC_BUTTON,
 			L"-",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
@@ -295,7 +295,7 @@ namespace PictureBrowser
 			m_instance,
 			nullptr);
 
-		m_plusButton = CreateWindow(
+		m_zoomInButton = CreateWindow(
 			WC_BUTTON,
 			L"+",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
@@ -308,7 +308,7 @@ namespace PictureBrowser
 			m_instance,
 			nullptr);
 
-		m_prevButton = CreateWindow(
+		m_previousPictureButton = CreateWindow(
 			WC_BUTTON,
 			L"<",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
@@ -321,7 +321,7 @@ namespace PictureBrowser
 			m_instance,
 			nullptr);
 
-		m_nextButton = CreateWindow(
+		m_nextPictureButton = CreateWindow(
 			WC_BUTTON,
 			L">",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
@@ -358,7 +358,7 @@ namespace PictureBrowser
 			m_canvasSize.left += FileListWidth;
 
 			if (!SetWindowPos(
-				m_minusButton,
+				m_zoomOutButton,
 				HWND_TOP,
 				m_canvasSize.left,
 				m_canvasSize.top,
@@ -370,7 +370,7 @@ namespace PictureBrowser
 			}
 
 			if (!SetWindowPos(
-				m_plusButton,
+				m_zoomInButton,
 				HWND_TOP,
 				m_canvasSize.right - ButtonWidth,
 				m_canvasSize.top,
@@ -382,7 +382,7 @@ namespace PictureBrowser
 			}
 
 			if (!SetWindowPos(
-				m_prevButton,
+				m_previousPictureButton,
 				HWND_TOP,
 				m_canvasSize.left,
 				m_canvasSize.bottom - ButtonHeight,
@@ -394,7 +394,7 @@ namespace PictureBrowser
 			}
 
 			if (!SetWindowPos(
-				m_nextButton,
+				m_nextPictureButton,
 				HWND_TOP,
 				m_canvasSize.right - ButtonWidth,
 				m_canvasSize.bottom - ButtonHeight,
