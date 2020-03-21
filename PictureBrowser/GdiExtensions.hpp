@@ -32,9 +32,7 @@ namespace GdiExtensions
 		Gdiplus::PropertyItem* m_property = nullptr;
 	};
 
-	Gdiplus::Rect ScaleToCanvasSize(const RECT& canvasSize, float imageWidth, float imageHeight);
-	Gdiplus::Rect ScaleToCanvasSize(const RECT& canvasSize, UINT imageWidth, UINT imageHeight);
-	
+	void ScaleAndCenterTo(const Gdiplus::Rect& source, const Gdiplus::SizeF& size, Gdiplus::Rect& dest);
 	void Zoom(Gdiplus::Rect& rect, int zoomPercent);
 
 	Gdiplus::RotateFlipType PropertyToRotateFlipType(Gdiplus::PropertyItem* prop);

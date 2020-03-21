@@ -8,6 +8,7 @@ namespace PictureBrowser
 {
 	MainWindow* g_mainWindow = nullptr;
 
+	constexpr UINT Padding = 5;
 	constexpr UINT ButtonWidth = 50;
 	constexpr UINT ButtonHeight = 25;
 	constexpr UINT FileListWidth = 250;
@@ -24,7 +25,7 @@ namespace PictureBrowser
 		}
 
 		buffer.resize(static_cast<size_t>(length));
-		
+
 		if (LoadString(instance, id, &buffer.front(), length + 1) != length)
 		{
 			return {};
@@ -143,7 +144,7 @@ namespace PictureBrowser
 				if (m_image)
 				{
 					m_image.reset();
-					InvalidateRect(m_window, &m_canvasSize, true);
+					Invalidate(true);
 				}
 				break;
 			}
@@ -274,20 +275,71 @@ namespace PictureBrowser
 			m_image->RotateFlip(rotation);
 		}
 
-		InvalidateRect(m_window, &m_canvasSize, false);
+		Invalidate(false);
 
 		const std::wstring title = m_title + L" - " + path.filename().wstring();
 		SetWindowText(m_window, title.c_str());
 	}
 
+	void MainWindow::RecalculatePaintArea(HWND window)
+	{
+		RECT clientArea = { 0 };
+
+		if (!GetClientRect(window, &clientArea))
+		{
+			clientArea.top = 0;
+			clientArea.left = 0;
+			clientArea.right = 800;
+			clientArea.bottom = 600;
+		}
+
+		m_fileListArea.X = clientArea.left + Padding;
+		m_fileListArea.Y = clientArea.top + Padding;
+		m_fileListArea.Width = FileListWidth;
+		m_fileListArea.Height = clientArea.bottom - Padding;
+
+		m_canvasArea.X = m_fileListArea.Width + Padding * 2;
+		m_canvasArea.Y = clientArea.top + Padding;
+		m_canvasArea.Width = clientArea.right - m_canvasArea.X - Padding;
+		m_canvasArea.Height = clientArea.bottom - Padding * 2;
+	}
+
 	void MainWindow::OnCreate(HWND window)
 	{
+		RecalculatePaintArea(window);
+
+		m_fileListBox = CreateWindow(
+			WC_LISTBOX,
+			L"Filelist...",
+			WS_VISIBLE | WS_CHILD | LBS_STANDARD,
+			m_fileListArea.X,
+			m_fileListArea.Y,
+			m_fileListArea.Width,
+			m_fileListArea.Height,
+			window,
+			reinterpret_cast<HMENU>(IDC_LISTBOX),
+			m_instance,
+			nullptr);
+
+		m_canvas = CreateWindow(
+			WC_STATIC,
+			nullptr,
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			m_canvasArea.X,
+			m_canvasArea.Y,
+			m_canvasArea.Width,
+			m_canvasArea.Height,
+			window,
+			reinterpret_cast<HMENU>(IDC_ZOOM_OUT_BUTTON),
+			m_instance,
+			nullptr);
+
 		m_zoomOutButton = CreateWindow(
 			WC_BUTTON,
 			L"-",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			300,
-			0,
+			m_canvasArea.X,
+			m_canvasArea.Y,
 			ButtonWidth,
 			ButtonHeight,
 			window,
@@ -299,8 +351,8 @@ namespace PictureBrowser
 			WC_BUTTON,
 			L"+",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			450,
-			0,
+			m_canvasArea.Width - ButtonWidth,
+			m_canvasArea.Y,
 			ButtonWidth,
 			ButtonHeight,
 			window,
@@ -312,8 +364,8 @@ namespace PictureBrowser
 			WC_BUTTON,
 			L"<",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			300,
-			710,
+			m_canvasArea.X,
+			m_canvasArea.Height - ButtonHeight,
 			ButtonWidth,
 			ButtonHeight,
 			window,
@@ -325,103 +377,96 @@ namespace PictureBrowser
 			WC_BUTTON,
 			L">",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			450,
-			710,
+			m_canvasArea.Width - ButtonWidth,
+			m_canvasArea.Height - ButtonHeight,
 			ButtonWidth,
 			ButtonHeight,
 			window,
 			reinterpret_cast<HMENU>(IDC_NEXT_BUTTON),
 			m_instance,
 			nullptr);
-
-		m_fileListBox = CreateWindow(
-			WC_LISTBOX,
-			L"Filelist...",
-			WS_VISIBLE | WS_CHILD | LBS_STANDARD,
-			0,
-			0,
-			FileListWidth,
-			800,
-			window,
-			reinterpret_cast<HMENU>(IDC_LISTBOX),
-			m_instance,
-			nullptr);
 	}
 
 	void MainWindow::OnResize()
 	{
-		RECT canvasSize = { 0 };
+		RecalculatePaintArea(m_window);
 
-		if (GetClientRect(m_window, &canvasSize))
+		if (!SetWindowPos(
+			m_fileListBox,
+			HWND_TOP,
+			0,
+			0,
+			m_fileListArea.Width,
+			m_fileListArea.Height,
+			SWP_NOMOVE | SWP_NOZORDER))
 		{
-			std::swap(m_canvasSize, canvasSize);
-			m_canvasSize.left += FileListWidth;
+			LOGD << L"Failed to move file list!";
+		}
 
-			if (!SetWindowPos(
-				m_zoomOutButton,
-				HWND_TOP,
-				m_canvasSize.left,
-				m_canvasSize.top,
-				0,
-				0,
-				SWP_NOSIZE | SWP_NOZORDER))
-			{
-				LOGD << L"Failed move minus button!";
-			}
+		if (!SetWindowPos(
+			m_canvas,
+			HWND_TOP,
+			m_canvasArea.GetLeft(),
+			m_canvasArea.GetTop(),
+			m_canvasArea.Width,
+			m_canvasArea.Height,
+			SWP_NOZORDER))
+		{
+			LOGD << L"Failed move minus button!";
+		}
 
-			if (!SetWindowPos(
-				m_zoomInButton,
-				HWND_TOP,
-				m_canvasSize.right - ButtonWidth,
-				m_canvasSize.top,
-				0,
-				0,
-				SWP_NOSIZE | SWP_NOZORDER))
-			{
-				LOGD << L"Failed move plus button!";
-			}
+		if (!SetWindowPos(
+			m_zoomOutButton,
+			HWND_TOP,
+			m_canvasArea.GetLeft(),
+			m_canvasArea.GetTop(),
+			0,
+			0,
+			SWP_NOSIZE | SWP_NOZORDER))
+		{
+			LOGD << L"Failed move minus button!";
+		}
 
-			if (!SetWindowPos(
-				m_previousPictureButton,
-				HWND_TOP,
-				m_canvasSize.left,
-				m_canvasSize.bottom - ButtonHeight,
-				0,
-				0,
-				SWP_NOSIZE | SWP_NOZORDER))
-			{
-				LOGD << L"Failed move previous button!";
-			}
+		if (!SetWindowPos(
+			m_zoomInButton,
+			HWND_TOP,
+			m_canvasArea.GetRight() - ButtonWidth,
+			m_canvasArea.GetTop(),
+			0,
+			0,
+			SWP_NOSIZE | SWP_NOZORDER))
+		{
+			LOGD << L"Failed move plus button!";
+		}
 
-			if (!SetWindowPos(
-				m_nextPictureButton,
-				HWND_TOP,
-				m_canvasSize.right - ButtonWidth,
-				m_canvasSize.bottom - ButtonHeight,
-				0,
-				0,
-				SWP_NOSIZE | SWP_NOZORDER))
-			{
-				LOGD << L"Failed to move next button!";
-			}
+		if (!SetWindowPos(
+			m_previousPictureButton,
+			HWND_TOP,
+			m_canvasArea.GetLeft(),
+			m_canvasArea.GetBottom() - ButtonHeight,
+			0,
+			0,
+			SWP_NOSIZE | SWP_NOZORDER))
+		{
+			LOGD << L"Failed move previous button!";
+		}
 
-			if (!SetWindowPos(
-				m_fileListBox,
-				HWND_TOP,
-				0,
-				0,
-				FileListWidth,
-				m_canvasSize.bottom, // TODO: there remains some weird gap
-				SWP_NOMOVE | SWP_NOZORDER))
-			{
-				LOGD << L"Failed to move file list!";
-			}
+		if (!SetWindowPos(
+			m_nextPictureButton,
+			HWND_TOP,
+			m_canvasArea.GetRight() - ButtonWidth,
+			m_canvasArea.GetBottom() - ButtonHeight,
+			0,
+			0,
+			SWP_NOSIZE | SWP_NOZORDER))
+		{
+			LOGD << L"Failed to move next button!";
 		}
 	}
 
 	void MainWindow::OnPaint() const
 	{
-		GdiExtensions::ContextWrapper context(m_window);
+		GdiExtensions::ContextWrapper context(m_canvas);
 
 		if (!context.IsValid())
 		{
@@ -429,17 +474,22 @@ namespace PictureBrowser
 		}
 
 		Gdiplus::Graphics& graphics = context.Get();
-		const Gdiplus::SolidBrush mySolidBrush(Gdiplus::Color::DarkGray);
-		graphics.FillRectangle(&mySolidBrush, m_canvasSize.left, m_canvasSize.top, m_canvasSize.right, m_canvasSize.bottom);
+		const Gdiplus::SolidBrush grayBrush(Gdiplus::Color::DarkGray);
+
+		graphics.FillRectangle(&grayBrush, 0, 0, m_canvasArea.Width, m_canvasArea.Height);
 
 		if (!m_image)
 		{
 			return;
 		}
 
-		Gdiplus::Rect rect = GdiExtensions::ScaleToCanvasSize(m_canvasSize, m_image->GetWidth(), m_image->GetHeight());
-		GdiExtensions::Zoom(rect, m_zoomPercent);
-		graphics.DrawImage(m_image.get(), rect);
+		Gdiplus::SizeF size(Gdiplus::REAL(m_image->GetWidth()), Gdiplus::REAL(m_image->GetHeight()));
+		Gdiplus::Rect scaled;
+
+		GdiExtensions::ScaleAndCenterTo(m_canvasArea, size, scaled);
+		GdiExtensions::Zoom(scaled, m_zoomPercent);
+
+		graphics.DrawImage(m_image.get(), scaled);
 	}
 
 	void MainWindow::OnDoubleClick()
@@ -458,14 +508,14 @@ namespace PictureBrowser
 				if (m_zoomPercent > 0)
 				{
 					m_zoomPercent -= 5;
-					InvalidateRect(m_window, &m_canvasSize, true);
+					Invalidate(true);
 				}
 				break;
 			case VK_OEM_PLUS:
 				if (m_zoomPercent < 1000)
 				{
 					m_zoomPercent += 5;
-					InvalidateRect(m_window, &m_canvasSize, false);
+					Invalidate(false);
 				}
 				break;
 		}
@@ -505,7 +555,7 @@ namespace PictureBrowser
 			case VK_RIGHT:
 			case VK_DOWN:
 			{
-				const LONG_PTR lastIndex = count -1;
+				const LONG_PTR lastIndex = count - 1;
 				LONG_PTR current = SendMessage(m_fileListBox, LB_GETCURSEL, 0, 0);
 
 				if (current < lastIndex)
@@ -682,6 +732,19 @@ namespace PictureBrowser
 		LoadPicture(path);
 	}
 
+	void MainWindow::Invalidate(bool erase)
+	{
+		const RECT canvasArea =
+		{
+			m_canvasArea.GetLeft(),
+			m_canvasArea.GetTop(),
+			m_canvasArea.GetRight(),
+			m_canvasArea.GetBottom()
+		};
+
+		InvalidateRect(m_window, &canvasArea, erase);
+	}
+
 	LRESULT CALLBACK MainWindow::WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		switch (message)
@@ -704,6 +767,7 @@ namespace PictureBrowser
 			}
 			case WM_PAINT:
 			{
+				DefWindowProc(window, message, wParam, lParam);
 				g_mainWindow->OnPaint();
 				break;
 			}

@@ -17,6 +17,7 @@ namespace PictureBrowser
 		bool LoadStrings();
 		ATOM Register() const;
 
+		void RecalculatePaintArea(HWND);
 		void OnCreate(HWND);
 		void OnResize();
 		void OnPaint() const;
@@ -32,6 +33,7 @@ namespace PictureBrowser
 		std::filesystem::path ImageFromIndex(LONG_PTR) const;
 		std::filesystem::path SelectedImage() const;
 		void SelectImage(LONG_PTR);
+		void Invalidate(bool erase);
 
 		static LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
 		static INT_PTR CALLBACK GenericOkDialog(HWND, UINT, WPARAM, LPARAM);
@@ -40,13 +42,16 @@ namespace PictureBrowser
 		std::wstring m_windowClassName;
 		int m_zoomPercent = 0;
 		HWND m_window = nullptr;
+		HWND m_canvas = nullptr;
 		HWND m_zoomOutButton = nullptr;
 		HWND m_zoomInButton = nullptr;
 		HWND m_previousPictureButton = nullptr;
 		HWND m_nextPictureButton = nullptr;
 		HWND m_fileListBox = nullptr;
 		HINSTANCE m_instance = nullptr;
-		RECT m_canvasSize = { 0 };
+		Gdiplus::Rect m_fileListArea;
+		Gdiplus::Rect m_canvasArea;
+
 		bool m_maximized = false;
 
 		std::unique_ptr<Gdiplus::Image> m_image;

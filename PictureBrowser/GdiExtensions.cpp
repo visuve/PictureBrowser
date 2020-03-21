@@ -70,26 +70,19 @@ namespace GdiExtensions
 		return m_property;
 	}
 
-	Gdiplus::Rect ScaleToCanvasSize(const RECT& canvasSize, float imageWidth, float imageHeight)
+	void ScaleAndCenterTo(const Gdiplus::Rect& source, const Gdiplus::SizeF& size, Gdiplus::Rect& dest)
 	{
-		float canvasWidth = static_cast<float>(canvasSize.right - canvasSize.left);
-		float canvasHeight = static_cast<float>(canvasSize.bottom - canvasSize.top);
+		float canvasWidth = static_cast<float>(source.Width);
+		float canvasHeight = static_cast<float>(source.Height);
 
 		float aspectRatio = min(
-			canvasWidth / imageWidth,
-			canvasHeight / imageHeight);
+			canvasWidth / size.Width,
+			canvasHeight / size.Height);
 
-		UINT x = UINT(canvasWidth - imageWidth * aspectRatio) / 2;
-		UINT y = UINT(canvasHeight - imageHeight * aspectRatio) / 2;
-		UINT w = UINT(imageWidth * aspectRatio);
-		UINT h = UINT(imageHeight * aspectRatio);
-
-		return Gdiplus::Rect(x + canvasSize.left, y + canvasSize.top, w, h);
-	}
-
-	Gdiplus::Rect ScaleToCanvasSize(const RECT& canvasSize, UINT imageWidth, UINT imageHeight)
-	{
-		return ScaleToCanvasSize(canvasSize, float(imageWidth), float(imageHeight));
+		dest.X = int(canvasWidth - size.Width * aspectRatio) / 2;
+		dest.Y = int(canvasHeight - size.Height * aspectRatio) / 2;
+		dest.Width = int(size.Width * aspectRatio);
+		dest.Height = int(size.Height * aspectRatio);
 	}
 
 	void Zoom(Gdiplus::Rect& rect, int zoomPercent)
