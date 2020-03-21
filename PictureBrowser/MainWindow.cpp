@@ -2,6 +2,7 @@
 #include "Resource.h"
 #include "MainWindow.hpp"
 #include "LogWrap.hpp"
+#include "GdiExtensions.hpp"
 
 namespace PictureBrowser
 {
@@ -30,106 +31,6 @@ namespace PictureBrowser
 		}
 
 		return buffer;
-	}
-
-	Gdiplus::Rect Adjust(const RECT& canvasSize, float imageWidth, float imageHeight)
-	{
-		float canvasWidth = static_cast<float>(canvasSize.right - canvasSize.left);
-		float canvasHeight = static_cast<float>(canvasSize.bottom - canvasSize.top);
-
-		float aspectRatio = min(
-			canvasWidth / imageWidth,
-			canvasHeight / imageHeight);
-
-		UINT x = UINT(canvasWidth - imageWidth * aspectRatio) / 2;
-		UINT y = UINT(canvasHeight - imageHeight * aspectRatio) / 2;
-		UINT w = UINT(imageWidth * aspectRatio);
-		UINT h = UINT(imageHeight * aspectRatio);
-
-		return Gdiplus::Rect(x + canvasSize.left, y + canvasSize.top, w, h);
-	}
-
-	Gdiplus::Rect Adjust(const RECT& canvasSize, UINT imageWidth, UINT imageHeight)
-	{
-		return Adjust(canvasSize, float(imageWidth), float(imageHeight));
-	}
-
-	class PropertyWrapper
-	{
-	public:
-		PropertyWrapper(Gdiplus::Image* image, PROPID propertyId)
-		{
-			UINT propertySize = image->GetPropertyItemSize(propertyId);
-
-			if (propertySize)
-			{
-				m_property = reinterpret_cast<Gdiplus::PropertyItem*>(malloc(propertySize));
-				m_status = image->GetPropertyItem(propertyId, propertySize, m_property);
-			}
-		}
-
-		~PropertyWrapper()
-		{
-			if (m_property)
-			{
-				free(m_property);
-				m_property = nullptr;
-			}
-		}
-
-		bool IsValid() const
-		{
-			return m_property && m_status == Gdiplus::Status::Ok;
-		}
-
-		Gdiplus::PropertyItem* Get() const
-		{
-			return m_property;
-		}
-
-	private:
-		Gdiplus::Status m_status = Gdiplus::Status::PropertyNotFound;
-		Gdiplus::PropertyItem* m_property = nullptr;
-	};
-
-	Gdiplus::RotateFlipType PropertyToRotateFlipType(Gdiplus::PropertyItem* prop)
-	{
-		uint16_t* ptr = reinterpret_cast<uint16_t*>(prop->value);
-		uint16_t value = static_cast<uint16_t>(*ptr);
-
-		switch (value)
-		{
-			case 1:
-				return Gdiplus::RotateFlipType::RotateNoneFlipNone;
-			case 2:
-				return Gdiplus::RotateFlipType::RotateNoneFlipX;
-			case 3:
-				return Gdiplus::RotateFlipType::Rotate180FlipNone;
-			case 4:
-				return Gdiplus::RotateFlipType::Rotate180FlipX;
-			case 5:
-				return Gdiplus::RotateFlipType::Rotate90FlipX;
-			case 6:
-				return Gdiplus::RotateFlipType::Rotate90FlipNone;
-			case 7:
-				return Gdiplus::RotateFlipType::Rotate270FlipX;
-			case 8:
-				return Gdiplus::RotateFlipType::Rotate270FlipNone;
-		}
-
-		return Gdiplus::RotateFlipType::RotateNoneFlipNone;
-	}
-
-	Gdiplus::RotateFlipType GetRotation(Gdiplus::Image* image)
-	{
-		const PropertyWrapper prop(image, PropertyTagOrientation);
-
-		if (!prop.IsValid())
-		{
-			return Gdiplus::RotateFlipType::RotateNoneFlipNone;
-		}
-
-		return PropertyToRotateFlipType(prop.Get());
 	}
 
 	MainWindow::MainWindow()
@@ -365,7 +266,7 @@ namespace PictureBrowser
 			return;
 		}
 
-		auto rotation = GetRotation(m_image.get());
+		auto rotation = GdiExtensions::GetRotation(m_image.get());
 
 		if (rotation != Gdiplus::RotateFlipType::RotateNoneFlipNone)
 		{
@@ -478,7 +379,7 @@ namespace PictureBrowser
 
 		if (m_image)
 		{
-			const Gdiplus::Rect rect = Adjust(m_canvasSize, m_image->GetWidth(), m_image->GetHeight());
+			const Gdiplus::Rect rect = GdiExtensions::ScaleToCanvasSize(m_canvasSize, m_image->GetWidth(), m_image->GetHeight());
 			graphics.DrawImage(m_image.get(), rect);
 		}
 

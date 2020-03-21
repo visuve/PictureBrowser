@@ -15,12 +15,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="GdiExtensions.hpp" />
     <ClInclude Include="LogWrap.hpp" />
     <ClInclude Include="PCH.hpp" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="MainWindow.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GdiExtensions.cpp" />
     <ClCompile Include="LogWrap.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Main.cpp" />
