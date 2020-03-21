@@ -9,7 +9,7 @@ namespace PictureBrowser
 		~MainWindow();
 
 		bool InitInstance(HINSTANCE, int);
-		void Display(const std::filesystem::path&);
+		void Open(const std::filesystem::path&);
 
 	private:
 		std::filesystem::file_type LoadFileList(const std::filesystem::path&);

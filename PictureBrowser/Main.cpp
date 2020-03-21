@@ -67,7 +67,7 @@ int APIENTRY wWinMain(
 
 	if (commandLine && commandLine[0] != '\0')
 	{
-		mainWindow.Display(TrimQuotes(commandLine));
+		mainWindow.Open(TrimQuotes(commandLine));
 	}
 
 	int run = 0;

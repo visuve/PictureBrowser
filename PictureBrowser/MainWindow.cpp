@@ -124,7 +124,7 @@ namespace PictureBrowser
 		return true;
 	}
 
-	void MainWindow::Display(const std::filesystem::path& path)
+	void MainWindow::Open(const std::filesystem::path& path)
 	{
 		switch (LoadFileList(path))
 		{
@@ -582,7 +582,7 @@ namespace PictureBrowser
 
 			if (DragQueryFile(dropInfo, 0, &path.front(), required + 1))
 			{
-				Display(path);
+				Open(path);
 			}
 		}
 
@@ -608,7 +608,7 @@ namespace PictureBrowser
 
 		if (GetOpenFileName(&openFile))
 		{
-			Display(openFile.lpstrFile);
+			Open(openFile.lpstrFile);
 		}
 		else
 		{
