@@ -130,7 +130,7 @@ namespace PictureBrowser
 		{
 			case std::filesystem::file_type::regular:
 			{
-				ShowImage(path);
+				LoadPicture(path);
 				break;
 			}
 			case std::filesystem::file_type::directory:
@@ -236,7 +236,7 @@ namespace PictureBrowser
 		return status;
 	}
 
-	void MainWindow::ShowImage(const std::filesystem::path& path)
+	void MainWindow::LoadPicture(const std::filesystem::path& path)
 	{
 		if (!std::filesystem::is_regular_file(path))
 		{
@@ -252,6 +252,7 @@ namespace PictureBrowser
 		}
 
 		m_image.reset(Gdiplus::Image::FromFile(path.c_str()));
+		m_zoomPercent = 0;
 
 		if (!m_image)
 		{
@@ -266,7 +267,7 @@ namespace PictureBrowser
 			return;
 		}
 
-		auto rotation = GdiExtensions::GetRotation(m_image.get());
+		const Gdiplus::RotateFlipType rotation = GdiExtensions::GetRotation(m_image.get());
 
 		if (rotation != Gdiplus::RotateFlipType::RotateNoneFlipNone)
 		{
@@ -281,6 +282,32 @@ namespace PictureBrowser
 
 	void MainWindow::OnCreate(HWND window)
 	{
+		m_minusButton = CreateWindow(
+			WC_BUTTON,
+			L"-",
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			300,
+			0,
+			ButtonWidth,
+			ButtonHeight,
+			window,
+			reinterpret_cast<HMENU>(IDC_ZOOM_OUT_BUTTON),
+			m_instance,
+			nullptr);
+
+		m_plusButton = CreateWindow(
+			WC_BUTTON,
+			L"+",
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			450,
+			0,
+			ButtonWidth,
+			ButtonHeight,
+			window,
+			reinterpret_cast<HMENU>(IDC_ZOOM_IN_BUTTON),
+			m_instance,
+			nullptr);
+
 		m_prevButton = CreateWindow(
 			WC_BUTTON,
 			L"<",
@@ -331,6 +358,30 @@ namespace PictureBrowser
 			m_canvasSize.left += FileListWidth;
 
 			if (!SetWindowPos(
+				m_minusButton,
+				HWND_TOP,
+				m_canvasSize.left,
+				m_canvasSize.top,
+				0,
+				0,
+				SWP_NOSIZE | SWP_NOZORDER))
+			{
+				LOGD << L"Failed move minus button!";
+			}
+
+			if (!SetWindowPos(
+				m_plusButton,
+				HWND_TOP,
+				m_canvasSize.right - ButtonWidth,
+				m_canvasSize.top,
+				0,
+				0,
+				SWP_NOSIZE | SWP_NOZORDER))
+			{
+				LOGD << L"Failed move plus button!";
+			}
+
+			if (!SetWindowPos(
 				m_prevButton,
 				HWND_TOP,
 				m_canvasSize.left,
@@ -379,7 +430,8 @@ namespace PictureBrowser
 
 		if (m_image)
 		{
-			const Gdiplus::Rect rect = GdiExtensions::ScaleToCanvasSize(m_canvasSize, m_image->GetWidth(), m_image->GetHeight());
+			Gdiplus::Rect rect = GdiExtensions::ScaleToCanvasSize(m_canvasSize, m_image->GetWidth(), m_image->GetHeight());
+			GdiExtensions::Zoom(rect, m_zoomPercent);
 			graphics.DrawImage(m_image.get(), rect);
 		}
 
@@ -392,6 +444,29 @@ namespace PictureBrowser
 		{
 			m_maximized = !m_maximized;
 		}
+	}
+
+	void MainWindow::OnZoom(WPARAM wParam)
+	{
+		switch (wParam)
+		{
+			case VK_OEM_MINUS:
+				if (m_zoomPercent > 0)
+				{
+					m_zoomPercent -= 5;
+					InvalidateRect(m_window, &m_canvasSize, true);
+				}
+				break;
+			case VK_OEM_PLUS:
+				if (m_zoomPercent < 1000)
+				{
+					m_zoomPercent += 5;
+					InvalidateRect(m_window, &m_canvasSize, false);
+				}
+				break;
+		}
+
+		LOGD << m_zoomPercent;
 	}
 
 	void MainWindow::OnKeyUp(WPARAM wParam)
@@ -461,6 +536,16 @@ namespace PictureBrowser
 			case IDM_OPEN:
 			{
 				OnOpenMenu();
+				break;
+			}
+			case IDC_ZOOM_OUT_BUTTON:
+			{
+				OnZoom(VK_OEM_MINUS);
+				break;
+			}
+			case IDC_ZOOM_IN_BUTTON:
+			{
+				OnZoom(VK_OEM_PLUS);
 				break;
 			}
 			case IDC_PREV_BUTTON:
@@ -540,7 +625,7 @@ namespace PictureBrowser
 			return;
 		}
 
-		ShowImage(path);
+		LoadPicture(path);
 	}
 
 	void MainWindow::OnDestroy()
@@ -590,7 +675,7 @@ namespace PictureBrowser
 			return;
 		}
 
-		ShowImage(path);
+		LoadPicture(path);
 	}
 
 	LRESULT CALLBACK MainWindow::WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam)

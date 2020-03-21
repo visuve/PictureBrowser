@@ -55,6 +55,17 @@ namespace GdiExtensions
 		return ScaleToCanvasSize(canvasSize, float(imageWidth), float(imageHeight));
 	}
 
+	void Zoom(Gdiplus::Rect& rect, int zoomPercent)
+	{
+		if (zoomPercent > 0)
+		{
+			rect.X -= int(rect.Width * (zoomPercent / 200.0));
+			rect.Y -= int(rect.Height * (zoomPercent / 200.0));
+			rect.Width += int(rect.Width * (zoomPercent / 100.0));
+			rect.Height += int(rect.Height * (zoomPercent / 100.0));
+		}
+	}
+
 	Gdiplus::RotateFlipType PropertyToRotateFlipType(Gdiplus::PropertyItem* prop)
 	{
 		uint16_t* ptr = reinterpret_cast<uint16_t*>(prop->value);

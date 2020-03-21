@@ -4,6 +4,7 @@ namespace GdiExtensions
 {
 	Gdiplus::Rect ScaleToCanvasSize(const RECT& canvasSize, float imageWidth, float imageHeight);
 	Gdiplus::Rect ScaleToCanvasSize(const RECT& canvasSize, UINT imageWidth, UINT imageHeight);
+	void Zoom(Gdiplus::Rect& rect, int zoomPercent);
 
 	class PropertyWrapper
 	{

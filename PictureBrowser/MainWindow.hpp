@@ -13,7 +13,7 @@ namespace PictureBrowser
 
 	private:
 		std::filesystem::file_type LoadFileList(const std::filesystem::path&);
-		void ShowImage(const std::filesystem::path&);
+		void LoadPicture(const std::filesystem::path&);
 		bool LoadStrings();
 		ATOM Register() const;
 
@@ -21,6 +21,7 @@ namespace PictureBrowser
 		void OnResize();
 		void OnPaint() const;
 		void OnDoubleClick();
+		void OnZoom(WPARAM);
 		void OnKeyUp(WPARAM);
 		void OnCommand(WPARAM);
 		void OnFileDrop(WPARAM);
@@ -37,7 +38,10 @@ namespace PictureBrowser
 
 		std::wstring m_title;
 		std::wstring m_windowClassName;
+		int m_zoomPercent = 0;
 		HWND m_window = nullptr;
+		HWND m_minusButton = nullptr;
+		HWND m_plusButton = nullptr;
 		HWND m_prevButton = nullptr;
 		HWND m_nextButton = nullptr;
 		HWND m_fileListBox = nullptr;
