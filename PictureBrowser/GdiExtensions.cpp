@@ -35,7 +35,7 @@ namespace GdiExtensions
 		return m_deviceContext;
 	}
 
-	Gdiplus::Graphics& ContextWrapper::Get()
+	Gdiplus::Graphics& ContextWrapper::Graphics()
 	{
 		return m_graphics;
 	}

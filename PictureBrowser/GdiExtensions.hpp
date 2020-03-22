@@ -9,7 +9,7 @@ namespace GdiExtensions
 		~ContextWrapper();
 
 		bool IsValid() const;
-		Gdiplus::Graphics& Get();
+		Gdiplus::Graphics& Graphics();
 
 	private:
 		const HWND m_window;

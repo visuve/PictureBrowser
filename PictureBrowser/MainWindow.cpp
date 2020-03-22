@@ -475,25 +475,24 @@ namespace PictureBrowser
 			return;
 		}
 
-		Gdiplus::Graphics& graphics = context.Get();
+		Gdiplus::Bitmap bitmap(m_canvasArea.Width, m_canvasArea.Height);
+		Gdiplus::Graphics buffer(&bitmap);
+
 		const Gdiplus::SolidBrush grayBrush(Gdiplus::Color::DarkGray);
+		buffer.FillRectangle(&grayBrush, 0, 0, m_canvasArea.Width, m_canvasArea.Height);
 
-		graphics.FillRectangle(&grayBrush, 0, 0, m_canvasArea.Width, m_canvasArea.Height);
-
-		if (!m_image)
+		if (m_image)
 		{
-			return;
+			Gdiplus::SizeF size(Gdiplus::REAL(m_image->GetWidth()), Gdiplus::REAL(m_image->GetHeight()));
+			Gdiplus::Rect scaled;
+
+			GdiExtensions::ScaleAndCenterTo(m_canvasArea, size, scaled);
+			GdiExtensions::Zoom(scaled, m_zoomPercent);
+			scaled.Offset(m_mouseDragOffset);
+			buffer.DrawImage(m_image.get(), scaled);
 		}
 
-		Gdiplus::SizeF size(Gdiplus::REAL(m_image->GetWidth()), Gdiplus::REAL(m_image->GetHeight()));
-		Gdiplus::Rect scaled;
-
-		GdiExtensions::ScaleAndCenterTo(m_canvasArea, size, scaled);
-		GdiExtensions::Zoom(scaled, m_zoomPercent);
-
-		scaled.Offset(m_mouseDragOffset);
-
-		graphics.DrawImage(m_image.get(), scaled);
+		context.Graphics().DrawImage(&bitmap, 0, 0, m_canvasArea.Width, m_canvasArea.Height);
 	}
 
 	void MainWindow::OnLeftMouseDown(LPARAM lParam)
