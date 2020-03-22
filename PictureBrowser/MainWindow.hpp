@@ -21,6 +21,10 @@ namespace PictureBrowser
 		void OnCreate(HWND);
 		void OnResize();
 		void OnPaint() const;
+		void OnLeftMouseDown(LPARAM);
+		void OnMouseMove(LPARAM);
+		void OnLeftMouseUp(LPARAM);
+		bool UpdateMousePositionOnCanvas(LPARAM);
 		void OnDoubleClick();
 		void OnZoom(WPARAM);
 		void OnKeyUp(WPARAM);
@@ -33,7 +37,7 @@ namespace PictureBrowser
 		std::filesystem::path ImageFromIndex(LONG_PTR) const;
 		std::filesystem::path SelectedImage() const;
 		void SelectImage(LONG_PTR);
-		void Invalidate(bool erase);
+		void Invalidate(bool erase = false);
 
 		static LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
 		static INT_PTR CALLBACK GenericOkDialog(HWND, UINT, WPARAM, LPARAM);
@@ -52,7 +56,11 @@ namespace PictureBrowser
 		Gdiplus::Rect m_fileListArea;
 		Gdiplus::Rect m_canvasArea;
 
+		Gdiplus::Point m_mouseDragStart;
+		Gdiplus::Point m_mouseDragOffset;
+
 		bool m_maximized = false;
+		bool m_isDragging = false;
 
 		std::unique_ptr<Gdiplus::Image> m_image;
 	};

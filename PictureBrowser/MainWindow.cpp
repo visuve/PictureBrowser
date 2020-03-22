@@ -144,7 +144,7 @@ namespace PictureBrowser
 				if (m_image)
 				{
 					m_image.reset();
-					Invalidate(true);
+					Invalidate();
 				}
 				break;
 			}
@@ -252,8 +252,10 @@ namespace PictureBrowser
 			return;
 		}
 
-		m_image.reset(Gdiplus::Image::FromFile(path.c_str()));
 		m_zoomPercent = 0;
+		m_mouseDragStart = { 0, 0 };
+		m_mouseDragOffset = { 0, 0 };
+		m_image.reset(Gdiplus::Image::FromFile(path.c_str()));
 
 		if (!m_image)
 		{
@@ -275,7 +277,7 @@ namespace PictureBrowser
 			m_image->RotateFlip(rotation);
 		}
 
-		Invalidate(false);
+		Invalidate();
 
 		const std::wstring title = m_title + L" - " + path.filename().wstring();
 		SetWindowText(m_window, title.c_str());
@@ -489,7 +491,59 @@ namespace PictureBrowser
 		GdiExtensions::ScaleAndCenterTo(m_canvasArea, size, scaled);
 		GdiExtensions::Zoom(scaled, m_zoomPercent);
 
+		scaled.Offset(m_mouseDragOffset);
+
 		graphics.DrawImage(m_image.get(), scaled);
+	}
+
+	void MainWindow::OnLeftMouseDown(LPARAM lParam)
+	{
+		if (!m_image)
+		{
+			return;
+		}
+
+		const POINT point = { LOWORD(lParam), HIWORD(lParam) };
+		m_isDragging = DragDetect(m_canvas, point);
+
+		if (!m_isDragging)
+		{
+			return;
+		}
+
+		m_mouseDragStart.X = point.x - m_mouseDragOffset.X;
+		m_mouseDragStart.Y = point.y -m_mouseDragOffset.Y;
+	}
+
+	void MainWindow::OnMouseMove(LPARAM lParam)
+	{
+		if (!m_isDragging)
+		{
+			return;
+		}
+
+		if (UpdateMousePositionOnCanvas(lParam))
+		{
+			Invalidate();
+		}
+	}
+
+	void MainWindow::OnLeftMouseUp(LPARAM)
+	{
+		m_isDragging = false;
+	}
+
+	bool MainWindow::UpdateMousePositionOnCanvas(LPARAM lParam)
+	{
+		Gdiplus::Point distance(LOWORD(lParam) - m_mouseDragStart.X, HIWORD(lParam) - m_mouseDragStart.Y);
+
+		if (distance.Equals(m_mouseDragOffset))
+		{
+			return false;
+		}
+
+		std::swap(m_mouseDragOffset, distance);
+		return true;
 	}
 
 	void MainWindow::OnDoubleClick()
@@ -508,14 +562,22 @@ namespace PictureBrowser
 				if (m_zoomPercent > 0)
 				{
 					m_zoomPercent -= 5;
-					Invalidate(true);
+					m_mouseDragStart.X = int(m_mouseDragStart.X * 0.95f);
+					m_mouseDragStart.Y = int(m_mouseDragStart.Y * 0.95f);
+					m_mouseDragOffset.X = int(m_mouseDragOffset.X * 0.95f);
+					m_mouseDragOffset.Y = int(m_mouseDragOffset.Y * 0.95f);
+					Invalidate();
 				}
 				break;
 			case VK_OEM_PLUS:
 				if (m_zoomPercent < 1000)
 				{
 					m_zoomPercent += 5;
-					Invalidate(false);
+					m_mouseDragStart.X = int(m_mouseDragStart.X * 1.05f);
+					m_mouseDragStart.Y = int(m_mouseDragStart.Y * 1.05f);
+					m_mouseDragOffset.X = int(m_mouseDragOffset.X * 1.05f);
+					m_mouseDragOffset.Y = int(m_mouseDragOffset.Y * 1.05f);
+					Invalidate();
 				}
 				break;
 		}
@@ -780,6 +842,21 @@ namespace PictureBrowser
 			case WM_RBUTTONDBLCLK:
 			{
 				g_mainWindow->OnDoubleClick();
+				break;
+			}
+			case WM_LBUTTONDOWN:
+			{
+				g_mainWindow->OnLeftMouseDown(lParam);
+				break;
+			}
+			case WM_MOUSEMOVE:
+			{
+				g_mainWindow->OnMouseMove(lParam);
+				break;
+			}
+			case WM_LBUTTONUP:
+			{
+				g_mainWindow->OnLeftMouseUp(lParam);
 				break;
 			}
 			case WM_COMMAND:
