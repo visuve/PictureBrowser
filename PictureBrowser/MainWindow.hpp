@@ -55,6 +55,7 @@ namespace PictureBrowser
 		HWND m_fileListBox = nullptr;
 		HINSTANCE m_instance = nullptr;
 		Gdiplus::Rect m_fileListArea;
+		Gdiplus::Rect m_mainArea;
 		Gdiplus::Rect m_canvasArea;
 
 		Gdiplus::Point m_mouseDragStart;

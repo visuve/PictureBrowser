@@ -31,6 +31,8 @@ public:
 
 	LogWrap& operator << (const std::wstring& value);
 
+	LogWrap& operator << (const Gdiplus::Rect& rect);
+
 private:
 	std::wstring m_buffer;
 };

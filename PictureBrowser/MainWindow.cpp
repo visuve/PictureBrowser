@@ -289,6 +289,7 @@ namespace PictureBrowser
 
 		if (!GetClientRect(window, &clientArea))
 		{
+			LOGD << L"GetClientRect failed!";
 			clientArea.top = 0;
 			clientArea.left = 0;
 			clientArea.right = 800;
@@ -300,10 +301,19 @@ namespace PictureBrowser
 		m_fileListArea.Width = FileListWidth;
 		m_fileListArea.Height = clientArea.bottom - Padding;
 
-		m_canvasArea.X = m_fileListArea.Width + Padding * 2;
-		m_canvasArea.Y = clientArea.top + Padding;
-		m_canvasArea.Width = clientArea.right - m_canvasArea.X - Padding;
-		m_canvasArea.Height = clientArea.bottom - Padding * 2;
+		m_mainArea.X = m_fileListArea.GetRight() + Padding;
+		m_mainArea.Y = clientArea.top + Padding;
+		m_mainArea.Width = clientArea.right - m_fileListArea.GetRight() - Padding * 2;
+		m_mainArea.Height = clientArea.bottom - Padding * 2;
+
+		m_canvasArea.X = m_mainArea.X;
+		m_canvasArea.Y = m_mainArea.Y + Padding + ButtonHeight;
+		m_canvasArea.Width = m_mainArea.Width;
+		m_canvasArea.Height = m_mainArea.Height - Padding * 2 - ButtonHeight * 2;
+
+		LOGD << L"m_fileListArea: " << m_fileListArea;
+		LOGD << L"m_mainArea: " << m_mainArea;
+		LOGD << L"m_canvasArea: " << m_canvasArea;
 	}
 
 	void MainWindow::OnCreate(HWND window)
@@ -340,8 +350,8 @@ namespace PictureBrowser
 			WC_BUTTON,
 			L"-",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			m_canvasArea.X,
-			m_canvasArea.Y,
+			m_mainArea.X,
+			m_mainArea.Y,
 			ButtonWidth,
 			ButtonHeight,
 			window,
@@ -353,8 +363,8 @@ namespace PictureBrowser
 			WC_BUTTON,
 			L"+",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			m_canvasArea.Width - ButtonWidth,
-			m_canvasArea.Y,
+			m_mainArea.Width - ButtonWidth,
+			m_mainArea.Y,
 			ButtonWidth,
 			ButtonHeight,
 			window,
@@ -366,8 +376,8 @@ namespace PictureBrowser
 			WC_BUTTON,
 			L"<",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			m_canvasArea.X,
-			m_canvasArea.Height - ButtonHeight,
+			m_mainArea.X,
+			m_mainArea.Height - ButtonHeight,
 			ButtonWidth,
 			ButtonHeight,
 			window,
@@ -379,8 +389,8 @@ namespace PictureBrowser
 			WC_BUTTON,
 			L">",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			m_canvasArea.Width - ButtonWidth,
-			m_canvasArea.Height - ButtonHeight,
+			m_mainArea.Width - ButtonWidth,
+			m_mainArea.Height - ButtonHeight,
 			ButtonWidth,
 			ButtonHeight,
 			window,
@@ -420,8 +430,8 @@ namespace PictureBrowser
 		if (!SetWindowPos(
 			m_zoomOutButton,
 			HWND_TOP,
-			m_canvasArea.GetLeft(),
-			m_canvasArea.GetTop(),
+			m_mainArea.GetLeft(),
+			m_mainArea.GetTop(),
 			0,
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
@@ -432,8 +442,8 @@ namespace PictureBrowser
 		if (!SetWindowPos(
 			m_zoomInButton,
 			HWND_TOP,
-			m_canvasArea.GetRight() - ButtonWidth,
-			m_canvasArea.GetTop(),
+			m_mainArea.GetRight() - ButtonWidth,
+			m_mainArea.GetTop(),
 			0,
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
@@ -444,8 +454,8 @@ namespace PictureBrowser
 		if (!SetWindowPos(
 			m_previousPictureButton,
 			HWND_TOP,
-			m_canvasArea.GetLeft(),
-			m_canvasArea.GetBottom() - ButtonHeight,
+			m_mainArea.GetLeft(),
+			m_mainArea.GetBottom() - ButtonHeight,
 			0,
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
@@ -456,8 +466,8 @@ namespace PictureBrowser
 		if (!SetWindowPos(
 			m_nextPictureButton,
 			HWND_TOP,
-			m_canvasArea.GetRight() - ButtonWidth,
-			m_canvasArea.GetBottom() - ButtonHeight,
+			m_mainArea.GetRight() - ButtonWidth,
+			m_mainArea.GetBottom() - ButtonHeight,
 			0,
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
