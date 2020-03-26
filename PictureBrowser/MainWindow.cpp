@@ -474,6 +474,8 @@ namespace PictureBrowser
 		{
 			LOGD << L"Failed to move next button!";
 		}
+
+		Invalidate();
 	}
 
 	void MainWindow::OnErase() const
