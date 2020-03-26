@@ -489,7 +489,16 @@ namespace PictureBrowser
 			GdiExtensions::ScaleAndCenterTo(m_canvasArea, size, scaled);
 			GdiExtensions::Zoom(scaled, m_zoomPercent);
 			scaled.Offset(m_mouseDragOffset);
-			buffer.DrawImage(m_image.get(), scaled);
+
+			if (m_isDragging)
+			{
+				const Gdiplus::Pen pen(Gdiplus::Color::DimGray, 2.0f);
+				buffer.DrawRectangle(&pen, scaled);
+			}
+			else
+			{
+				buffer.DrawImage(m_image.get(), scaled);
+			}
 		}
 
 		context.Graphics().DrawImage(&bitmap, 0, 0, m_canvasArea.Width, m_canvasArea.Height);
@@ -530,6 +539,7 @@ namespace PictureBrowser
 	void MainWindow::OnLeftMouseUp(LPARAM)
 	{
 		m_isDragging = false;
+		Invalidate();
 	}
 
 	bool MainWindow::UpdateMousePositionOnCanvas(LPARAM lParam)
