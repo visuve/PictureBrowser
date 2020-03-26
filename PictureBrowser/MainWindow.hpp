@@ -20,6 +20,7 @@ namespace PictureBrowser
 		void RecalculatePaintArea(HWND);
 		void OnCreate(HWND);
 		void OnResize();
+		void OnErase() const;
 		void OnPaint() const;
 		void OnLeftMouseDown(LPARAM);
 		void OnMouseMove(LPARAM);

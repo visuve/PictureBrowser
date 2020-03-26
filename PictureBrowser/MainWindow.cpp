@@ -466,6 +466,22 @@ namespace PictureBrowser
 		}
 	}
 
+	void MainWindow::OnErase() const
+	{
+		RECT clientArea = { 0 };
+
+		if (!GetWindowRect(m_window, &clientArea))
+		{
+			LOGD << L"GetWindowRect failed!";
+			return;
+		}
+
+		const Gdiplus::Rect area(0, 0, clientArea.right - clientArea.left, clientArea.bottom - clientArea.top);
+		GdiExtensions::ContextWrapper context(m_window);
+		const Gdiplus::SolidBrush grayBrush(Gdiplus::Color::LightGray);
+		context.Graphics().FillRectangle(&grayBrush, area);
+	}
+
 	void MainWindow::OnPaint() const
 	{
 		GdiExtensions::ContextWrapper context(m_canvas);
@@ -492,7 +508,7 @@ namespace PictureBrowser
 
 			if (m_isDragging)
 			{
-				const Gdiplus::Pen pen(Gdiplus::Color::DimGray, 2.0f);
+				const Gdiplus::Pen pen(Gdiplus::Color::Gray, 2.0f);
 				buffer.DrawRectangle(&pen, scaled);
 			}
 			else
@@ -813,7 +829,10 @@ namespace PictureBrowser
 			m_canvasArea.GetBottom()
 		};
 
-		InvalidateRect(m_window, &canvasArea, erase);
+		if (!InvalidateRect(m_window, &canvasArea, erase))
+		{
+			LOGD << L"InvalidateRect failed!";
+		}
 	}
 
 	LRESULT CALLBACK MainWindow::WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
@@ -834,6 +853,11 @@ namespace PictureBrowser
 			case WM_SIZE:
 			{
 				g_mainWindow->OnResize();
+				break;
+			}
+			case WM_ERASEBKGND:
+			{
+				g_mainWindow->OnErase();
 				break;
 			}
 			case WM_PAINT:
