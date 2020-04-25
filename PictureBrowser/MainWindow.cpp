@@ -153,7 +153,7 @@ namespace PictureBrowser
 
 	std::filesystem::file_type MainWindow::LoadFileList(const std::filesystem::path& path)
 	{
-		std::wstring filter = L"\\*.jpg";
+		std::wstring filter = L"\\*.??g";
 
 		const std::filesystem::file_type status = std::filesystem::status(path).type();
 
@@ -175,10 +175,11 @@ namespace PictureBrowser
 			}
 			case std::filesystem::file_type::regular:
 			{
-				if (_wcsicmp(path.extension().c_str(), L".jpg") != 0)
+				if (_wcsicmp(path.extension().c_str(), L".jpg") != 0 && 
+					_wcsicmp(path.extension().c_str(), L".png") != 0)
 				{
 					MessageBox(m_window,
-						L"Only the picture format of the future is supported.",
+						L"Only JPG and PNG are supported!",
 						L"Unsupported file format!",
 						MB_OK | MB_ICONINFORMATION);
 
@@ -218,7 +219,7 @@ namespace PictureBrowser
 		if (!count)
 		{
 			const std::wstring message =
-				L"The path you have entered does not appear to have JPG files!\n" + path.wstring();
+				L"The path you have entered does not appear to have JPG or PNG files!\n" + path.wstring();
 
 			MessageBox(
 				m_window,
@@ -752,7 +753,7 @@ namespace PictureBrowser
 		openFile.hwndOwner = m_window;
 		openFile.lpstrFile = filePath;
 		openFile.nMaxFile = 0xFFF;
-		openFile.lpstrFilter = L"Picture format of the future (*.jpg)\0*.jpg\0";
+		openFile.lpstrFilter = L"Joint Photographic Experts Group (*.jpg)\0*.jpg\0Portable Network Graphics (*.png)\0*.png\0";
 		openFile.nFilterIndex = 1;
 		openFile.lpstrFileTitle = nullptr;
 		openFile.nMaxFileTitle = 0;
