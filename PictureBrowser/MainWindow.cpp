@@ -153,7 +153,8 @@ namespace PictureBrowser
 
 	std::filesystem::file_type MainWindow::LoadFileList(const std::filesystem::path& path)
 	{
-		std::wstring filter = L"\\*.??g";
+		std::wstring jpgFilter = L"\\*.jpg";
+		std::wstring pngFilter = L"\\*.png";
 
 		const std::filesystem::file_type status = std::filesystem::status(path).type();
 
@@ -186,12 +187,16 @@ namespace PictureBrowser
 					return std::filesystem::file_type::none;
 				}
 
-				filter.insert(0, path.parent_path().wstring());
+				jpgFilter.insert(0, path.parent_path().wstring());
+				pngFilter.insert(0, path.parent_path().wstring());
+				m_currentDirectory = path.parent_path();
 				break;
 			}
 			case std::filesystem::file_type::directory:
 			{
-				filter.insert(0, path.wstring());
+				jpgFilter.insert(0, path.wstring());
+				pngFilter.insert(0, path.wstring());
+				m_currentDirectory = path;
 				break;
 			}
 			default:
@@ -208,10 +213,19 @@ namespace PictureBrowser
 			}
 		}
 
-		if (!DlgDirList(m_window, &filter.front(), IDC_LISTBOX, 0, DDL_READWRITE))
+		if (!SendMessage(m_fileListBox, LB_RESETCONTENT, 0, 0))
 		{
-			LOGD << L"DlgDirList failed with filter: " << filter;
-			return std::filesystem::file_type::none;
+			LOGD << L"Failed to send message LB_RESETCONTENT!";
+		}
+
+		if (!SendMessage(m_fileListBox, LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(jpgFilter.c_str())))
+		{
+			LOGD << L"Failed to send JPG filter update!";
+		}
+
+		if (!SendMessage(m_fileListBox, LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(pngFilter.c_str())))
+		{
+			LOGD << L"Failed to send PNG filter update!";
 		}
 
 		const LONG_PTR count = SendMessage(m_fileListBox, LB_GETCOUNT, 0, 0);
@@ -792,13 +806,13 @@ namespace PictureBrowser
 		const size_t length = static_cast<size_t>(SendMessage(m_fileListBox, LB_GETTEXTLEN, index, 0));
 		std::wstring buffer(length, '\0');
 
-		if (SendMessage(m_fileListBox, LB_GETTEXT, index, reinterpret_cast<LPARAM>(&buffer.front())) != length)
+		if (SendMessage(m_fileListBox, LB_GETTEXT, index, reinterpret_cast<LPARAM>(buffer.data())) != length)
 		{
 			LOGD << L"Failed to send LB_GETTEXT!";
 			return {};
 		}
 
-		return buffer;
+		return m_currentDirectory / buffer;
 	}
 
 	std::filesystem::path MainWindow::SelectedImage() const

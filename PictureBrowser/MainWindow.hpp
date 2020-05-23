@@ -65,5 +65,6 @@ namespace PictureBrowser
 		bool m_isDragging = false;
 
 		std::unique_ptr<Gdiplus::Image> m_image;
+		std::filesystem::path m_currentDirectory;
 	};
 }
