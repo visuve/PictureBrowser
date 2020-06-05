@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ImageCache.hpp"
+
 namespace PictureBrowser
 {
 	class MainWindow
@@ -64,7 +66,8 @@ namespace PictureBrowser
 		bool m_maximized = false;
 		bool m_isDragging = false;
 
-		std::unique_ptr<Gdiplus::Image> m_image;
+		ImageCache m_imageCache;
+		Gdiplus::Image* m_currentImage;
 		std::filesystem::path m_currentDirectory;
 	};
 }

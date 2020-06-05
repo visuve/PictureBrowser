@@ -127,6 +127,9 @@ namespace PictureBrowser
 
 	void MainWindow::Open(const std::filesystem::path& path)
 	{
+		m_imageCache.Clear();
+		m_currentImage = nullptr;
+
 		switch (LoadFileList(path))
 		{
 			case std::filesystem::file_type::regular:
@@ -141,11 +144,7 @@ namespace PictureBrowser
 			}
 			default:
 			{
-				if (m_image)
-				{
-					m_image.reset();
-					Invalidate();
-				}
+				Invalidate();
 				break;
 			}
 		}
@@ -176,7 +175,7 @@ namespace PictureBrowser
 			}
 			case std::filesystem::file_type::regular:
 			{
-				if (_wcsicmp(path.extension().c_str(), L".jpg") != 0 && 
+				if (_wcsicmp(path.extension().c_str(), L".jpg") != 0 &&
 					_wcsicmp(path.extension().c_str(), L".png") != 0)
 				{
 					MessageBox(m_window,
@@ -270,9 +269,9 @@ namespace PictureBrowser
 		m_zoomPercent = 0;
 		m_mouseDragStart = { 0, 0 };
 		m_mouseDragOffset = { 0, 0 };
-		m_image.reset(Gdiplus::Image::FromFile(path.c_str()));
+		m_currentImage = m_imageCache.Get(path);
 
-		if (!m_image)
+		if (!m_currentImage)
 		{
 			const std::wstring message =
 				L"Failed to load:\n" + path.wstring();
@@ -283,13 +282,6 @@ namespace PictureBrowser
 				MB_OK | MB_ICONINFORMATION);
 
 			return;
-		}
-
-		const Gdiplus::RotateFlipType rotation = GdiExtensions::GetRotation(m_image.get());
-
-		if (rotation != Gdiplus::RotateFlipType::RotateNoneFlipNone)
-		{
-			m_image->RotateFlip(rotation);
 		}
 
 		Invalidate();
@@ -524,9 +516,9 @@ namespace PictureBrowser
 		const Gdiplus::SolidBrush grayBrush(Gdiplus::Color::DarkGray);
 		buffer.FillRectangle(&grayBrush, 0, 0, m_canvasArea.Width, m_canvasArea.Height);
 
-		if (m_image)
+		if (m_currentImage)
 		{
-			Gdiplus::SizeF size(Gdiplus::REAL(m_image->GetWidth()), Gdiplus::REAL(m_image->GetHeight()));
+			Gdiplus::SizeF size(Gdiplus::REAL(m_currentImage->GetWidth()), Gdiplus::REAL(m_currentImage->GetHeight()));
 			Gdiplus::Rect scaled;
 
 			GdiExtensions::ScaleAndCenterTo(m_canvasArea, size, scaled);
@@ -540,7 +532,7 @@ namespace PictureBrowser
 			}
 			else
 			{
-				buffer.DrawImage(m_image.get(), scaled);
+				buffer.DrawImage(m_currentImage, scaled);
 			}
 		}
 
@@ -549,7 +541,7 @@ namespace PictureBrowser
 
 	void MainWindow::OnLeftMouseDown(LPARAM lParam)
 	{
-		if (!m_image)
+		if (!m_currentImage)
 		{
 			return;
 		}
@@ -563,7 +555,7 @@ namespace PictureBrowser
 		}
 
 		m_mouseDragStart.X = point.x - m_mouseDragOffset.X;
-		m_mouseDragStart.Y = point.y -m_mouseDragOffset.Y;
+		m_mouseDragStart.Y = point.y - m_mouseDragOffset.Y;
 	}
 
 	void MainWindow::OnMouseMove(LPARAM lParam)
@@ -798,7 +790,9 @@ namespace PictureBrowser
 
 	void MainWindow::OnDestroy()
 	{
-		g_mainWindow->m_image.reset();
+		g_mainWindow->m_currentDirectory.clear();
+		g_mainWindow->m_currentImage = nullptr;
+		g_mainWindow->m_imageCache.Clear();
 	}
 
 	std::filesystem::path MainWindow::ImageFromIndex(LONG_PTR index) const
