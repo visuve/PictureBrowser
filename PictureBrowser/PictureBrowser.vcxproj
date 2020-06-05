@@ -11,8 +11,11 @@
   <ItemDefinitionGroup>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>Gdiplus.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Gdiplus.lib;Comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>PictureBrowser.exe.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="GdiExtensions.hpp" />
@@ -37,5 +40,8 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="PictureBrowser.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="PictureBrowser.exe.manifest" />
   </ItemGroup>
 </Project>
