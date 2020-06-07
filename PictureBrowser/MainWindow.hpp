@@ -15,8 +15,9 @@ namespace PictureBrowser
 
 	private:
 		std::filesystem::file_type LoadFileList(const std::filesystem::path&);
-		void LoadPicture(const std::filesystem::path&);
+		bool LoadPicture(const std::filesystem::path&);
 		bool LoadStrings();
+		bool InitCommonControls();
 		ATOM Register() const;
 
 		void RecalculatePaintArea(HWND);
@@ -29,17 +30,15 @@ namespace PictureBrowser
 		void OnLeftMouseUp(LPARAM);
 		bool UpdateMousePositionOnCanvas(LPARAM);
 		void OnDoubleClick();
-		void OnZoom(WPARAM);
+		void OnDeleteSelected();
 		void OnKeyUp(WPARAM);
+		void OnZoom(WPARAM);
 		void OnCommand(WPARAM);
 		void OnFileDrop(WPARAM);
 		void OnOpenMenu();
-		void OnSelectionChanged();
+		void OnSelectionChanged(size_t);
 		void OnDestroy();
-
-		std::filesystem::path ImageFromIndex(LONG_PTR) const;
-		std::filesystem::path SelectedImage() const;
-		void SelectImage(LONG_PTR);
+		void SelectImage(size_t);
 		void Invalidate(bool erase = false);
 
 		static LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -50,11 +49,12 @@ namespace PictureBrowser
 		int m_zoomPercent = 0;
 		HWND m_window = nullptr;
 		HWND m_canvas = nullptr;
+		HWND m_deleteButton = nullptr;
 		HWND m_zoomOutButton = nullptr;
 		HWND m_zoomInButton = nullptr;
 		HWND m_previousPictureButton = nullptr;
 		HWND m_nextPictureButton = nullptr;
-		HWND m_fileListBox = nullptr;
+		HWND m_fileListView = nullptr;
 		HINSTANCE m_instance = nullptr;
 		Gdiplus::Rect m_fileListArea;
 		Gdiplus::Rect m_mainArea;
@@ -67,7 +67,9 @@ namespace PictureBrowser
 		bool m_isDragging = false;
 
 		ImageCache m_imageCache;
-		Gdiplus::Image* m_currentImage;
+		Gdiplus::Image* m_currentImage = nullptr;
+
+		std::vector<std::wstring> m_fileList;
 		std::filesystem::path m_currentDirectory;
 	};
 }

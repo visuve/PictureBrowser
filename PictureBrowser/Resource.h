@@ -10,11 +10,12 @@
 
 #define IDC_PICTURE_BROWSER             301
 #define IDC_MENU                        302
-#define IDC_PREV_BUTTON                 303
-#define IDC_NEXT_BUTTON                 304
-#define IDC_ZOOM_OUT_BUTTON             305
-#define IDC_ZOOM_IN_BUTTON              306
-#define IDC_LISTBOX                     307
+#define IDC_DELETE_SELECTED_BUTTON      303
+#define IDC_PREV_BUTTON                 304
+#define IDC_NEXT_BUTTON                 305
+#define IDC_ZOOM_OUT_BUTTON             306
+#define IDC_ZOOM_IN_BUTTON              307
+#define IDC_LISTBOX                     308
 #define IDC_STATIC                      -1
 
 #define IDD_ABOUT                       401

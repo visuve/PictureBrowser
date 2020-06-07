@@ -13,6 +13,21 @@ namespace PictureBrowser
 	constexpr UINT ButtonHeight = 25;
 	constexpr UINT FileListWidth = 250;
 
+	static const std::set<std::wstring> SupportedImageFormats = { L".jpg", L".png", L".bmp" };
+
+	bool IsSupportedImageFormat(const std::filesystem::path& path)
+	{
+		return std::any_of(SupportedImageFormats.cbegin(), SupportedImageFormats.cend(), [&](const std::wstring& supported)
+		{
+			return path.extension() == supported;
+		});
+	}
+
+	bool IsSupportedImageFormat(const std::filesystem::directory_entry& entry)
+	{
+		return IsSupportedImageFormat(entry.path());
+	}
+
 	std::wstring LoadStdString(HINSTANCE instance, UINT id)
 	{
 		std::wstring buffer(1, L'\0');
@@ -52,6 +67,14 @@ namespace PictureBrowser
 		return !(m_title.empty() || m_windowClassName.empty());
 	}
 
+	bool MainWindow::InitCommonControls()
+	{
+		INITCOMMONCONTROLSEX icex = { 0 };
+		icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+		icex.dwICC = ICC_LISTVIEW_CLASSES;
+		return InitCommonControlsEx(&icex);
+	}
+
 	ATOM MainWindow::Register() const
 	{
 		WNDCLASSEXW windowClass = { 0 };
@@ -79,6 +102,12 @@ namespace PictureBrowser
 		if (!LoadStrings())
 		{
 			LOGD << L"Failed to load strings!";
+			return false;
+		}
+
+		if (!InitCommonControls())
+		{
+			LOGD << L"InitCommonControlsEx failed: " << uint32_t(GetLastError());
 			return false;
 		}
 
@@ -152,10 +181,10 @@ namespace PictureBrowser
 
 	std::filesystem::file_type MainWindow::LoadFileList(const std::filesystem::path& path)
 	{
-		std::wstring jpgFilter = L"\\*.jpg";
-		std::wstring pngFilter = L"\\*.png";
-
 		const std::filesystem::file_type status = std::filesystem::status(path).type();
+
+		m_currentDirectory.clear();
+		m_fileList.clear();
 
 		switch (status)
 		{
@@ -175,8 +204,7 @@ namespace PictureBrowser
 			}
 			case std::filesystem::file_type::regular:
 			{
-				if (_wcsicmp(path.extension().c_str(), L".jpg") != 0 &&
-					_wcsicmp(path.extension().c_str(), L".png") != 0)
+				if (!IsSupportedImageFormat(path))
 				{
 					MessageBox(m_window,
 						L"Only JPG and PNG are supported!",
@@ -186,15 +214,11 @@ namespace PictureBrowser
 					return std::filesystem::file_type::none;
 				}
 
-				jpgFilter.insert(0, path.parent_path().wstring());
-				pngFilter.insert(0, path.parent_path().wstring());
 				m_currentDirectory = path.parent_path();
 				break;
 			}
 			case std::filesystem::file_type::directory:
 			{
-				jpgFilter.insert(0, path.wstring());
-				pngFilter.insert(0, path.wstring());
 				m_currentDirectory = path;
 				break;
 			}
@@ -212,24 +236,44 @@ namespace PictureBrowser
 			}
 		}
 
-		if (!SendMessage(m_fileListBox, LB_RESETCONTENT, 0, 0))
+		if (!ListView_DeleteAllItems(m_fileListView))
 		{
-			LOGD << L"Failed to send message LB_RESETCONTENT!";
+			LOGD << L"ListView_DeleteAllItems failed.";
 		}
 
-		if (!SendMessage(m_fileListBox, LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(jpgFilter.c_str())))
+		int index = 0;
+		int selectedIndex = 0;
+
+		for (auto& iter : std::filesystem::directory_iterator(m_currentDirectory, std::filesystem::directory_options::skip_permission_denied))
 		{
-			LOGD << L"Failed to send JPG filter update!";
+			if (!IsSupportedImageFormat(iter))
+			{
+				continue;
+			}
+
+			const std::wstring filename = iter.path().filename();
+			m_fileList.push_back(filename);
+
+			LVITEM item = { 0 };
+			item.mask = LVIF_TEXT;
+			item.cchTextMax = static_cast<int>(filename.size()) + 1;
+			item.pszText = const_cast<wchar_t*>(m_fileList[index].c_str());
+			item.iItem = index;
+			
+			if (ListView_InsertItem(m_fileListView, &item) == -1)
+			{
+				LOGD << L"ListView_InsertItem failed.";
+			}
+
+			if (iter == path)
+			{
+				selectedIndex = index;
+			}
+
+			++index;
 		}
 
-		if (!SendMessage(m_fileListBox, LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(pngFilter.c_str())))
-		{
-			LOGD << L"Failed to send PNG filter update!";
-		}
-
-		const LONG_PTR count = SendMessage(m_fileListBox, LB_GETCOUNT, 0, 0);
-
-		if (!count)
+		if (m_fileList.empty())
 		{
 			const std::wstring message =
 				L"The path you have entered does not appear to have JPG or PNG files!\n" + path.wstring();
@@ -243,15 +287,13 @@ namespace PictureBrowser
 			return std::filesystem::file_type::none;
 		}
 
-		if (!SendMessage(m_fileListBox, LB_SELECTSTRING, 0, reinterpret_cast<LPARAM>(path.filename().c_str())))
-		{
-			LOGD << L"Failed to send message LB_SELECTSTRING!";
-		}
+		ListView_SetItemState(m_fileListView, selectedIndex, LVIS_FOCUSED | LVIS_SELECTED, 0x000F);
+		ListView_EnsureVisible(m_fileListView, selectedIndex, false);
 
 		return status;
 	}
 
-	void MainWindow::LoadPicture(const std::filesystem::path& path)
+	bool MainWindow::LoadPicture(const std::filesystem::path& path)
 	{
 		if (!std::filesystem::is_regular_file(path))
 		{
@@ -263,7 +305,7 @@ namespace PictureBrowser
 				L"Unsupported file format!",
 				MB_OK | MB_ICONINFORMATION);
 
-			return;
+			return false;
 		}
 
 		m_zoomPercent = 0;
@@ -281,13 +323,15 @@ namespace PictureBrowser
 				L"FUBAR",
 				MB_OK | MB_ICONINFORMATION);
 
-			return;
+			return false;
 		}
-
-		Invalidate();
 
 		const std::wstring title = m_title + L" - " + path.filename().wstring();
 		SetWindowText(m_window, title.c_str());
+
+		Invalidate();
+
+		return true;
 	}
 
 	void MainWindow::RecalculatePaintArea(HWND window)
@@ -306,7 +350,7 @@ namespace PictureBrowser
 		m_fileListArea.X = clientArea.left + Padding;
 		m_fileListArea.Y = clientArea.top + Padding;
 		m_fileListArea.Width = FileListWidth;
-		m_fileListArea.Height = clientArea.bottom - Padding;
+		m_fileListArea.Height = clientArea.bottom - ButtonHeight - Padding * 3;
 
 		m_mainArea.X = m_fileListArea.GetRight() + Padding;
 		m_mainArea.Y = clientArea.top + Padding;
@@ -327,16 +371,40 @@ namespace PictureBrowser
 	{
 		RecalculatePaintArea(window);
 
-		m_fileListBox = CreateWindow(
-			WC_LISTBOX,
+		m_fileListView = CreateWindow(
+			WC_LISTVIEW,
 			L"Filelist...",
-			WS_VISIBLE | WS_CHILD | LBS_STANDARD,
+			WS_VISIBLE | WS_CHILD | WS_BORDER | LVS_LIST | LVS_SINGLESEL | LVS_SHOWSELALWAYS,
 			m_fileListArea.X,
 			m_fileListArea.Y,
 			m_fileListArea.Width,
 			m_fileListArea.Height,
 			window,
 			reinterpret_cast<HMENU>(IDC_LISTBOX),
+			m_instance,
+			nullptr);
+
+		if (ListView_SetExtendedListViewStyle(m_fileListView, LVS_EX_CHECKBOXES | LVS_EX_UNDERLINECOLD) != 0)
+		{
+			LOGD << L"ListView_SetExtendedListViewStyle failed.";
+		}
+
+		// ListView_SetBkColor(m_fileListView, RGB(255, 0, 0));
+		// ListView_SetTextBkColor(m_fileListView, RGB(0, 255, 0));
+		// ListView_SetTextColor(m_fileListView, RGB(0, 0, 255));
+		// ListView_SetOutlineColor(m_fileListView, RGB(255, 0, 0));
+		// ListView_SetInsertMarkColor(m_fileListView, RGB(255, 0, 0));
+
+		m_deleteButton = CreateWindow(
+			WC_BUTTON,
+			L"Delete selected",
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			m_fileListArea.X,
+			m_fileListArea.Height + Padding * 2,
+			m_fileListArea.Width,
+			ButtonHeight,
+			window,
+			reinterpret_cast<HMENU>(IDC_DELETE_SELECTED_BUTTON),
 			m_instance,
 			nullptr);
 
@@ -411,7 +479,7 @@ namespace PictureBrowser
 		RecalculatePaintArea(m_window);
 
 		if (!SetWindowPos(
-			m_fileListBox,
+			m_fileListView,
 			HWND_TOP,
 			0,
 			0,
@@ -420,6 +488,18 @@ namespace PictureBrowser
 			SWP_NOMOVE | SWP_NOZORDER))
 		{
 			LOGD << L"Failed to move file list!";
+		}
+
+		if (!SetWindowPos(
+			m_deleteButton,
+			HWND_TOP,
+			m_fileListArea.X,
+			m_fileListArea.Height + Padding * 2,
+			0,
+			0,
+			SWP_NOSIZE | SWP_NOZORDER))
+		{
+			LOGD << L"Failed move delete button!";
 		}
 
 		if (!SetWindowPos(
@@ -598,6 +678,11 @@ namespace PictureBrowser
 		}
 	}
 
+	void MainWindow::OnDeleteSelected()
+	{
+		MessageBox(m_window, L"Not implemented yet!", L"Picture Browser", MB_OK | MB_ICONINFORMATION);
+	}
+
 	void MainWindow::OnZoom(WPARAM wParam)
 	{
 		switch (wParam)
@@ -631,16 +716,11 @@ namespace PictureBrowser
 
 	void MainWindow::OnKeyUp(WPARAM wParam)
 	{
-		const LONG_PTR count = SendMessage(m_fileListBox, LB_GETCOUNT, 0, 0);
+		const int count = ListView_GetItemCount(m_fileListView);
+		const int lastIndex = count - 1;
 
-		if (!count)
+		if (count <= 0)
 		{
-			MessageBox(
-				m_window,
-				L"Please drag & drop a file or open from the menu!",
-				L"No image selected!",
-				MB_OK | MB_ICONINFORMATION);
-
 			return;
 		}
 
@@ -649,9 +729,9 @@ namespace PictureBrowser
 			case VK_LEFT:
 			case VK_UP:
 			{
-				LONG_PTR current = SendMessage(m_fileListBox, LB_GETCURSEL, 0, 0);
+				int current = ListView_GetNextItem(m_fileListView, -1, LVNI_FOCUSED | LVNI_SELECTED);
 
-				if (current > 0)
+				if (current > 0 && current <= lastIndex)
 				{
 					SelectImage(--current);
 				}
@@ -661,10 +741,9 @@ namespace PictureBrowser
 			case VK_RIGHT:
 			case VK_DOWN:
 			{
-				const LONG_PTR lastIndex = count - 1;
-				LONG_PTR current = SendMessage(m_fileListBox, LB_GETCURSEL, 0, 0);
+				int current = ListView_GetNextItem(m_fileListView, -1, LVNI_FOCUSED | LVNI_SELECTED);
 
-				if (current < lastIndex)
+				if (current >= 0 && current < lastIndex)
 				{
 					SelectImage(++current);
 				}
@@ -698,14 +777,9 @@ namespace PictureBrowser
 				OnOpenMenu();
 				break;
 			}
-			case IDC_ZOOM_OUT_BUTTON:
+			case IDC_DELETE_SELECTED_BUTTON:
 			{
-				OnZoom(VK_OEM_MINUS);
-				break;
-			}
-			case IDC_ZOOM_IN_BUTTON:
-			{
-				OnZoom(VK_OEM_PLUS);
+				OnDeleteSelected();
 				break;
 			}
 			case IDC_PREV_BUTTON:
@@ -718,13 +792,14 @@ namespace PictureBrowser
 				OnKeyUp(VK_RIGHT);
 				break;
 			}
-		}
-
-		switch (HIWORD(wParam))
-		{
-			case LBN_SELCHANGE:
+			case IDC_ZOOM_OUT_BUTTON:
 			{
-				OnSelectionChanged();
+				OnZoom(VK_OEM_MINUS);
+				break;
+			}
+			case IDC_ZOOM_IN_BUTTON:
+			{
+				OnZoom(VK_OEM_PLUS);
 				break;
 			}
 		}
@@ -776,9 +851,9 @@ namespace PictureBrowser
 		}
 	}
 
-	void MainWindow::OnSelectionChanged()
+	void MainWindow::OnSelectionChanged(size_t index)
 	{
-		const std::filesystem::path path = SelectedImage();
+		const std::filesystem::path path = m_currentDirectory / m_fileList[index];
 
 		if (path.empty())
 		{
@@ -790,54 +865,24 @@ namespace PictureBrowser
 
 	void MainWindow::OnDestroy()
 	{
-		g_mainWindow->m_currentDirectory.clear();
-		g_mainWindow->m_currentImage = nullptr;
-		g_mainWindow->m_imageCache.Clear();
+		m_currentDirectory.clear();
+		m_currentImage = nullptr;
+		m_imageCache.Clear();
 	}
 
-	std::filesystem::path MainWindow::ImageFromIndex(LONG_PTR index) const
+	void MainWindow::SelectImage(size_t index)
 	{
-		const size_t length = static_cast<size_t>(SendMessage(m_fileListBox, LB_GETTEXTLEN, index, 0));
-		std::wstring buffer(length, '\0');
-
-		if (SendMessage(m_fileListBox, LB_GETTEXT, index, reinterpret_cast<LPARAM>(buffer.data())) != length)
-		{
-			LOGD << L"Failed to send LB_GETTEXT!";
-			return {};
-		}
-
-		return m_currentDirectory / buffer;
-	}
-
-	std::filesystem::path MainWindow::SelectedImage() const
-	{
-		const LONG_PTR current = SendMessage(m_fileListBox, LB_GETCURSEL, 0, 0);
-
-		if (current < 0)
-		{
-			LOGD << L"Failed to get current index or nothing selected. Got: " << current;
-			return {};
-		}
-
-		return ImageFromIndex(current);
-	}
-
-	void MainWindow::SelectImage(LONG_PTR current)
-	{
-		if (SendMessage(m_fileListBox, LB_SETCURSEL, current, 0) < 0)
-		{
-			LOGD << L"Failed to send LB_SETCURSEL!";
-			return;
-		}
-
-		const std::filesystem::path path = ImageFromIndex(current);
+		const std::filesystem::path path = m_currentDirectory / m_fileList[index];
 
 		if (path.empty())
 		{
 			return;
 		}
 
-		LoadPicture(path);
+		if (LoadPicture(path))
+		{
+			ListView_SetItemState(m_fileListView, index, LVIS_FOCUSED | LVIS_SELECTED, 0x000F);
+		}
 	}
 
 	void MainWindow::Invalidate(bool erase)
@@ -887,8 +932,23 @@ namespace PictureBrowser
 				g_mainWindow->OnPaint();
 				break;
 			}
+			case WM_NOTIFY:
+			{
+				const auto notification = reinterpret_cast<NMLISTVIEW*>(lParam);
+
+				if (notification && notification->hdr.code == LVN_ITEMCHANGED && notification->hdr.hwndFrom == g_mainWindow->m_fileListView && notification->uNewState & LVIS_SELECTED)
+				{
+					g_mainWindow->OnSelectionChanged(notification->iItem);
+					break;
+				}
+
+				// NMCLICK https://docs.microsoft.com/fi-fi/windows/win32/controls/nm-click-list-view
+
+				break;
+			}
 			case WM_KEYUP:
 			{
+				LOGD << L"PSAKA";
 				g_mainWindow->OnKeyUp(wParam);
 				break;
 			}
