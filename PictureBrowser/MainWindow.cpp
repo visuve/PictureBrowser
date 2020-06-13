@@ -403,6 +403,7 @@ namespace PictureBrowser
 			nullptr);
 
 		m_mouseHandler = std::make_unique<MouseHandler>(window, m_canvas, std::bind(&MainWindow::Invalidate, this, true));
+		m_keyboardHandler = std::make_unique<KeyboardHandler>(window, m_fileListBox, std::bind(&MainWindow::SelectImage, this, std::placeholders::_1));
 	}
 
 	void MainWindow::OnResize()
@@ -564,51 +565,6 @@ namespace PictureBrowser
 		LOGD << m_zoomPercent;
 	}
 
-	void MainWindow::OnKeyUp(WPARAM wParam)
-	{
-		const LONG_PTR count = SendMessage(m_fileListBox, LB_GETCOUNT, 0, 0);
-
-		if (!count)
-		{
-			MessageBox(
-				m_window,
-				L"Please drag & drop a file or open from the menu!",
-				L"No image selected!",
-				MB_OK | MB_ICONINFORMATION);
-
-			return;
-		}
-
-		switch (wParam)
-		{
-			case VK_LEFT:
-			case VK_UP:
-			{
-				LONG_PTR current = SendMessage(m_fileListBox, LB_GETCURSEL, 0, 0);
-
-				if (current > 0)
-				{
-					SelectImage(--current);
-				}
-
-				return;
-			}
-			case VK_RIGHT:
-			case VK_DOWN:
-			{
-				const LONG_PTR lastIndex = count - 1;
-				LONG_PTR current = SendMessage(m_fileListBox, LB_GETCURSEL, 0, 0);
-
-				if (current < lastIndex)
-				{
-					SelectImage(++current);
-				}
-
-				return;
-			}
-		}
-	}
-
 	void MainWindow::OnCommand(WPARAM wParam)
 	{
 		switch (LOWORD(wParam))
@@ -635,22 +591,26 @@ namespace PictureBrowser
 			}
 			case IDC_ZOOM_OUT_BUTTON:
 			{
+				// TODO: disable button if no image is loaded
 				OnZoom(VK_OEM_MINUS);
 				break;
 			}
 			case IDC_ZOOM_IN_BUTTON:
 			{
+				// TODO: disable button if no image is loaded
 				OnZoom(VK_OEM_PLUS);
 				break;
 			}
 			case IDC_PREV_BUTTON:
 			{
-				OnKeyUp(VK_LEFT);
+				// TODO: disable button if no image is loaded
+				m_keyboardHandler->OnKeyUp(VK_LEFT);
 				break;
 			}
 			case IDC_NEXT_BUTTON:
 			{
-				OnKeyUp(VK_RIGHT);
+				// TODO: disable button if no image is loaded
+				m_keyboardHandler->OnKeyUp(VK_RIGHT);
 				break;
 			}
 		}
@@ -826,7 +786,7 @@ namespace PictureBrowser
 			}
 			case WM_KEYUP:
 			{
-				g_mainWindow->OnKeyUp(wParam);
+				g_mainWindow->m_keyboardHandler->OnKeyUp(wParam);
 				break;
 			}
 			case WM_LBUTTONDBLCLK:

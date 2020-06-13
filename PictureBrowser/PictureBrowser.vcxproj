@@ -20,6 +20,7 @@
   <ItemGroup>
     <ClInclude Include="GdiExtensions.hpp" />
     <ClInclude Include="ImageCache.hpp" />
+    <ClInclude Include="KeyboardHandler.hpp" />
     <ClInclude Include="LogWrap.hpp" />
     <ClInclude Include="MouseHandler.hpp" />
     <ClInclude Include="PCH.hpp" />
@@ -29,6 +30,7 @@
   <ItemGroup>
     <ClCompile Include="GdiExtensions.cpp" />
     <ClCompile Include="ImageCache.cpp" />
+    <ClCompile Include="KeyboardHandler.cpp" />
     <ClCompile Include="LogWrap.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Main.cpp" />

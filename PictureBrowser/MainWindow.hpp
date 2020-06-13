@@ -2,6 +2,7 @@
 
 #include "ImageCache.hpp"
 #include "MouseHandler.hpp"
+#include "KeyboardHandler.hpp"
 
 namespace PictureBrowser
 {
@@ -26,7 +27,6 @@ namespace PictureBrowser
 		void OnErase() const;
 		void OnPaint();
 		void OnZoom(WPARAM);
-		void OnKeyUp(WPARAM);
 		void OnCommand(WPARAM);
 		void OnFileDrop(WPARAM);
 		void OnOpenMenu();
@@ -57,6 +57,8 @@ namespace PictureBrowser
 		Gdiplus::Rect m_canvasArea;
 
 		std::unique_ptr<MouseHandler> m_mouseHandler;
+		std::unique_ptr<KeyboardHandler> m_keyboardHandler;
+
 		ImageCache m_imageCache;
 		std::filesystem::path m_currentDirectory;
 	};
