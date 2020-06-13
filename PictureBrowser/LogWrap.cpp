@@ -87,3 +87,24 @@ LogWrap& LogWrap::operator << (const Gdiplus::Rect& rect)
 
 	return *this;
 }
+
+LogWrap& LogWrap::operator << (const RECT& rect)
+{
+	m_buffer.append(L"L=");
+	m_buffer.append(std::to_wstring(rect.left));
+	m_buffer.append(1, L' ');
+
+	m_buffer.append(L"T=");
+	m_buffer.append(std::to_wstring(rect.top));
+	m_buffer.append(1, L' ');
+
+	m_buffer.append(L"R=");
+	m_buffer.append(std::to_wstring(rect.right));
+	m_buffer.append(1, L' ');
+
+	m_buffer.append(L"B=");
+	m_buffer.append(std::to_wstring(rect.bottom));
+	m_buffer.append(1, L' ');
+
+	return *this;
+}

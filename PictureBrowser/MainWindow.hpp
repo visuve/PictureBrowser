@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ImageCache.hpp"
+#include "MouseHandler.hpp"
 
 namespace PictureBrowser
 {
@@ -24,11 +25,6 @@ namespace PictureBrowser
 		void OnResize();
 		void OnErase() const;
 		void OnPaint();
-		void OnLeftMouseDown(LPARAM);
-		void OnMouseMove(LPARAM);
-		void OnLeftMouseUp(LPARAM);
-		bool UpdateMousePositionOnCanvas(LPARAM);
-		void OnDoubleClick();
 		void OnZoom(WPARAM);
 		void OnKeyUp(WPARAM);
 		void OnCommand(WPARAM);
@@ -60,12 +56,7 @@ namespace PictureBrowser
 		Gdiplus::Rect m_mainArea;
 		Gdiplus::Rect m_canvasArea;
 
-		Gdiplus::Point m_mouseDragStart;
-		Gdiplus::Point m_mouseDragOffset;
-
-		bool m_maximized = false;
-		bool m_isDragging = false;
-
+		std::unique_ptr<MouseHandler> m_mouseHandler;
 		ImageCache m_imageCache;
 		std::filesystem::path m_currentDirectory;
 	};

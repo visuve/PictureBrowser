@@ -266,8 +266,7 @@ namespace PictureBrowser
 		}
 
 		m_zoomPercent = 0;
-		m_mouseDragStart = { 0, 0 };
-		m_mouseDragOffset = { 0, 0 };
+		m_mouseHandler->ResetOffsets();
 
 		if (!m_imageCache.SetCurrent(path))
 		{
@@ -402,6 +401,8 @@ namespace PictureBrowser
 			reinterpret_cast<HMENU>(IDC_NEXT_BUTTON),
 			m_instance,
 			nullptr);
+
+		m_mouseHandler = std::make_unique<MouseHandler>(window, m_canvas, std::bind(&MainWindow::Invalidate, this, true));
 	}
 
 	void MainWindow::OnResize()
@@ -523,9 +524,9 @@ namespace PictureBrowser
 
 			GdiExtensions::ScaleAndCenterTo(m_canvasArea, size, scaled);
 			GdiExtensions::Zoom(scaled, m_zoomPercent);
-			scaled.Offset(m_mouseDragOffset);
+			scaled.Offset(m_mouseHandler->MouseDragOffset());
 
-			if (m_isDragging)
+			if (m_mouseHandler->IsDragging())
 			{
 				const Gdiplus::Pen pen(Gdiplus::Color::Gray, 2.0f);
 				buffer.DrawRectangle(&pen, scaled);
@@ -539,64 +540,6 @@ namespace PictureBrowser
 		context.Graphics().DrawImage(&bitmap, 0, 0, m_canvasArea.Width, m_canvasArea.Height);
 	}
 
-	void MainWindow::OnLeftMouseDown(LPARAM lParam)
-	{
-		if (!m_imageCache.Current())
-		{
-			return;
-		}
-
-		const POINT point = { LOWORD(lParam), HIWORD(lParam) };
-		m_isDragging = DragDetect(m_canvas, point);
-
-		if (!m_isDragging)
-		{
-			return;
-		}
-
-		m_mouseDragStart.X = point.x - m_mouseDragOffset.X;
-		m_mouseDragStart.Y = point.y - m_mouseDragOffset.Y;
-	}
-
-	void MainWindow::OnMouseMove(LPARAM lParam)
-	{
-		if (!m_isDragging)
-		{
-			return;
-		}
-
-		if (UpdateMousePositionOnCanvas(lParam))
-		{
-			Invalidate();
-		}
-	}
-
-	void MainWindow::OnLeftMouseUp(LPARAM)
-	{
-		m_isDragging = false;
-		Invalidate();
-	}
-
-	bool MainWindow::UpdateMousePositionOnCanvas(LPARAM lParam)
-	{
-		Gdiplus::Point distance(LOWORD(lParam) - m_mouseDragStart.X, HIWORD(lParam) - m_mouseDragStart.Y);
-
-		if (distance.Equals(m_mouseDragOffset))
-		{
-			return false;
-		}
-
-		std::swap(m_mouseDragOffset, distance);
-		return true;
-	}
-
-	void MainWindow::OnDoubleClick()
-	{
-		if (ShowWindow(m_window, m_maximized ? SW_NORMAL : SW_SHOWMAXIMIZED))
-		{
-			m_maximized = !m_maximized;
-		}
-	}
 
 	void MainWindow::OnZoom(WPARAM wParam)
 	{
@@ -606,10 +549,6 @@ namespace PictureBrowser
 				if (m_zoomPercent > 0)
 				{
 					m_zoomPercent -= 5;
-					m_mouseDragStart.X = int(m_mouseDragStart.X * 0.95f);
-					m_mouseDragStart.Y = int(m_mouseDragStart.Y * 0.95f);
-					m_mouseDragOffset.X = int(m_mouseDragOffset.X * 0.95f);
-					m_mouseDragOffset.Y = int(m_mouseDragOffset.Y * 0.95f);
 					Invalidate();
 				}
 				break;
@@ -617,10 +556,6 @@ namespace PictureBrowser
 				if (m_zoomPercent < 1000)
 				{
 					m_zoomPercent += 5;
-					m_mouseDragStart.X = int(m_mouseDragStart.X * 1.05f);
-					m_mouseDragStart.Y = int(m_mouseDragStart.Y * 1.05f);
-					m_mouseDragOffset.X = int(m_mouseDragOffset.X * 1.05f);
-					m_mouseDragOffset.Y = int(m_mouseDragOffset.Y * 1.05f);
 					Invalidate();
 				}
 				break;
@@ -852,7 +787,10 @@ namespace PictureBrowser
 		if (!InvalidateRect(m_window, &canvasArea, erase))
 		{
 			LOGD << L"InvalidateRect failed!";
+			return;
 		}
+
+		LOGD << canvasArea;
 	}
 
 	LRESULT CALLBACK MainWindow::WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
@@ -894,22 +832,22 @@ namespace PictureBrowser
 			case WM_LBUTTONDBLCLK:
 			case WM_RBUTTONDBLCLK:
 			{
-				g_mainWindow->OnDoubleClick();
+				g_mainWindow->m_mouseHandler->OnDoubleClick();
 				break;
 			}
 			case WM_LBUTTONDOWN:
 			{
-				g_mainWindow->OnLeftMouseDown(lParam);
+				g_mainWindow->m_mouseHandler->OnLeftMouseDown(lParam);
 				break;
 			}
 			case WM_MOUSEMOVE:
 			{
-				g_mainWindow->OnMouseMove(lParam);
+				g_mainWindow->m_mouseHandler->OnMouseMove(lParam);
 				break;
 			}
 			case WM_LBUTTONUP:
 			{
-				g_mainWindow->OnLeftMouseUp(lParam);
+				g_mainWindow->m_mouseHandler->OnLeftMouseUp(lParam);
 				break;
 			}
 			case WM_COMMAND:
