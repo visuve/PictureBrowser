@@ -18,6 +18,22 @@ ImageCache::~ImageCache()
 	Clear();
 }
 
+bool ImageCache::SetCurrent(const std::filesystem::path& path)
+{
+	if (!Load(path))
+	{
+		return false;
+	}
+
+	m_currentImage = path;
+	return true;
+}
+
+Gdiplus::Image* ImageCache::Current()
+{
+	return Get(m_currentImage);
+}
+
 Gdiplus::Image* ImageCache::Get(const std::filesystem::path& path)
 {
 	const auto iter = m_cache.find(path);
@@ -27,6 +43,16 @@ Gdiplus::Image* ImageCache::Get(const std::filesystem::path& path)
 		return iter->second.get();
 	}
 
+	return Load(path);
+}
+
+void ImageCache::Clear()
+{
+	m_cache.clear();
+}
+
+Gdiplus::Image* ImageCache::Load(const std::filesystem::path& path)
+{
 	Gdiplus::Image* image = Gdiplus::Image::FromFile(path.c_str());
 
 	if (!image)
@@ -38,9 +64,4 @@ Gdiplus::Image* ImageCache::Get(const std::filesystem::path& path)
 	m_cache[path].reset(image);
 	LOGD << L"Cached: " << path;
 	return image;
-}
-
-void ImageCache::Clear()
-{
-	m_cache.clear();
 }

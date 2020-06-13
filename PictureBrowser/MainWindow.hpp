@@ -23,7 +23,7 @@ namespace PictureBrowser
 		void OnCreate(HWND);
 		void OnResize();
 		void OnErase() const;
-		void OnPaint() const;
+		void OnPaint();
 		void OnLeftMouseDown(LPARAM);
 		void OnMouseMove(LPARAM);
 		void OnLeftMouseUp(LPARAM);
@@ -67,7 +67,6 @@ namespace PictureBrowser
 		bool m_isDragging = false;
 
 		ImageCache m_imageCache;
-		Gdiplus::Image* m_currentImage;
 		std::filesystem::path m_currentDirectory;
 	};
 }
