@@ -18,6 +18,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="FileListHandler.hpp" />
     <ClInclude Include="GdiExtensions.hpp" />
     <ClInclude Include="ImageCache.hpp" />
     <ClInclude Include="KeyboardHandler.hpp" />
@@ -28,6 +29,7 @@
     <ClInclude Include="MainWindow.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FileListHandler.cpp" />
     <ClCompile Include="GdiExtensions.cpp" />
     <ClCompile Include="ImageCache.cpp" />
     <ClCompile Include="KeyboardHandler.cpp" />

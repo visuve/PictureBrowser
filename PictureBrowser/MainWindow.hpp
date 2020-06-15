@@ -1,8 +1,9 @@
 #pragma once
 
 #include "ImageCache.hpp"
-#include "MouseHandler.hpp"
+#include "FileListHandler.hpp"
 #include "KeyboardHandler.hpp"
+#include "MouseHandler.hpp"
 
 namespace PictureBrowser
 {
@@ -16,8 +17,6 @@ namespace PictureBrowser
 		void Open(const std::filesystem::path&);
 
 	private:
-		std::filesystem::file_type LoadFileList(const std::filesystem::path&);
-		void LoadPicture(const std::filesystem::path&);
 		bool LoadStrings();
 		ATOM Register() const;
 
@@ -26,16 +25,10 @@ namespace PictureBrowser
 		void OnResize();
 		void OnErase() const;
 		void OnPaint();
+
+		void OnImageChanged(std::filesystem::path);
 		void OnZoom(WPARAM);
 		void OnCommand(WPARAM);
-		void OnFileDrop(WPARAM);
-		void OnOpenMenu();
-		void OnSelectionChanged();
-		void OnDestroy();
-
-		std::filesystem::path ImageFromIndex(LONG_PTR) const;
-		std::filesystem::path SelectedImage() const;
-		void SelectImage(LONG_PTR);
 		void Invalidate(bool erase = false);
 
 		static LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -56,10 +49,9 @@ namespace PictureBrowser
 		Gdiplus::Rect m_mainArea;
 		Gdiplus::Rect m_canvasArea;
 
-		std::unique_ptr<MouseHandler> m_mouseHandler;
+		std::shared_ptr<ImageCache> m_imageCache;
+		std::unique_ptr<FileListHandler> m_fileListHandler;
 		std::unique_ptr<KeyboardHandler> m_keyboardHandler;
-
-		ImageCache m_imageCache;
-		std::filesystem::path m_currentDirectory;
+		std::unique_ptr<MouseHandler> m_mouseHandler;
 	};
 }
