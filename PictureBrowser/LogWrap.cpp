@@ -7,6 +7,12 @@ LogWrap::~LogWrap()
 	OutputDebugString(m_buffer.c_str());
 }
 
+LogWrap& LogWrap::operator << (bool value)
+{
+	m_buffer.append(value ? L"true" : L"false");
+	return *this;
+}
+
 LogWrap& LogWrap::operator << (int8_t value)
 {
 	m_buffer.append(std::to_wstring(value));
@@ -61,9 +67,27 @@ LogWrap& LogWrap::operator << (wchar_t value)
 	return *this;
 }
 
+LogWrap& LogWrap::operator << (DWORD value)
+{
+	m_buffer.append(std::to_wstring(value));
+	return *this;
+}
+
+LogWrap& LogWrap::operator << (LSTATUS value)
+{
+	m_buffer.append(std::to_wstring(value));
+	return *this;
+}
+
 LogWrap& LogWrap::operator << (const std::wstring& value)
 {
 	m_buffer.append(value);
+	return *this;
+}
+
+LogWrap& LogWrap::operator << (const std::filesystem::path& value)
+{
+	m_buffer.append(value.wstring());
 	return *this;
 }
 

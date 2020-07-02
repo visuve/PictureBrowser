@@ -68,7 +68,9 @@ void MouseHandler::OnDoubleClick()
 
 	if (!ShowWindow(m_window, show))
 	{
-		LOGD << L"Failed to " << (show == SW_SHOWMAXIMIZED ? L"maximize screen" : L"show window in normal size");
+		const std::wstring message = 
+			show == SW_SHOWMAXIMIZED ? L"maximize screen" : L"show window in normal size";
+		LOGD << L"Failed to " << message;
 	}
 }
 

@@ -31,6 +31,9 @@ namespace PictureBrowser
 		void OnCommand(WPARAM);
 		void Invalidate(bool erase = false);
 
+		UINT CheckedState(UINT menuEntry) const;
+		void SetCheckedState(UINT menuEntry, UINT state) const;
+
 		static LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
 		static INT_PTR CALLBACK GenericOkDialog(HWND, UINT, WPARAM, LPARAM);
 

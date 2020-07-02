@@ -3,6 +3,7 @@
 #include "MainWindow.hpp"
 #include "LogWrap.hpp"
 #include "GdiExtensions.hpp"
+#include "Registry.hpp"
 
 namespace PictureBrowser
 {
@@ -245,7 +246,10 @@ namespace PictureBrowser
 			m_instance,
 			nullptr);
 
-		m_imageCache = std::make_shared<ImageCache>();
+		const bool useCaching = Registry::Get(L"Software\\PictureBrowser\\UseCaching", true);
+		SetCheckedState(IDM_OPTIONS_USE_CACHING, useCaching ? MFS_CHECKED : MFS_UNCHECKED);
+
+		m_imageCache = std::make_shared<ImageCache>(useCaching);
 		m_fileListHandler = std::make_unique<FileListHandler>(window, m_fileListBox, m_imageCache, std::bind(&MainWindow::OnImageChanged, this, std::placeholders::_1));
 		m_mouseHandler = std::make_unique<MouseHandler>(window, m_canvas, std::bind(&MainWindow::Invalidate, this, true));
 		m_keyboardHandler = std::make_unique<KeyboardHandler>(window, m_fileListBox, std::bind(&FileListHandler::SelectImage, m_fileListHandler.get(), std::placeholders::_1));
@@ -468,6 +472,23 @@ namespace PictureBrowser
 				m_fileListHandler->OnOpenMenu();
 				break;
 			}
+			case IDM_OPTIONS_USE_CACHING:
+			{
+				const UINT checkedState = CheckedState(IDM_OPTIONS_USE_CACHING);
+
+				if (checkedState == MFS_CHECKED)
+				{
+					Registry::Set(L"Software\\PictureBrowser\\UseCaching", false);
+					SetCheckedState(IDM_OPTIONS_USE_CACHING, MFS_UNCHECKED);
+				}
+				else
+				{
+					Registry::Set(L"Software\\PictureBrowser\\UseCaching", true);
+					SetCheckedState(IDM_OPTIONS_USE_CACHING, MFS_CHECKED);
+				}
+
+				break;
+			}
 		}
 
 		switch (HIWORD(wParam))
@@ -496,6 +517,36 @@ namespace PictureBrowser
 		}
 
 		LOGD << canvasArea;
+	}
+
+	UINT MainWindow::CheckedState(UINT menuEntry) const
+	{
+		const HMENU menu = GetMenu(m_window);
+		MENUITEMINFO menuItemInfo = { 0 };
+		menuItemInfo.cbSize = sizeof(MENUITEMINFO);
+		menuItemInfo.fMask = MIIM_STATE;
+
+		if (!GetMenuItemInfo(menu, IDM_OPTIONS_USE_CACHING, FALSE, &menuItemInfo))
+		{
+			LOGD << L"GetMenuItemInfo failed!";
+			return MFS_DEFAULT; // Maybe not the best idea...
+		}
+
+		return menuItemInfo.fState;
+	}
+
+	void MainWindow::SetCheckedState(UINT menuEntry, UINT state) const
+	{
+		const HMENU menu = GetMenu(m_window);
+		MENUITEMINFO menuItemInfo = { 0 };
+		menuItemInfo.cbSize = sizeof(MENUITEMINFO);
+		menuItemInfo.fMask = MIIM_STATE;
+		menuItemInfo.fState = state;
+
+		if (!SetMenuItemInfo(menu, IDM_OPTIONS_USE_CACHING, FALSE, &menuItemInfo))
+		{
+			LOGD << L"SetMenuItemInfo failed!";
+		}
 	}
 
 	LRESULT CALLBACK MainWindow::WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam)

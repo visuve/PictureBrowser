@@ -3,7 +3,7 @@
 class ImageCache
 {
 public:
-	ImageCache() = default;
+	ImageCache(bool useCaching);
 	~ImageCache();
 
 	bool SetCurrent(const std::filesystem::path& path);
@@ -17,4 +17,5 @@ private:
 
 	std::map<std::filesystem::path, std::unique_ptr<Gdiplus::Image>> m_cache;
 	std::filesystem::path m_currentImage;
+	bool m_useCaching = true;
 };
