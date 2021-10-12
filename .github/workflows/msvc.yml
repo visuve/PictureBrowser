@@ -1,4 +1,4 @@
-name: Picture Browser CI
+name: Compile source code (MSVC)
 
 on: [push, pull_request]
 
