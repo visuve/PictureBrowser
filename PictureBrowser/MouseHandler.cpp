@@ -86,6 +86,6 @@ Gdiplus::Point MouseHandler::MouseDragOffset() const
 
 void MouseHandler::ResetOffsets()
 {
-	_mouseDragStart = { 0, 0 };
-	_mouseDragOffset = { 0, 0 };
+	_mouseDragStart = { };
+	_mouseDragOffset = { };
 }

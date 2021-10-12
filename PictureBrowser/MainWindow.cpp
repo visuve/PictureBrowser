@@ -250,9 +250,22 @@ namespace PictureBrowser
 		SetCheckedState(IDM_OPTIONS_USE_CACHING, useCaching ? MFS_CHECKED : MFS_UNCHECKED);
 
 		_imageCache = std::make_shared<ImageCache>(useCaching);
-		_fileListHandler = std::make_unique<FileListHandler>(window, _fileListBox, _imageCache, std::bind(&MainWindow::OnImageChanged, this, std::placeholders::_1));
-		_mouseHandler = std::make_unique<MouseHandler>(window, _canvas, std::bind(&MainWindow::Invalidate, this, true));
-		_keyboardHandler = std::make_unique<KeyboardHandler>(window, _fileListBox, std::bind(&FileListHandler::SelectImage, _fileListHandler.get(), std::placeholders::_1));
+
+		_fileListHandler = std::make_unique<FileListHandler>(
+			window,
+			_fileListBox,
+			_imageCache,
+			std::bind(&MainWindow::OnImageChanged, this, std::placeholders::_1));
+		
+		_mouseHandler = std::make_unique<MouseHandler>(
+			window,
+			_canvas,
+			std::bind(&MainWindow::Invalidate, this, true));
+
+		_keyboardHandler = std::make_unique<KeyboardHandler>(
+			window,
+			_fileListBox,
+			std::bind(&FileListHandler::SelectImage, _fileListHandler.get(), std::placeholders::_1));
 	}
 
 	void MainWindow::OnResize()

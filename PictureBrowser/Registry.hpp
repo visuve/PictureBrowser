@@ -8,7 +8,12 @@ namespace Registry
 	{
 	public:
 		RegPath(const std::wstring& path);
-		RegPath(const wchar_t* path);
+		
+		template<std::size_t N>
+		RegPath(const wchar_t(&path)[N]) :
+			RegPath(std::wstring(path, N))
+		{
+		}
 
 		const wchar_t* SubKeyName() const;
 		const wchar_t* ValueName() const;
@@ -84,17 +89,16 @@ namespace Registry
 	{
 		RegHandle key(hive, path);
 
-		DWORD result = false;
-		DWORD dataSize = sizeof(DWORD);
-
 		union U32U8
 		{
-			uint32_t U32;
+			uint32_t U32 = 0;
 			uint8_t U8[4];
 		};
 
-		U32U8 u32u8 = { 0 };
+		U32U8 u32u8;
 		u32u8.U32 = value;
+
+		DWORD dataSize = sizeof(DWORD);
 
 		LSTATUS status = RegSetValueEx(
 			key.Get(),

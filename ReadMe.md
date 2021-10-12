@@ -9,3 +9,7 @@
 - Visual Studio 2019
 	- https://www.visualstudio.com/
 	- C++ desktop development workload selected
+
+## TODO:
+
+- Apply a "widget" and decorator pattern to all the UI elements

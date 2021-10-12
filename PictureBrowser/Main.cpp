@@ -24,7 +24,7 @@ public:
 		return _status == Gdiplus::Status::Ok;
 	}
 private:
-	Gdiplus::GdiplusStartupInput _gdiPlusStartupInput = { 0 };
+	Gdiplus::GdiplusStartupInput _gdiPlusStartupInput;
 	UINT_PTR _gdiPlusToken = 0;
 	Gdiplus::Status _status;
 };

@@ -2,7 +2,11 @@
 #include "FileListHandler.hpp"
 #include "LogWrap.hpp"
 
-FileListHandler::FileListHandler(HWND window, HWND fileListBox, const std::shared_ptr<ImageCache>& imageCache, const std::function<void(std::filesystem::path)>& imageChanged) :
+FileListHandler::FileListHandler(
+	HWND window, 
+	HWND fileListBox, 
+	const std::shared_ptr<ImageCache>& imageCache,
+	const std::function<void(std::filesystem::path)>& imageChanged) :
 	_window(window),
 	_fileListBox(fileListBox),
 	_imageCache(imageCache),
@@ -62,7 +66,8 @@ void FileListHandler::OnOpenMenu()
 	openFile.hwndOwner = _window;
 	openFile.lpstrFile = filePath;
 	openFile.nMaxFile = 0xFFF;
-	openFile.lpstrFilter = L"Joint Photographic Experts Group (*.jpg)\0*.jpg\0Portable Network Graphics (*.png)\0*.png\0";
+	openFile.lpstrFilter = 
+		L"Joint Photographic Experts Group (*.jpg)\0*.jpg\0Portable Network Graphics (*.png)\0*.png\0";
 	openFile.nFilterIndex = 1;
 	openFile.lpstrFileTitle = nullptr;
 	openFile.nMaxFileTitle = 0;

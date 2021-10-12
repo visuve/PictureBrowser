@@ -9,11 +9,6 @@ namespace Registry
 	{
 	}
 
-	RegPath::RegPath(const wchar_t* path) :
-		RegPath(std::wstring(path))
-	{
-	}
-
 	const wchar_t* RegPath::SubKeyName() const
 	{
 		return _subKey.c_str();
