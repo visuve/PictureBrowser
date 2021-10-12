@@ -3,70 +3,70 @@
 #include "LogWrap.hpp"
 
 MouseHandler::MouseHandler(HWND window, HWND canvas, const std::function<void()>& invalidate) :
-	m_window(window),
-	m_canvas(canvas),
-	m_invalidate(invalidate)
+	_window(window),
+	_canvas(canvas),
+	_invalidate(invalidate)
 {
 }
 
 void MouseHandler::OnLeftMouseDown(LPARAM lParam)
 {
 	const POINT point = { LOWORD(lParam), HIWORD(lParam) };
-	m_isDragging = DragDetect(m_canvas, point);
+	_isDragging = DragDetect(_canvas, point);
 
-	if (!m_isDragging)
+	if (!_isDragging)
 	{
 		return;
 	}
 
-	m_mouseDragStart.X = point.x - m_mouseDragOffset.X;
-	m_mouseDragStart.Y = point.y - m_mouseDragOffset.Y;
+	_mouseDragStart.X = point.x - _mouseDragOffset.X;
+	_mouseDragStart.Y = point.y - _mouseDragOffset.Y;
 }
 
 void MouseHandler::OnMouseMove(LPARAM lParam)
 {
-	if (!m_isDragging)
+	if (!_isDragging)
 	{
 		return;
 	}
 
 	if (UpdateMousePosition(lParam))
 	{
-		m_invalidate();
+		_invalidate();
 	}
 }
 
 bool MouseHandler::UpdateMousePosition(LPARAM lParam)
 {
-	Gdiplus::Point distance(LOWORD(lParam) - m_mouseDragStart.X, HIWORD(lParam) - m_mouseDragStart.Y);
+	Gdiplus::Point distance(LOWORD(lParam) - _mouseDragStart.X, HIWORD(lParam) - _mouseDragStart.Y);
 
-	if (distance.Equals(m_mouseDragOffset))
+	if (distance.Equals(_mouseDragOffset))
 	{
 		return false;
 	}
 
-	std::swap(m_mouseDragOffset, distance);
+	std::swap(_mouseDragOffset, distance);
 	return true;
 }
 
 void MouseHandler::OnLeftMouseUp(LPARAM)
 {
-	m_isDragging = false;
-	m_invalidate();
+	_isDragging = false;
+	_invalidate();
 }
 
 void MouseHandler::OnDoubleClick()
 {
 	WINDOWPLACEMENT placement = { 0 };
 
-	if (!GetWindowPlacement(m_window, &placement))
+	if (!GetWindowPlacement(_window, &placement))
 	{
 		return;
 	}
 
 	const UINT show = placement.showCmd == SW_NORMAL ? SW_SHOWMAXIMIZED : SW_NORMAL;
 
-	if (!ShowWindow(m_window, show))
+	if (!ShowWindow(_window, show))
 	{
 		const std::wstring message = 
 			show == SW_SHOWMAXIMIZED ? L"maximize screen" : L"show window in normal size";
@@ -76,16 +76,16 @@ void MouseHandler::OnDoubleClick()
 
 bool MouseHandler::IsDragging() const
 {
-	return m_isDragging;
+	return _isDragging;
 }
 
 Gdiplus::Point MouseHandler::MouseDragOffset() const
 {
-	return m_mouseDragOffset;
+	return _mouseDragOffset;
 }
 
 void MouseHandler::ResetOffsets()
 {
-	m_mouseDragStart = { 0, 0 };
-	m_mouseDragOffset = { 0, 0 };
+	_mouseDragStart = { 0, 0 };
+	_mouseDragOffset = { 0, 0 };
 }

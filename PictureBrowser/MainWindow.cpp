@@ -7,7 +7,7 @@
 
 namespace PictureBrowser
 {
-	MainWindow* g_mainWindow = nullptr;
+	MainWindow* _mainWindow = nullptr;
 
 	constexpr UINT Padding = 5;
 	constexpr UINT ButtonWidth = 50;
@@ -37,20 +37,20 @@ namespace PictureBrowser
 
 	MainWindow::MainWindow()
 	{
-		g_mainWindow = this;
+		_mainWindow = this;
 	}
 
 	MainWindow::~MainWindow()
 	{
-		g_mainWindow = nullptr;
+		_mainWindow = nullptr;
 	}
 
 	bool MainWindow::LoadStrings()
 	{
-		m_title = LoadStdString(m_instance, IDS_PICTURE_BROWSER);
-		m_windowClassName = LoadStdString(m_instance, IDC_PICTURE_BROWSER);
+		_title = LoadStdString(_instance, IDS_PICTURE_BROWSER);
+		_windowClassName = LoadStdString(_instance, IDC_PICTURE_BROWSER);
 
-		return !(m_title.empty() || m_windowClassName.empty());
+		return !(_title.empty() || _windowClassName.empty());
 	}
 
 	ATOM MainWindow::Register() const
@@ -62,20 +62,20 @@ namespace PictureBrowser
 		windowClass.lpfnWndProc = WindowProcedure;
 		windowClass.cbClsExtra = 0;
 		windowClass.cbWndExtra = 0;
-		windowClass.hInstance = m_instance;
-		windowClass.hIcon = LoadIcon(m_instance, MAKEINTRESOURCE(IDI_PICTURE_BROWSER));
+		windowClass.hInstance = _instance;
+		windowClass.hIcon = LoadIcon(_instance, MAKEINTRESOURCE(IDI_PICTURE_BROWSER));
 		windowClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
 		windowClass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
 		windowClass.lpszMenuName = MAKEINTRESOURCEW(IDC_MENU);
-		windowClass.lpszClassName = m_windowClassName.c_str();
-		windowClass.hIconSm = LoadIcon(m_instance, MAKEINTRESOURCE(IDI_PICTURE_BROWSER));
+		windowClass.lpszClassName = _windowClassName.c_str();
+		windowClass.hIconSm = LoadIcon(_instance, MAKEINTRESOURCE(IDI_PICTURE_BROWSER));
 
 		return RegisterClassEx(&windowClass);
 	}
 
 	bool MainWindow::InitInstance(HINSTANCE instance, int showCommand)
 	{
-		m_instance = instance;
+		_instance = instance;
 
 		if (!LoadStrings())
 		{
@@ -89,10 +89,10 @@ namespace PictureBrowser
 			return false;
 		}
 
-		m_window = CreateWindowEx(
+		_window = CreateWindowEx(
 			WS_EX_ACCEPTFILES,
-			m_windowClassName.c_str(),
-			m_title.c_str(),
+			_windowClassName.c_str(),
+			_title.c_str(),
 			WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT,
 			CW_USEDEFAULT,
@@ -100,35 +100,35 @@ namespace PictureBrowser
 			800,
 			nullptr,
 			nullptr,
-			m_instance,
+			_instance,
 			nullptr);
 
-		if (!m_window)
+		if (!_window)
 		{
 			LOGD << L"Failed to create main window!";
 			return false;
 		}
 
-		if (!ShowWindow(m_window, showCommand))
+		if (!ShowWindow(_window, showCommand))
 		{
 			LOGD << L"Failed to show window!";
 		}
 
-		if (!UpdateWindow(m_window))
+		if (!UpdateWindow(_window))
 		{
 			LOGD << L"Failed to update window!";
 		}
 
 		OnResize();
 
-		// SetWindowTheme(m_window, L" ", L" "); // This will make even worse looks
+		// SetWindowTheme(_window, L" ", L" "); // This will make even worse looks
 
 		return true;
 	}
 
 	void MainWindow::Open(const std::filesystem::path& path)
 	{
-		m_fileListHandler->Open(path);
+		_fileListHandler->Open(path);
 	}
 
 	void MainWindow::RecalculatePaintArea(HWND window)
@@ -144,150 +144,150 @@ namespace PictureBrowser
 			clientArea.bottom = 600;
 		}
 
-		m_fileListArea.X = clientArea.left + Padding;
-		m_fileListArea.Y = clientArea.top + Padding;
-		m_fileListArea.Width = FileListWidth;
-		m_fileListArea.Height = clientArea.bottom - Padding;
+		_fileListArea.X = clientArea.left + Padding;
+		_fileListArea.Y = clientArea.top + Padding;
+		_fileListArea.Width = FileListWidth;
+		_fileListArea.Height = clientArea.bottom - Padding;
 
-		m_mainArea.X = m_fileListArea.GetRight() + Padding;
-		m_mainArea.Y = clientArea.top + Padding;
-		m_mainArea.Width = clientArea.right - m_fileListArea.GetRight() - Padding * 2;
-		m_mainArea.Height = clientArea.bottom - Padding * 2;
+		_mainArea.X = _fileListArea.GetRight() + Padding;
+		_mainArea.Y = clientArea.top + Padding;
+		_mainArea.Width = clientArea.right - _fileListArea.GetRight() - Padding * 2;
+		_mainArea.Height = clientArea.bottom - Padding * 2;
 
-		m_canvasArea.X = m_mainArea.X;
-		m_canvasArea.Y = m_mainArea.Y + Padding + ButtonHeight;
-		m_canvasArea.Width = m_mainArea.Width;
-		m_canvasArea.Height = m_mainArea.Height - Padding * 2 - ButtonHeight * 2;
+		_canvasArea.X = _mainArea.X;
+		_canvasArea.Y = _mainArea.Y + Padding + ButtonHeight;
+		_canvasArea.Width = _mainArea.Width;
+		_canvasArea.Height = _mainArea.Height - Padding * 2 - ButtonHeight * 2;
 
-		LOGD << L"m_fileListArea: " << m_fileListArea;
-		LOGD << L"m_mainArea: " << m_mainArea;
-		LOGD << L"m_canvasArea: " << m_canvasArea;
+		LOGD << L"File list area: " << _fileListArea;
+		LOGD << L"Main area: " << _mainArea;
+		LOGD << L"Canvas area: " << _canvasArea;
 	}
 
 	void MainWindow::OnCreate(HWND window)
 	{
 		RecalculatePaintArea(window);
 
-		m_fileListBox = CreateWindow(
+		_fileListBox = CreateWindow(
 			WC_LISTBOX,
 			L"Filelist...",
 			WS_VISIBLE | WS_CHILD | LBS_STANDARD,
-			m_fileListArea.X,
-			m_fileListArea.Y,
-			m_fileListArea.Width,
-			m_fileListArea.Height,
+			_fileListArea.X,
+			_fileListArea.Y,
+			_fileListArea.Width,
+			_fileListArea.Height,
 			window,
 			reinterpret_cast<HMENU>(IDC_LISTBOX),
-			m_instance,
+			_instance,
 			nullptr);
 
-		m_canvas = CreateWindow(
+		_canvas = CreateWindow(
 			WC_STATIC,
 			nullptr,
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			m_canvasArea.X,
-			m_canvasArea.Y,
-			m_canvasArea.Width,
-			m_canvasArea.Height,
+			_canvasArea.X,
+			_canvasArea.Y,
+			_canvasArea.Width,
+			_canvasArea.Height,
 			window,
 			reinterpret_cast<HMENU>(IDC_ZOOM_OUT_BUTTON),
-			m_instance,
+			_instance,
 			nullptr);
 
-		m_zoomOutButton = CreateWindow(
+		_zoomOutButton = CreateWindow(
 			WC_BUTTON,
 			L"-",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			m_mainArea.X,
-			m_mainArea.Y,
+			_mainArea.X,
+			_mainArea.Y,
 			ButtonWidth,
 			ButtonHeight,
 			window,
 			reinterpret_cast<HMENU>(IDC_ZOOM_OUT_BUTTON),
-			m_instance,
+			_instance,
 			nullptr);
 
-		m_zoomInButton = CreateWindow(
+		_zoomInButton = CreateWindow(
 			WC_BUTTON,
 			L"+",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			m_mainArea.Width - ButtonWidth,
-			m_mainArea.Y,
+			_mainArea.Width - ButtonWidth,
+			_mainArea.Y,
 			ButtonWidth,
 			ButtonHeight,
 			window,
 			reinterpret_cast<HMENU>(IDC_ZOOM_IN_BUTTON),
-			m_instance,
+			_instance,
 			nullptr);
 
-		m_previousPictureButton = CreateWindow(
+		_previousPictureButton = CreateWindow(
 			WC_BUTTON,
 			L"<",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			m_mainArea.X,
-			m_mainArea.Height - ButtonHeight,
+			_mainArea.X,
+			_mainArea.Height - ButtonHeight,
 			ButtonWidth,
 			ButtonHeight,
 			window,
 			reinterpret_cast<HMENU>(IDC_PREV_BUTTON),
-			m_instance,
+			_instance,
 			nullptr);
 
-		m_nextPictureButton = CreateWindow(
+		_nextPictureButton = CreateWindow(
 			WC_BUTTON,
 			L">",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			m_mainArea.Width - ButtonWidth,
-			m_mainArea.Height - ButtonHeight,
+			_mainArea.Width - ButtonWidth,
+			_mainArea.Height - ButtonHeight,
 			ButtonWidth,
 			ButtonHeight,
 			window,
 			reinterpret_cast<HMENU>(IDC_NEXT_BUTTON),
-			m_instance,
+			_instance,
 			nullptr);
 
 		const bool useCaching = Registry::Get(L"Software\\PictureBrowser\\UseCaching", true);
 		SetCheckedState(IDM_OPTIONS_USE_CACHING, useCaching ? MFS_CHECKED : MFS_UNCHECKED);
 
-		m_imageCache = std::make_shared<ImageCache>(useCaching);
-		m_fileListHandler = std::make_unique<FileListHandler>(window, m_fileListBox, m_imageCache, std::bind(&MainWindow::OnImageChanged, this, std::placeholders::_1));
-		m_mouseHandler = std::make_unique<MouseHandler>(window, m_canvas, std::bind(&MainWindow::Invalidate, this, true));
-		m_keyboardHandler = std::make_unique<KeyboardHandler>(window, m_fileListBox, std::bind(&FileListHandler::SelectImage, m_fileListHandler.get(), std::placeholders::_1));
+		_imageCache = std::make_shared<ImageCache>(useCaching);
+		_fileListHandler = std::make_unique<FileListHandler>(window, _fileListBox, _imageCache, std::bind(&MainWindow::OnImageChanged, this, std::placeholders::_1));
+		_mouseHandler = std::make_unique<MouseHandler>(window, _canvas, std::bind(&MainWindow::Invalidate, this, true));
+		_keyboardHandler = std::make_unique<KeyboardHandler>(window, _fileListBox, std::bind(&FileListHandler::SelectImage, _fileListHandler.get(), std::placeholders::_1));
 	}
 
 	void MainWindow::OnResize()
 	{
-		RecalculatePaintArea(m_window);
+		RecalculatePaintArea(_window);
 
 		if (!SetWindowPos(
-			m_fileListBox,
+			_fileListBox,
 			HWND_TOP,
 			0,
 			0,
-			m_fileListArea.Width,
-			m_fileListArea.Height,
+			_fileListArea.Width,
+			_fileListArea.Height,
 			SWP_NOMOVE | SWP_NOZORDER))
 		{
 			LOGD << L"Failed to move file list!";
 		}
 
 		if (!SetWindowPos(
-			m_canvas,
+			_canvas,
 			HWND_TOP,
-			m_canvasArea.GetLeft(),
-			m_canvasArea.GetTop(),
-			m_canvasArea.Width,
-			m_canvasArea.Height,
+			_canvasArea.GetLeft(),
+			_canvasArea.GetTop(),
+			_canvasArea.Width,
+			_canvasArea.Height,
 			SWP_NOZORDER))
 		{
 			LOGD << L"Failed move minus button!";
 		}
 
 		if (!SetWindowPos(
-			m_zoomOutButton,
+			_zoomOutButton,
 			HWND_TOP,
-			m_mainArea.GetLeft(),
-			m_mainArea.GetTop(),
+			_mainArea.GetLeft(),
+			_mainArea.GetTop(),
 			0,
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
@@ -296,10 +296,10 @@ namespace PictureBrowser
 		}
 
 		if (!SetWindowPos(
-			m_zoomInButton,
+			_zoomInButton,
 			HWND_TOP,
-			m_mainArea.GetRight() - ButtonWidth,
-			m_mainArea.GetTop(),
+			_mainArea.GetRight() - ButtonWidth,
+			_mainArea.GetTop(),
 			0,
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
@@ -308,10 +308,10 @@ namespace PictureBrowser
 		}
 
 		if (!SetWindowPos(
-			m_previousPictureButton,
+			_previousPictureButton,
 			HWND_TOP,
-			m_mainArea.GetLeft(),
-			m_mainArea.GetBottom() - ButtonHeight,
+			_mainArea.GetLeft(),
+			_mainArea.GetBottom() - ButtonHeight,
 			0,
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
@@ -320,10 +320,10 @@ namespace PictureBrowser
 		}
 
 		if (!SetWindowPos(
-			m_nextPictureButton,
+			_nextPictureButton,
 			HWND_TOP,
-			m_mainArea.GetRight() - ButtonWidth,
-			m_mainArea.GetBottom() - ButtonHeight,
+			_mainArea.GetRight() - ButtonWidth,
+			_mainArea.GetBottom() - ButtonHeight,
 			0,
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
@@ -338,45 +338,45 @@ namespace PictureBrowser
 	{
 		RECT clientArea = { 0 };
 
-		if (!GetWindowRect(m_window, &clientArea))
+		if (!GetWindowRect(_window, &clientArea))
 		{
 			LOGD << L"GetWindowRect failed!";
 			return;
 		}
 
 		const Gdiplus::Rect area(0, 0, clientArea.right - clientArea.left, clientArea.bottom - clientArea.top);
-		GdiExtensions::ContextWrapper context(m_window);
+		GdiExtensions::ContextWrapper context(_window);
 		const Gdiplus::SolidBrush grayBrush(Gdiplus::Color::LightGray);
 		context.Graphics().FillRectangle(&grayBrush, area);
 	}
 
 	void MainWindow::OnPaint()
 	{
-		GdiExtensions::ContextWrapper context(m_canvas);
+		GdiExtensions::ContextWrapper context(_canvas);
 
 		if (!context.IsValid())
 		{
 			return;
 		}
 
-		Gdiplus::Bitmap bitmap(m_canvasArea.Width, m_canvasArea.Height);
+		Gdiplus::Bitmap bitmap(_canvasArea.Width, _canvasArea.Height);
 		Gdiplus::Graphics buffer(&bitmap);
 
 		const Gdiplus::SolidBrush grayBrush(Gdiplus::Color::DarkGray);
-		buffer.FillRectangle(&grayBrush, 0, 0, m_canvasArea.Width, m_canvasArea.Height);
+		buffer.FillRectangle(&grayBrush, 0, 0, _canvasArea.Width, _canvasArea.Height);
 
-		Gdiplus::Image* image = m_imageCache->Current();
+		Gdiplus::Image* image = _imageCache->Current();
 
 		if (image)
 		{
 			Gdiplus::SizeF size(Gdiplus::REAL(image->GetWidth()), Gdiplus::REAL(image->GetHeight()));
 			Gdiplus::Rect scaled;
 
-			GdiExtensions::ScaleAndCenterTo(m_canvasArea, size, scaled);
-			GdiExtensions::Zoom(scaled, m_zoomPercent);
-			scaled.Offset(m_mouseHandler->MouseDragOffset());
+			GdiExtensions::ScaleAndCenterTo(_canvasArea, size, scaled);
+			GdiExtensions::Zoom(scaled, _zoomPercent);
+			scaled.Offset(_mouseHandler->MouseDragOffset());
 
-			if (m_mouseHandler->IsDragging())
+			if (_mouseHandler->IsDragging())
 			{
 				const Gdiplus::Pen pen(Gdiplus::Color::Gray, 2.0f);
 				buffer.DrawRectangle(&pen, scaled);
@@ -387,18 +387,18 @@ namespace PictureBrowser
 			}
 		}
 
-		context.Graphics().DrawImage(&bitmap, 0, 0, m_canvasArea.Width, m_canvasArea.Height);
+		context.Graphics().DrawImage(&bitmap, 0, 0, _canvasArea.Width, _canvasArea.Height);
 	}
 
 	void MainWindow::OnImageChanged(std::filesystem::path path)
 	{
-		m_zoomPercent = 0;
-		m_mouseHandler->ResetOffsets();
+		_zoomPercent = 0;
+		_mouseHandler->ResetOffsets();
 
 		Invalidate();
 
-		const std::wstring title = m_title + L" - " + path.filename().wstring();
-		SetWindowText(m_window, title.c_str());
+		const std::wstring title = _title + L" - " + path.filename().wstring();
+		SetWindowText(_window, title.c_str());
 	}
 
 	void MainWindow::OnZoom(WPARAM wParam)
@@ -406,22 +406,22 @@ namespace PictureBrowser
 		switch (wParam)
 		{
 			case VK_OEM_MINUS:
-				if (m_zoomPercent > 0)
+				if (_zoomPercent > 0)
 				{
-					m_zoomPercent -= 5;
+					_zoomPercent -= 5;
 					Invalidate();
 				}
 				break;
 			case VK_OEM_PLUS:
-				if (m_zoomPercent < 1000)
+				if (_zoomPercent < 1000)
 				{
-					m_zoomPercent += 5;
+					_zoomPercent += 5;
 					Invalidate();
 				}
 				break;
 		}
 
-		LOGD << m_zoomPercent;
+		LOGD << _zoomPercent;
 	}
 
 	void MainWindow::OnCommand(WPARAM wParam)
@@ -443,33 +443,33 @@ namespace PictureBrowser
 			case IDC_PREV_BUTTON:
 			{
 				// TODO: disable button if no image is loaded
-				m_keyboardHandler->OnKeyUp(VK_LEFT);
+				_keyboardHandler->OnKeyUp(VK_LEFT);
 				break;
 			}
 			case IDC_NEXT_BUTTON:
 			{
 				// TODO: disable button if no image is loaded
-				m_keyboardHandler->OnKeyUp(VK_RIGHT);
+				_keyboardHandler->OnKeyUp(VK_RIGHT);
 				break;
 			}
 			case IDM_EXIT:
 			{
-				DestroyWindow(m_window);
+				DestroyWindow(_window);
 				break;
 			}
 			case IDM_ABOUT:
 			{
-				DialogBox(g_mainWindow->m_instance, MAKEINTRESOURCE(IDD_ABOUT), m_window, GenericOkDialog);
+				DialogBox(_mainWindow->_instance, MAKEINTRESOURCE(IDD_ABOUT), _window, GenericOkDialog);
 				break;
 			}
 			case IDM_KEYBOARD:
 			{
-				DialogBox(g_mainWindow->m_instance, MAKEINTRESOURCE(IDD_KEYBOARD), m_window, GenericOkDialog);
+				DialogBox(_mainWindow->_instance, MAKEINTRESOURCE(IDD_KEYBOARD), _window, GenericOkDialog);
 				break;
 			}
 			case IDM_OPEN:
 			{
-				m_fileListHandler->OnOpenMenu();
+				_fileListHandler->OnOpenMenu();
 				break;
 			}
 			case IDM_OPTIONS_USE_CACHING:
@@ -495,7 +495,7 @@ namespace PictureBrowser
 		{
 			case LBN_SELCHANGE:
 			{
-				m_fileListHandler->OnSelectionChanged();
+				_fileListHandler->OnSelectionChanged();
 				break;
 			}
 		}
@@ -504,13 +504,13 @@ namespace PictureBrowser
 	{
 		const RECT canvasArea =
 		{
-			m_canvasArea.GetLeft(),
-			m_canvasArea.GetTop(),
-			m_canvasArea.GetRight(),
-			m_canvasArea.GetBottom()
+			_canvasArea.GetLeft(),
+			_canvasArea.GetTop(),
+			_canvasArea.GetRight(),
+			_canvasArea.GetBottom()
 		};
 
-		if (!InvalidateRect(m_window, &canvasArea, erase))
+		if (!InvalidateRect(_window, &canvasArea, erase))
 		{
 			LOGD << L"InvalidateRect failed!";
 			return;
@@ -521,7 +521,7 @@ namespace PictureBrowser
 
 	UINT MainWindow::CheckedState(UINT menuEntry) const
 	{
-		const HMENU menu = GetMenu(m_window);
+		const HMENU menu = GetMenu(_window);
 		MENUITEMINFO menuItemInfo = { 0 };
 		menuItemInfo.cbSize = sizeof(MENUITEMINFO);
 		menuItemInfo.fMask = MIIM_STATE;
@@ -537,7 +537,7 @@ namespace PictureBrowser
 
 	void MainWindow::SetCheckedState(UINT menuEntry, UINT state) const
 	{
-		const HMENU menu = GetMenu(m_window);
+		const HMENU menu = GetMenu(_window);
 		MENUITEMINFO menuItemInfo = { 0 };
 		menuItemInfo.cbSize = sizeof(MENUITEMINFO);
 		menuItemInfo.fMask = MIIM_STATE;
@@ -555,65 +555,65 @@ namespace PictureBrowser
 		{
 			case WM_CREATE:
 			{
-				g_mainWindow->OnCreate(window);
+				_mainWindow->OnCreate(window);
 				break;
 			}
 			case WM_DESTROY:
 			{
-				g_mainWindow->m_fileListHandler->Clear();
+				_mainWindow->_fileListHandler->Clear();
 				PostQuitMessage(0);
 				break;
 			}
 			case WM_SIZE:
 			{
-				g_mainWindow->OnResize();
+				_mainWindow->OnResize();
 				break;
 			}
 			case WM_ERASEBKGND:
 			{
-				g_mainWindow->OnErase();
+				_mainWindow->OnErase();
 				break;
 			}
 			case WM_PAINT:
 			{
 				DefWindowProc(window, message, wParam, lParam);
-				g_mainWindow->OnPaint();
+				_mainWindow->OnPaint();
 				break;
 			}
 			case WM_KEYUP:
 			{
-				g_mainWindow->m_keyboardHandler->OnKeyUp(wParam);
+				_mainWindow->_keyboardHandler->OnKeyUp(wParam);
 				break;
 			}
 			case WM_LBUTTONDBLCLK:
 			case WM_RBUTTONDBLCLK:
 			{
-				g_mainWindow->m_mouseHandler->OnDoubleClick();
+				_mainWindow->_mouseHandler->OnDoubleClick();
 				break;
 			}
 			case WM_LBUTTONDOWN:
 			{
-				g_mainWindow->m_mouseHandler->OnLeftMouseDown(lParam);
+				_mainWindow->_mouseHandler->OnLeftMouseDown(lParam);
 				break;
 			}
 			case WM_MOUSEMOVE:
 			{
-				g_mainWindow->m_mouseHandler->OnMouseMove(lParam);
+				_mainWindow->_mouseHandler->OnMouseMove(lParam);
 				break;
 			}
 			case WM_LBUTTONUP:
 			{
-				g_mainWindow->m_mouseHandler->OnLeftMouseUp(lParam);
+				_mainWindow->_mouseHandler->OnLeftMouseUp(lParam);
 				break;
 			}
 			case WM_COMMAND:
 			{
-				g_mainWindow->OnCommand(wParam);
+				_mainWindow->OnCommand(wParam);
 				break;
 			}
 			case WM_DROPFILES:
 			{
-				g_mainWindow->m_fileListHandler->OnFileDrop(wParam);
+				_mainWindow->_fileListHandler->OnFileDrop(wParam);
 				break;
 			}
 			default:

@@ -12,10 +12,10 @@ namespace GdiExtensions
 		Gdiplus::Graphics& Graphics();
 
 	private:
-		const HWND m_window;
-		const HDC m_deviceContext;
-		PAINTSTRUCT m_paintScruct = { 0 };
-		Gdiplus::Graphics m_graphics;
+		const HWND _window;
+		const HDC _deviceContext;
+		PAINTSTRUCT _paintScruct = { 0 };
+		Gdiplus::Graphics _graphics;
 	};
 
 	class PropertyWrapper
@@ -28,8 +28,8 @@ namespace GdiExtensions
 		Gdiplus::PropertyItem* Get() const;
 
 	private:
-		Gdiplus::Status m_status = Gdiplus::Status::PropertyNotFound;
-		Gdiplus::PropertyItem* m_property = nullptr;
+		Gdiplus::Status _status = Gdiplus::Status::PropertyNotFound;
+		Gdiplus::PropertyItem* _property = nullptr;
 	};
 
 	void ScaleAndCenterTo(const Gdiplus::Rect& source, const Gdiplus::SizeF& size, Gdiplus::Rect& dest);

@@ -19,9 +19,9 @@ private:
 	void LoadPicture(const std::filesystem::path& path);
 	std::filesystem::path ImageFromIndex(LONG_PTR index) const;
 
-	HWND m_window = nullptr;
-	HWND m_fileListBox = nullptr;
-	std::shared_ptr<ImageCache> m_imageCache;
-	std::filesystem::path m_currentDirectory;
-	std::function<void(std::filesystem::path)> m_imageChanged;
+	HWND _window = nullptr;
+	HWND _fileListBox = nullptr;
+	std::shared_ptr<ImageCache> _imageCache;
+	std::filesystem::path _currentDirectory;
+	std::function<void(std::filesystem::path)> _imageChanged;
 };

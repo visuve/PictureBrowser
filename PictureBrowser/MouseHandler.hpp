@@ -16,11 +16,11 @@ public:
 	void ResetOffsets();
 
 private:
-	const HWND m_window = nullptr;
-	const HWND m_canvas = nullptr;
-	std::function<void()> m_invalidate;
+	const HWND _window = nullptr;
+	const HWND _canvas = nullptr;
+	std::function<void()> _invalidate;
 
-	bool m_isDragging = false;
-	Gdiplus::Point m_mouseDragStart;
-	Gdiplus::Point m_mouseDragOffset;
+	bool _isDragging = false;
+	Gdiplus::Point _mouseDragStart;
+	Gdiplus::Point _mouseDragOffset;
 };

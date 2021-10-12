@@ -15,7 +15,7 @@ public:
 private:
 	Gdiplus::Image* Load(const std::filesystem::path& path);
 
-	std::map<std::filesystem::path, std::unique_ptr<Gdiplus::Image>> m_cache;
-	std::filesystem::path m_currentImage;
-	bool m_useCaching = true;
+	std::map<std::filesystem::path, std::unique_ptr<Gdiplus::Image>> _cache;
+	std::filesystem::path _currentImage;
+	bool _useCaching = true;
 };

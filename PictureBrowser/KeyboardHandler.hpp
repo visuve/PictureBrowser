@@ -7,8 +7,8 @@ public:
 	void OnKeyUp(WPARAM);
 
 private:
-	HWND m_window;
-	HWND m_fileListBox;
-	std::function<void(LONG_PTR)> m_selectImage;
+	HWND _window;
+	HWND _fileListBox;
+	std::function<void(LONG_PTR)> _selectImage;
 };
 

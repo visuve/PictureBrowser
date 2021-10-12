@@ -15,8 +15,8 @@ namespace Registry
 		std::wstring Padded() const;
 
 	private:
-		const std::wstring m_subKey;
-		const std::wstring m_valueName;
+		const std::wstring _subKey;
+		const std::wstring _valueName;
 	};
 
 	class RegHandle
@@ -29,7 +29,7 @@ namespace Registry
 		HKEY Get() const;
 		PHKEY Ref();
 	private:
-		HKEY m_key = nullptr;
+		HKEY _key = nullptr;
 	};
 
 	template<typename T>

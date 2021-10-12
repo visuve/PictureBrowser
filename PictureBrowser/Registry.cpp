@@ -4,8 +4,8 @@
 namespace Registry
 {
 	RegPath::RegPath(const std::wstring& path) :
-		m_subKey(path.substr(0, path.rfind('\\'))),
-		m_valueName(path.substr(path.rfind('\\') + 1, path.length()))
+		_subKey(path.substr(0, path.rfind('\\'))),
+		_valueName(path.substr(path.rfind('\\') + 1, path.length()))
 	{
 	}
 
@@ -16,17 +16,17 @@ namespace Registry
 
 	const wchar_t* RegPath::SubKeyName() const
 	{
-		return m_subKey.c_str();
+		return _subKey.c_str();
 	}
 
 	const wchar_t* RegPath::ValueName() const
 	{
-		return m_valueName.c_str();
+		return _valueName.c_str();
 	}
 
 	std::wstring RegPath::Padded() const
 	{
-		return L'"' + m_subKey + L'\\' + m_valueName + L'"';
+		return L'"' + _subKey + L'\\' + _valueName + L'"';
 	}
 
 	RegHandle::RegHandle(const HKEY hive, const RegPath& path)
@@ -39,7 +39,7 @@ namespace Registry
 			0,
 			KEY_READ | KEY_WRITE,
 			nullptr,
-			&m_key,
+			&_key,
 			nullptr) != ERROR_SUCCESS)
 		{
 			LOGD << L"RegCreateKeyEx failed.";
@@ -48,9 +48,9 @@ namespace Registry
 
 	RegHandle::~RegHandle()
 	{
-		if (m_key)
+		if (_key)
 		{
-			if (RegCloseKey(m_key) != ERROR_SUCCESS)
+			if (RegCloseKey(_key) != ERROR_SUCCESS)
 			{
 				LOGD << L"RegCloseKey failed.";
 			}
@@ -59,16 +59,16 @@ namespace Registry
 
 	bool RegHandle::IsValid()
 	{
-		return m_key != nullptr;
+		return _key != nullptr;
 	}
 
 	HKEY RegHandle::Get() const
 	{
-		return m_key;
+		return _key;
 	}
 
 	PHKEY RegHandle::Ref()
 	{
-		return &m_key;
+		return &_key;
 	}
 }

@@ -3,16 +3,16 @@
 #include "LogWrap.hpp"
 
 FileListHandler::FileListHandler(HWND window, HWND fileListBox, const std::shared_ptr<ImageCache>& imageCache, const std::function<void(std::filesystem::path)>& imageChanged) :
-	m_window(window),
-	m_fileListBox(fileListBox),
-	m_imageCache(imageCache),
-	m_imageChanged(imageChanged)
+	_window(window),
+	_fileListBox(fileListBox),
+	_imageCache(imageCache),
+	_imageChanged(imageChanged)
 {
 }
 
 void FileListHandler::Open(const std::filesystem::path& path)
 {
-	m_imageCache->Clear();
+	_imageCache->Clear();
 
 	switch (LoadFileList(path))
 	{
@@ -36,13 +36,13 @@ void FileListHandler::Open(const std::filesystem::path& path)
 
 void FileListHandler::Clear()
 {
-	m_currentDirectory.clear();
-	m_imageCache->Clear();
+	_currentDirectory.clear();
+	_imageCache->Clear();
 }
 
 std::filesystem::path FileListHandler::SelectedImage() const
 {
-	const LONG_PTR current = SendMessage(m_fileListBox, LB_GETCURSEL, 0, 0);
+	const LONG_PTR current = SendMessage(_fileListBox, LB_GETCURSEL, 0, 0);
 
 	if (current < 0)
 	{
@@ -59,7 +59,7 @@ void FileListHandler::OnOpenMenu()
 	wchar_t filePath[0x1000] = { 0 };
 
 	openFile.lStructSize = sizeof(openFile);
-	openFile.hwndOwner = m_window;
+	openFile.hwndOwner = _window;
 	openFile.lpstrFile = filePath;
 	openFile.nMaxFile = 0xFFF;
 	openFile.lpstrFilter = L"Joint Photographic Experts Group (*.jpg)\0*.jpg\0Portable Network Graphics (*.png)\0*.png\0";
@@ -108,12 +108,12 @@ void FileListHandler::OnFileDrop(WPARAM wParam)
 	}
 
 	DragFinish(dropInfo);
-	SetFocus(m_window); // Somehow loses focus without
+	SetFocus(_window); // Somehow loses focus without
 }
 
 void FileListHandler::SelectImage(LONG_PTR current)
 {
-	if (SendMessage(m_fileListBox, LB_SETCURSEL, current, 0) < 0)
+	if (SendMessage(_fileListBox, LB_SETCURSEL, current, 0) < 0)
 	{
 		LOGD << L"Failed to send LB_SETCURSEL!";
 		return;
@@ -145,7 +145,7 @@ std::filesystem::file_type FileListHandler::LoadFileList(const std::filesystem::
 			const std::wstring message =
 				L"The path you have entered does not appear to exist:\n" + path.wstring();
 
-			MessageBox(m_window,
+			MessageBox(_window,
 				message.c_str(),
 				L"I/O error!",
 				MB_OK | MB_ICONINFORMATION);
@@ -157,7 +157,7 @@ std::filesystem::file_type FileListHandler::LoadFileList(const std::filesystem::
 			if (_wcsicmp(path.extension().c_str(), L".jpg") != 0 &&
 				_wcsicmp(path.extension().c_str(), L".png") != 0)
 			{
-				MessageBox(m_window,
+				MessageBox(_window,
 					L"Only JPG and PNG are supported!",
 					L"Unsupported file format!",
 					MB_OK | MB_ICONINFORMATION);
@@ -167,14 +167,14 @@ std::filesystem::file_type FileListHandler::LoadFileList(const std::filesystem::
 
 			jpgFilter.insert(0, path.parent_path().wstring());
 			pngFilter.insert(0, path.parent_path().wstring());
-			m_currentDirectory = path.parent_path();
+			_currentDirectory = path.parent_path();
 			break;
 		}
 		case std::filesystem::file_type::directory:
 		{
 			jpgFilter.insert(0, path.wstring());
 			pngFilter.insert(0, path.wstring());
-			m_currentDirectory = path;
+			_currentDirectory = path;
 			break;
 		}
 		default:
@@ -182,7 +182,7 @@ std::filesystem::file_type FileListHandler::LoadFileList(const std::filesystem::
 			const std::wstring message =
 				L"The path you have entered does not appear to be a file or a folder:\n" + path.wstring();
 
-			MessageBox(m_window,
+			MessageBox(_window,
 				message.c_str(),
 				L"FUBAR",
 				MB_OK | MB_ICONINFORMATION);
@@ -191,22 +191,22 @@ std::filesystem::file_type FileListHandler::LoadFileList(const std::filesystem::
 		}
 	}
 
-	if (!SendMessage(m_fileListBox, LB_RESETCONTENT, 0, 0))
+	if (!SendMessage(_fileListBox, LB_RESETCONTENT, 0, 0))
 	{
 		LOGD << L"Failed to send message LB_RESETCONTENT!";
 	}
 
-	if (!SendMessage(m_fileListBox, LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(jpgFilter.c_str())))
+	if (!SendMessage(_fileListBox, LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(jpgFilter.c_str())))
 	{
 		LOGD << L"Failed to send JPG filter update!";
 	}
 
-	if (!SendMessage(m_fileListBox, LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(pngFilter.c_str())))
+	if (!SendMessage(_fileListBox, LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(pngFilter.c_str())))
 	{
 		LOGD << L"Failed to send PNG filter update!";
 	}
 
-	const LONG_PTR count = SendMessage(m_fileListBox, LB_GETCOUNT, 0, 0);
+	const LONG_PTR count = SendMessage(_fileListBox, LB_GETCOUNT, 0, 0);
 
 	if (!count)
 	{
@@ -214,7 +214,7 @@ std::filesystem::file_type FileListHandler::LoadFileList(const std::filesystem::
 			L"The path you have entered does not appear to have JPG or PNG files!\n" + path.wstring();
 
 		MessageBox(
-			m_window,
+			_window,
 			message.c_str(),
 			L"Empty directory!",
 			MB_OK | MB_ICONINFORMATION);
@@ -222,7 +222,7 @@ std::filesystem::file_type FileListHandler::LoadFileList(const std::filesystem::
 		return std::filesystem::file_type::none;
 	}
 
-	if (!SendMessage(m_fileListBox, LB_SELECTSTRING, 0, reinterpret_cast<LPARAM>(path.filename().c_str())))
+	if (!SendMessage(_fileListBox, LB_SELECTSTRING, 0, reinterpret_cast<LPARAM>(path.filename().c_str())))
 	{
 		LOGD << L"Failed to send message LB_SELECTSTRING!";
 	}
@@ -237,7 +237,7 @@ void FileListHandler::LoadPicture(const std::filesystem::path& path)
 		const std::wstring message =
 			path.wstring() + L" does not appear to be a file!";
 
-		MessageBox(m_window,
+		MessageBox(_window,
 			message.c_str(),
 			L"Unsupported file format!",
 			MB_OK | MB_ICONINFORMATION);
@@ -245,12 +245,12 @@ void FileListHandler::LoadPicture(const std::filesystem::path& path)
 		return;
 	}
 
-	if (!m_imageCache->SetCurrent(path))
+	if (!_imageCache->SetCurrent(path))
 	{
 		const std::wstring message =
 			L"Failed to load:\n" + path.wstring();
 
-		MessageBox(m_window,
+		MessageBox(_window,
 			message.c_str(),
 			L"FUBAR",
 			MB_OK | MB_ICONINFORMATION);
@@ -258,19 +258,19 @@ void FileListHandler::LoadPicture(const std::filesystem::path& path)
 		return;
 	}
 
-	m_imageChanged(path);
+	_imageChanged(path);
 }
 
 std::filesystem::path FileListHandler::ImageFromIndex(LONG_PTR index) const
 {
-	const size_t length = static_cast<size_t>(SendMessage(m_fileListBox, LB_GETTEXTLEN, index, 0));
+	const size_t length = static_cast<size_t>(SendMessage(_fileListBox, LB_GETTEXTLEN, index, 0));
 	std::wstring buffer(length, '\0');
 
-	if (SendMessage(m_fileListBox, LB_GETTEXT, index, reinterpret_cast<LPARAM>(buffer.data())) != length)
+	if (SendMessage(_fileListBox, LB_GETTEXT, index, reinterpret_cast<LPARAM>(buffer.data())) != length)
 	{
 		LOGD << L"Failed to send LB_GETTEXT!";
 		return {};
 	}
 
-	return m_currentDirectory / buffer;
+	return _currentDirectory / buffer;
 }

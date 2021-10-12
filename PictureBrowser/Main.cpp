@@ -7,26 +7,26 @@ class GdiPlusGuard
 {
 public:
 	GdiPlusGuard() :
-		m_status(Gdiplus::GdiplusStartup(&m_gdiPlusToken, &gdiPlusStartupInput, nullptr))
+		_status(Gdiplus::GdiplusStartup(&_gdiPlusToken, &_gdiPlusStartupInput, nullptr))
 	{
 	}
 
 	~GdiPlusGuard()
 	{
-		if (m_gdiPlusToken)
+		if (_gdiPlusToken)
 		{
-			Gdiplus::GdiplusShutdown(m_gdiPlusToken);
+			Gdiplus::GdiplusShutdown(_gdiPlusToken);
 		}
 	}
 
 	operator bool() const
 	{
-		return m_status == Gdiplus::Status::Ok;
+		return _status == Gdiplus::Status::Ok;
 	}
 private:
-	Gdiplus::GdiplusStartupInput gdiPlusStartupInput = { 0 };
-	UINT_PTR m_gdiPlusToken = 0;
-	Gdiplus::Status m_status;
+	Gdiplus::GdiplusStartupInput _gdiPlusStartupInput = { 0 };
+	UINT_PTR _gdiPlusToken = 0;
+	Gdiplus::Status _status;
 };
 
 std::filesystem::path TrimQuotes(const std::wstring& path)

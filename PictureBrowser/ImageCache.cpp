@@ -14,7 +14,7 @@ void CorrectRotationIfNeeded(Gdiplus::Image* image)
 }
 
 ImageCache::ImageCache(bool useCaching) :
-	m_useCaching(useCaching)
+	_useCaching(useCaching)
 {
 }
 
@@ -30,22 +30,22 @@ bool ImageCache::SetCurrent(const std::filesystem::path& path)
 		return false;
 	}
 
-	m_currentImage = path;
+	_currentImage = path;
 	return true;
 }
 
 Gdiplus::Image* ImageCache::Current()
 {
-	return Get(m_currentImage);
+	return Get(_currentImage);
 }
 
 Gdiplus::Image* ImageCache::Get(const std::filesystem::path& path)
 {
-	if (m_useCaching)
+	if (_useCaching)
 	{
-		const auto iter = m_cache.find(path);
+		const auto iter = _cache.find(path);
 
-		if (iter != m_cache.cend())
+		if (iter != _cache.cend())
 		{
 			return iter->second.get();
 		}
@@ -56,7 +56,7 @@ Gdiplus::Image* ImageCache::Get(const std::filesystem::path& path)
 
 void ImageCache::Clear()
 {
-	m_cache.clear();
+	_cache.clear();
 }
 
 Gdiplus::Image* ImageCache::Load(const std::filesystem::path& path)
@@ -68,10 +68,10 @@ Gdiplus::Image* ImageCache::Load(const std::filesystem::path& path)
 		return nullptr;
 	}
 
-	if (m_useCaching)
+	if (_useCaching)
 	{
 		CorrectRotationIfNeeded(image);
-		m_cache[path].reset(image);
+		_cache[path].reset(image);
 		LOGD << L"Cached: " << path;
 	}
 

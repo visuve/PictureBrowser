@@ -35,7 +35,7 @@ public:
 	template<std::size_t N>
 	LogWrap& operator << (const wchar_t(&value)[N])
 	{
-		m_buffer.append(value);
+		_buffer.append(value);
 		return *this;
 	}
 
@@ -48,7 +48,7 @@ public:
 	LogWrap& operator << (const RECT& rect);
 
 private:
-	std::wstring m_buffer;
+	std::wstring _buffer;
 };
 
 #define LOGD LogWrap(__FUNCTIONW__, __LINE__)

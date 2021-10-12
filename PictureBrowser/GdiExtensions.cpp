@@ -16,28 +16,28 @@ namespace GdiExtensions
 	}
 
 	ContextWrapper::ContextWrapper(HWND window) :
-		m_window(window),
-		m_deviceContext(BeginPaint(m_window, &m_paintScruct)),
-		m_graphics(m_deviceContext)
+		_window(window),
+		_deviceContext(BeginPaint(_window, &_paintScruct)),
+		_graphics(_deviceContext)
 	{
 	}
 
 	ContextWrapper::~ContextWrapper()
 	{
-		if (m_deviceContext)
+		if (_deviceContext)
 		{
-			EndPaint(m_window, &m_paintScruct);
+			EndPaint(_window, &_paintScruct);
 		}
 	}
 
 	bool ContextWrapper::IsValid() const
 	{
-		return m_deviceContext;
+		return _deviceContext;
 	}
 
 	Gdiplus::Graphics& ContextWrapper::Graphics()
 	{
-		return m_graphics;
+		return _graphics;
 	}
 
 	PropertyWrapper::PropertyWrapper(Gdiplus::Image* image, PROPID propertyId)
@@ -46,28 +46,28 @@ namespace GdiExtensions
 
 		if (propertySize)
 		{
-			m_property = reinterpret_cast<Gdiplus::PropertyItem*>(malloc(propertySize));
-			m_status = image->GetPropertyItem(propertyId, propertySize, m_property);
+			_property = reinterpret_cast<Gdiplus::PropertyItem*>(malloc(propertySize));
+			_status = image->GetPropertyItem(propertyId, propertySize, _property);
 		}
 	}
 
 	PropertyWrapper::~PropertyWrapper()
 	{
-		if (m_property)
+		if (_property)
 		{
-			free(m_property);
-			m_property = nullptr;
+			free(_property);
+			_property = nullptr;
 		}
 	}
 
 	bool PropertyWrapper::IsValid() const
 	{
-		return m_property && m_status == Gdiplus::Status::Ok;
+		return _property && _status == Gdiplus::Status::Ok;
 	}
 
 	Gdiplus::PropertyItem* PropertyWrapper::Get() const
 	{
-		return m_property;
+		return _property;
 	}
 
 	void ScaleAndCenterTo(const Gdiplus::Rect& source, const Gdiplus::SizeF& size, Gdiplus::Rect& dest)
