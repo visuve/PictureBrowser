@@ -25,7 +25,7 @@ ImageCache::~ImageCache()
 
 bool ImageCache::SetCurrent(const std::filesystem::path& path)
 {
-	if (!Load(path))
+	if (!Get(path))
 	{
 		return false;
 	}
@@ -49,6 +49,8 @@ Gdiplus::Image* ImageCache::Get(const std::filesystem::path& path)
 		{
 			return iter->second.get();
 		}
+
+		LOGD << L"Not cached: " << path;
 	}
 
 	return Load(path);
