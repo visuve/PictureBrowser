@@ -25,7 +25,7 @@ public:
 	}
 private:
 	Gdiplus::GdiplusStartupInput _gdiPlusStartupInput;
-	UINT_PTR _gdiPlusToken = 0;
+	ULONG_PTR _gdiPlusToken = 0;
 	Gdiplus::Status _status;
 };
 
