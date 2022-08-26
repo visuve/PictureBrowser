@@ -6,9 +6,8 @@ public:
 	template<std::size_t N>
 	LogWrap(const wchar_t(&function)[N], int line)
 	{
-		const auto now = std::chrono::system_clock::now();
-		const auto since = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
-		*this << since.count() << L' ' << function << L':' << line << L": ";
+		auto now = std::chrono::system_clock::now();
+		*this << std::format(L"{} {}: {}", now, function, line);
 	}
 
 	~LogWrap();
