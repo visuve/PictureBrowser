@@ -3,7 +3,7 @@
 
 namespace Registry
 {
-	RegPath::RegPath(const std::wstring& path) :
+	RegPath::RegPath(std::wstring_view path) :
 		_subKey(path.substr(0, path.rfind('\\'))),
 		_valueName(path.substr(path.rfind('\\') + 1, path.length()))
 	{

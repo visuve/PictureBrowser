@@ -7,11 +7,11 @@ namespace Registry
 	class RegPath
 	{
 	public:
-		RegPath(const std::wstring& path);
+		RegPath(std::wstring_view path);
 		
 		template<std::size_t N>
 		RegPath(const wchar_t(&path)[N]) :
-			RegPath(std::wstring(path, N))
+			RegPath(std::wstring_view(path, N))
 		{
 		}
 

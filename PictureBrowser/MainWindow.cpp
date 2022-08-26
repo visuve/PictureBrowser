@@ -171,7 +171,7 @@ namespace PictureBrowser
 		_fileListBox = CreateWindow(
 			WC_LISTBOX,
 			L"Filelist...",
-			WS_VISIBLE | WS_CHILD | LBS_STANDARD,
+			WS_VISIBLE | WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY | LBS_HASSTRINGS,
 			_fileListArea.X,
 			_fileListArea.Y,
 			_fileListArea.Width,

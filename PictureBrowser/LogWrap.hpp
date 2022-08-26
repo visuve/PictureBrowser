@@ -7,7 +7,7 @@ public:
 	LogWrap(const wchar_t(&function)[N], int line)
 	{
 		auto now = std::chrono::system_clock::now();
-		*this << std::format(L"{} {}: {}", now, function, line);
+		*this << std::format(L"{} {}:{}: ", now, function, line);
 	}
 
 	~LogWrap();

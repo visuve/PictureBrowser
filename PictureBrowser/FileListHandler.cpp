@@ -227,9 +227,14 @@ std::filesystem::file_type FileListHandler::LoadFileList(const std::filesystem::
 		return std::filesystem::file_type::none;
 	}
 
-	if (!SendMessage(_fileListBox, LB_SELECTSTRING, 0, reinterpret_cast<LPARAM>(path.filename().c_str())))
+	if (status == std::filesystem::file_type::regular && 
+		!SendMessage(_fileListBox, LB_SELECTSTRING, 0, reinterpret_cast<LPARAM>(path.filename().c_str())))
 	{
 		LOGD << L"Failed to send message LB_SELECTSTRING!";
+	}
+	else if (!SendMessage(_fileListBox, LB_SETCURSEL, 0, 0))
+	{
+		LOGD << L"Failed to send message LB_SETCURSEL !";
 	}
 
 	return status;

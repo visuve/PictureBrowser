@@ -6,7 +6,7 @@
 
 ## Prerequisites
 
-- Visual Studio 2019
+- Visual Studio 2022
 	- https://www.visualstudio.com/
 	- C++ desktop development workload selected
 
