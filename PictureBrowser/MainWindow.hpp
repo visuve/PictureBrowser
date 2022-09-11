@@ -23,6 +23,7 @@ namespace PictureBrowser
 		void RecalculatePaintArea(HWND);
 		void OnCreate(HWND);
 		void OnResize();
+		void OnContextMenu(WPARAM, LPARAM);
 		void OnErase() const;
 		void OnPaint();
 

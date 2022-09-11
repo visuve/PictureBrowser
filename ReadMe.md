@@ -12,4 +12,5 @@
 
 ## TODO:
 
-- Apply a "widget" and decorator pattern to all the UI elements
+- Create a widget class and handle messages in each widget
+	- The current architecture is horrible

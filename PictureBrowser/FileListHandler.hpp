@@ -13,6 +13,8 @@ public:
 	void OnSelectionChanged();
 	void OnFileDrop(WPARAM wParam);
 	void SelectImage(LONG_PTR current);
+	void OnContextMenu(LPARAM);
+	void OnPopupClosed();
 
 private:
 	std::filesystem::file_type LoadFileList(const std::filesystem::path&);
@@ -24,4 +26,5 @@ private:
 	std::shared_ptr<ImageCache> _imageCache;
 	std::filesystem::path _currentDirectory;
 	std::function<void(std::filesystem::path)> _imageChanged;
+	WORD _contextMenuIndex = 0;
 };

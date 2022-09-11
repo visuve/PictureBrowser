@@ -133,7 +133,7 @@ namespace PictureBrowser
 
 	void MainWindow::RecalculatePaintArea(HWND window)
 	{
-		RECT clientArea = { 0 };
+		RECT clientArea = { };
 
 		if (!GetClientRect(window, &clientArea))
 		{
@@ -347,6 +347,14 @@ namespace PictureBrowser
 		Invalidate();
 	}
 
+	void MainWindow::OnContextMenu(WPARAM wParam, LPARAM lParam)
+	{
+		if (reinterpret_cast<HWND>(wParam) == _mainWindow->_fileListBox)
+		{
+			_mainWindow->_fileListHandler->OnContextMenu(lParam);
+		}
+	}
+
 	void MainWindow::OnErase() const
 	{
 		RECT clientArea = { 0 };
@@ -463,6 +471,11 @@ namespace PictureBrowser
 			{
 				// TODO: disable button if no image is loaded
 				_keyboardHandler->OnKeyUp(VK_RIGHT);
+				break;
+			}
+			case IDC_POPUP_COPY:
+			{
+				_fileListHandler->OnPopupClosed();
 				break;
 			}
 			case IDM_EXIT:
@@ -582,15 +595,20 @@ namespace PictureBrowser
 				_mainWindow->OnResize();
 				break;
 			}
+			case WM_PAINT:
+			{
+				DefWindowProc(window, message, wParam, lParam);
+				_mainWindow->OnPaint();
+				break;
+			}
 			case WM_ERASEBKGND:
 			{
 				_mainWindow->OnErase();
 				break;
 			}
-			case WM_PAINT:
+			case WM_CONTEXTMENU:
 			{
-				DefWindowProc(window, message, wParam, lParam);
-				_mainWindow->OnPaint();
+				_mainWindow->OnContextMenu(wParam, lParam);
 				break;
 			}
 			case WM_KEYUP:

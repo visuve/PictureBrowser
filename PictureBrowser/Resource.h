@@ -17,6 +17,7 @@
 #define IDC_ZOOM_OUT_BUTTON		305
 #define IDC_ZOOM_IN_BUTTON		306
 #define IDC_LISTBOX				307
+#define IDC_POPUP_COPY			308
 
 #define IDD_ABOUT				401
 #define IDD_KEYBOARD			402

@@ -1,6 +1,7 @@
 #include "PCH.hpp"
 #include "FileListHandler.hpp"
 #include "LogWrap.hpp"
+#include "Resource.h"
 
 FileListHandler::FileListHandler(
 	HWND window, 
@@ -54,7 +55,7 @@ std::filesystem::path FileListHandler::SelectedImage() const
 		return {};
 	}
 
-	return ImageFromIndex(current);
+	return _currentDirectory / ImageFromIndex(current);
 }
 
 void FileListHandler::OnOpenMenu()
@@ -116,6 +117,82 @@ void FileListHandler::OnFileDrop(WPARAM wParam)
 	SetFocus(_window); // Somehow loses focus without
 }
 
+void FileListHandler::OnContextMenu(LPARAM lParam)
+{
+	const long x = LOWORD(lParam);
+	const long y = HIWORD(lParam);
+
+	POINT p = { x, y };
+
+	if (!ScreenToClient(_fileListBox, &p))
+	{
+		return;
+	}
+
+	LRESULT result = SendMessage(
+		_fileListBox, 
+		LB_ITEMFROMPOINT, 
+		0,
+		MAKELPARAM(p.x, p.y));
+
+	if (result < 0)
+	{
+		return;
+	}
+
+	WORD index = LOWORD(result);
+	
+	if (HIWORD(result))
+	{
+		return; // Outside the client area
+	}
+
+	_contextMenuIndex = index;
+
+	HMENU menu = CreatePopupMenu();
+
+	InsertMenu(menu, 0, MF_STRING, IDC_POPUP_COPY, L"Copy filename to clipboard");
+
+	TrackPopupMenu(menu, TPM_TOPALIGN | TPM_LEFTALIGN, x, y, 0, _window, nullptr);
+
+	DestroyMenu(menu);
+}
+
+void FileListHandler::OnPopupClosed()
+{
+	std::wstring filename = ImageFromIndex(_contextMenuIndex);
+
+	if (filename.empty())
+	{
+		return;
+	}
+
+	size_t bytes = filename.size() * sizeof(wchar_t) + sizeof(wchar_t);
+
+	HGLOBAL memory = GlobalAlloc(GMEM_MOVEABLE, bytes);
+
+	if (!memory)
+	{
+		return;
+	}
+
+	void* lock = GlobalLock(memory);
+
+	if (!lock)
+	{
+		return;
+	}
+
+	memcpy(lock, filename.c_str(), bytes);
+
+	GlobalUnlock(memory);
+
+	OpenClipboard(0);
+	EmptyClipboard();
+	SetClipboardData(CF_UNICODETEXT, memory);
+	CloseClipboard();
+}
+
 void FileListHandler::SelectImage(LONG_PTR current)
 {
 	if (SendMessage(_fileListBox, LB_SETCURSEL, current, 0) < 0)
@@ -124,7 +201,7 @@ void FileListHandler::SelectImage(LONG_PTR current)
 		return;
 	}
 
-	const std::filesystem::path path = ImageFromIndex(current);
+	const std::filesystem::path path = _currentDirectory / ImageFromIndex(current);
 
 	if (path.empty())
 	{
@@ -273,7 +350,14 @@ void FileListHandler::LoadPicture(const std::filesystem::path& path)
 
 std::filesystem::path FileListHandler::ImageFromIndex(LONG_PTR index) const
 {
-	const size_t length = static_cast<size_t>(SendMessage(_fileListBox, LB_GETTEXTLEN, index, 0));
+	LRESULT result = SendMessage(_fileListBox, LB_GETTEXTLEN, index, 0);
+
+	if (result <= 0)
+	{
+		return {};
+	}
+
+	const size_t length = static_cast<size_t>(result);
 	std::wstring buffer(length, '\0');
 
 	if (SendMessage(_fileListBox, LB_GETTEXT, index, reinterpret_cast<LPARAM>(buffer.data())) != length)
@@ -282,5 +366,5 @@ std::filesystem::path FileListHandler::ImageFromIndex(LONG_PTR index) const
 		return {};
 	}
 
-	return _currentDirectory / buffer;
+	return buffer;
 }
