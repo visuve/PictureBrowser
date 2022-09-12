@@ -1,6 +1,6 @@
 // IDA = Accelerator tables	100 - 199
 // IDB = Bitmaps			200 - 299
-// IDC = Commands			300 - 399
+// IDC = Classes			300 - 399
 // IDD = Dialogs			400 - 499
 // IDI = Icons				500 - 599
 // IDM = Menus				600 - 699
@@ -29,5 +29,3 @@
 #define IDM_KEYBOARD			603
 #define IDM_OPEN				604
 #define IDM_OPTIONS_USE_CACHING	605
-
-#define IDS_PICTURE_BROWSER		801

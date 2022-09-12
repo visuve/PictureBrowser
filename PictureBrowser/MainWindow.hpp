@@ -17,7 +17,6 @@ namespace PictureBrowser
 		void Open(const std::filesystem::path&);
 
 	private:
-		bool LoadStrings();
 		ATOM Register() const;
 
 		void RecalculatePaintArea(HWND);
@@ -38,8 +37,6 @@ namespace PictureBrowser
 		static LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
 		static INT_PTR CALLBACK GenericOkDialog(HWND, UINT, WPARAM, LPARAM);
 
-		std::wstring _title;
-		std::wstring _windowClassName;
 		int _zoomPercent = 0;
 		HWND _window = nullptr;
 		HWND _canvas = nullptr;

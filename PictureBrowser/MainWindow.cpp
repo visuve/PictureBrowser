@@ -14,27 +14,6 @@ namespace PictureBrowser
 	constexpr UINT ButtonHeight = 25;
 	constexpr UINT FileListWidth = 250;
 
-	std::wstring LoadStdString(HINSTANCE instance, UINT id)
-	{
-		std::wstring buffer(1, L'\0');
-		const int length = LoadString(instance, id, &buffer.front(), 0);
-
-		if (length <= 0)
-		{
-			LOGD << L"Failed to load string ID: " << id;
-			return {};
-		}
-
-		buffer.resize(static_cast<size_t>(length));
-
-		if (LoadString(instance, id, &buffer.front(), length + 1) != length)
-		{
-			return {};
-		}
-
-		return buffer;
-	}
-
 	MainWindow::MainWindow()
 	{
 		_mainWindow = this;
@@ -43,14 +22,6 @@ namespace PictureBrowser
 	MainWindow::~MainWindow()
 	{
 		_mainWindow = nullptr;
-	}
-
-	bool MainWindow::LoadStrings()
-	{
-		_title = LoadStdString(_instance, IDS_PICTURE_BROWSER);
-		_windowClassName = LoadStdString(_instance, IDC_PICTURE_BROWSER);
-
-		return !(_title.empty() || _windowClassName.empty());
 	}
 
 	ATOM MainWindow::Register() const
@@ -67,7 +38,7 @@ namespace PictureBrowser
 		windowClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
 		windowClass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
 		windowClass.lpszMenuName = MAKEINTRESOURCEW(IDC_MENU);
-		windowClass.lpszClassName = _windowClassName.c_str();
+		windowClass.lpszClassName = L"PictureBrowser";
 		windowClass.hIconSm = LoadIcon(_instance, MAKEINTRESOURCE(IDI_PICTURE_BROWSER));
 
 		return RegisterClassEx(&windowClass);
@@ -77,12 +48,6 @@ namespace PictureBrowser
 	{
 		_instance = instance;
 
-		if (!LoadStrings())
-		{
-			LOGD << L"Failed to load strings!";
-			return false;
-		}
-
 		if (!Register())
 		{
 			LOGD << L"Failed to register main window!";
@@ -91,8 +56,8 @@ namespace PictureBrowser
 
 		_window = CreateWindowEx(
 			WS_EX_ACCEPTFILES,
-			_windowClassName.c_str(),
-			_title.c_str(),
+			L"PictureBrowser",
+			L"Picture Browser 2.2",
 			WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT,
 			CW_USEDEFAULT,
@@ -418,7 +383,7 @@ namespace PictureBrowser
 
 		Invalidate();
 
-		const std::wstring title = _title + L" - " + path.filename().wstring();
+		const std::wstring title = L"Picture Browser 2.2 - " + path.filename().wstring();
 		SetWindowText(_window, title.c_str());
 	}
 
