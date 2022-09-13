@@ -119,8 +119,8 @@ void FileListHandler::OnFileDrop(WPARAM wParam)
 
 void FileListHandler::OnContextMenu(LPARAM lParam)
 {
-	const long x = LOWORD(lParam);
-	const long y = HIWORD(lParam);
+	const int16_t x = LOWORD(lParam);
+	const int16_t y = HIWORD(lParam);
 
 	POINT p = { x, y };
 
@@ -144,7 +144,8 @@ void FileListHandler::OnContextMenu(LPARAM lParam)
 	
 	if (HIWORD(result))
 	{
-		return; // Outside the client area
+		LOGD << L"The click is outside client area " << p;
+		return;
 	}
 
 	_contextMenuIndex = index;
