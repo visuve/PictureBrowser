@@ -44,6 +44,8 @@ public:
 
 	LogWrap& operator << (const Gdiplus::Rect& rect);
 
+	LogWrap& operator << (const POINT& point);
+
 	LogWrap& operator << (const RECT& rect);
 
 private:

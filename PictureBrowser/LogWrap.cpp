@@ -112,6 +112,18 @@ LogWrap& LogWrap::operator << (const Gdiplus::Rect& rect)
 	return *this;
 }
 
+LogWrap& LogWrap::operator<<(const POINT& point)
+{
+	_buffer.append(L"X=");
+	_buffer.append(std::to_wstring(point.x));
+	_buffer.append(1, L' ');
+
+	_buffer.append(L"Y=");
+	_buffer.append(std::to_wstring(point.y));
+
+	return *this;
+}
+
 LogWrap& LogWrap::operator << (const RECT& rect)
 {
 	_buffer.append(L"L=");
