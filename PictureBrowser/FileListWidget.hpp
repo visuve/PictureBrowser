@@ -9,7 +9,8 @@ namespace PictureBrowser
 	{
 	public:
 		FileListWidget(
-			HWND parent, 
+			HINSTANCE instance,
+			HWND parent,
 			const std::shared_ptr<ImageCache>& imageCache, 
 			const std::function<void(std::filesystem::path)>& imageChanged);
 
@@ -26,7 +27,6 @@ namespace PictureBrowser
 		void OnUpdateSelection();
 		void OnContextMenu(LPARAM);
 		void OnPopupClosed();
-		void OnKeyUp(WPARAM);
 
 		std::filesystem::file_type LoadFileList(const std::filesystem::path&);
 		void LoadPicture(const std::filesystem::path& path);

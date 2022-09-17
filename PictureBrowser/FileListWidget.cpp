@@ -6,6 +6,7 @@
 namespace PictureBrowser
 {
 	FileListWidget::FileListWidget(
+		HINSTANCE instance,
 		HWND parent,
 		const std::shared_ptr<ImageCache>& imageCache,
 		const std::function<void(std::filesystem::path)>& imageChanged) :
@@ -14,13 +15,13 @@ namespace PictureBrowser
 			WC_LISTBOX,
 			L"Filelist...",
 			WS_VISIBLE | WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY | LBS_HASSTRINGS,
-			0,
-			0,
-			100,
+			5,
+			5,
+			250,
 			700,
 			parent,
 			reinterpret_cast<HMENU>(IDC_LISTBOX),
-			GetModuleHandle(nullptr),
+			instance,
 			nullptr),
 		_imageCache(imageCache),
 		_imageChanged(imageChanged)
@@ -48,8 +49,8 @@ namespace PictureBrowser
 				{
 					OnOpenMenu();
 					break;
-				}				
-				
+				}
+
 				if (LOWORD(wParam) == IDM_POPUP_COPY_PATH)
 				{
 					OnPopupClosed();
@@ -59,7 +60,6 @@ namespace PictureBrowser
 				OnFileDrop(wParam);
 				break;
 		}
-
 	}
 
 	void FileListWidget::Open(const std::filesystem::path& path)
@@ -390,7 +390,10 @@ namespace PictureBrowser
 			return;
 		}
 
-		_imageChanged(path);
+		if (_imageChanged)
+		{
+			_imageChanged(path);
+		}
 	}
 
 	std::filesystem::path FileListWidget::ImageFromIndex(LONG_PTR index) const

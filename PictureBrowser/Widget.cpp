@@ -52,6 +52,7 @@ namespace PictureBrowser
 			data)),
 		_parent(parent)
 	{
+		_ASSERTE(_window != nullptr);
 	}
 
 	bool Widget::Intercept(HWND window)
@@ -81,6 +82,24 @@ namespace PictureBrowser
 		}
 
 		return buffer;
+	}
+
+	SIZE Widget::Size() const
+	{
+		RECT area = Area();
+		return { area.right - area.left, area.bottom - area.top };
+	}
+	
+	RECT Widget::Area() const
+	{ 
+		RECT area;
+
+		if (!GetWindowRect(_window, &area))
+		{
+			std::unreachable();
+		}
+
+		return area;
 	}
 
 	bool Widget::SetPosition(HWND z, int x, int y, int w, int h, UINT flags)

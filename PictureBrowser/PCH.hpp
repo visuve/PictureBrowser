@@ -11,8 +11,13 @@
 #include <memory>
 #include <map>
 
-template <typename T>
-void Clear(T* x)
+namespace PictureBrowser
 {
-	memset(x, 0, sizeof(T));
+	template <typename T>
+	void Clear(T* x)
+	{
+		memset(x, 0, sizeof(T));
+	}
+
+	constexpr UINT Padding = 5;
 }

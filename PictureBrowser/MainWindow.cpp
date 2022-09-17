@@ -7,7 +7,6 @@
 
 namespace PictureBrowser
 {
-	constexpr UINT Padding = 5;
 	constexpr UINT ButtonWidth = 50;
 	constexpr UINT ButtonHeight = 25;
 	constexpr UINT FileListWidth = 250;
@@ -57,41 +56,15 @@ namespace PictureBrowser
 				OnResize();
 				break;
 			}
-			case WM_PAINT:
+			case WM_COMMAND:
 			{
-				DefWindowProc(_window, message, wParam, lParam);
-				OnPaint();
-				break;
-			}
-			case WM_ERASEBKGND:
-			{
-				OnErase();
+				OnCommand(wParam);
 				break;
 			}
 			case WM_LBUTTONDBLCLK:
 			case WM_RBUTTONDBLCLK:
 			{
-				_mouseHandler->OnDoubleClick();
-				break;
-			}
-			case WM_LBUTTONDOWN:
-			{
-				_mouseHandler->OnLeftMouseDown(lParam);
-				break;
-			}
-			case WM_MOUSEMOVE:
-			{
-				_mouseHandler->OnMouseMove(lParam);
-				break;
-			}
-			case WM_LBUTTONUP:
-			{
-				_mouseHandler->OnLeftMouseUp(lParam);
-				break;
-			}
-			case WM_COMMAND:
-			{
-				OnCommand(wParam);
+				OnDoubleClick();
 				break;
 			}
 		}
@@ -135,19 +108,6 @@ namespace PictureBrowser
 	void MainWindow::OnCreate()
 	{
 		RecalculatePaintArea();
-
-		_canvas = CreateWindow(
-			WC_STATIC,
-			nullptr,
-			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			_canvasArea.X,
-			_canvasArea.Y,
-			_canvasArea.Width,
-			_canvasArea.Height,
-			_window,
-			reinterpret_cast<HMENU>(IDC_ZOOM_OUT_BUTTON),
-			Instance(),
-			nullptr);
 
 		_zoomOutButton = CreateWindow(
 			WC_BUTTON,
@@ -206,17 +166,20 @@ namespace PictureBrowser
 
 		_imageCache = std::make_shared<ImageCache>(useCaching);
 
+		_canvasWidget = std::make_unique<CanvasWidget>(
+			Instance(),
+			_window, 
+			_imageCache);
+
+		_canvasWidget->Intercept(_window);
+
 		_fileListWidget = std::make_unique<FileListWidget>(
+			Instance(),
 			_window,
 			_imageCache,
-			std::bind(&MainWindow::OnImageChanged, this, std::placeholders::_1));
+			std::bind(&CanvasWidget::OnImageChanged, _canvasWidget.get(), std::placeholders::_1));
 
 		_fileListWidget->Intercept(_window);
-		
-		_mouseHandler = std::make_unique<MouseHandler>(
-			_window,
-			_canvas,
-			std::bind(&MainWindow::Invalidate, this, true));
 	}
 
 	void MainWindow::OnResize()
@@ -234,8 +197,7 @@ namespace PictureBrowser
 			LOGD << L"Failed to move file list!";
 		}
 
-		if (!SetWindowPos(
-			_canvas,
+		if (!_canvasWidget->SetPosition(
 			HWND_TOP,
 			_canvasArea.GetLeft(),
 			_canvasArea.GetTop(),
@@ -294,115 +256,24 @@ namespace PictureBrowser
 			LOGD << L"Failed to move next button!";
 		}
 
-		Invalidate();
-	}
-
-	void MainWindow::OnErase() const
-	{
-		RECT clientArea = { 0 };
-
-		if (!GetWindowRect(_window, &clientArea))
+		const RECT canvasArea =
 		{
-			LOGD << L"GetWindowRect failed!";
-			return;
-		}
+			_canvasArea.GetLeft(),
+			_canvasArea.GetTop(),
+			_canvasArea.GetRight(),
+			_canvasArea.GetBottom()
+		};
 
-		const Gdiplus::Rect area(0, 0, clientArea.right - clientArea.left, clientArea.bottom - clientArea.top);
-		GdiExtensions::ContextWrapper context(_window);
-		const Gdiplus::SolidBrush grayBrush(Gdiplus::Color::LightGray);
-		context.Graphics().FillRectangle(&grayBrush, area);
-	}
-
-	void MainWindow::OnPaint()
-	{
-		GdiExtensions::ContextWrapper context(_canvas);
-
-		if (!context.IsValid())
+		if (!InvalidateRect(_window, &canvasArea, false))
 		{
-			return;
+			std::unreachable();
 		}
-
-		Gdiplus::Bitmap bitmap(_canvasArea.Width, _canvasArea.Height);
-		Gdiplus::Graphics buffer(&bitmap);
-
-		const Gdiplus::SolidBrush grayBrush(Gdiplus::Color::DarkGray);
-		buffer.FillRectangle(&grayBrush, 0, 0, _canvasArea.Width, _canvasArea.Height);
-
-		Gdiplus::Image* image = _imageCache->Current();
-
-		if (image)
-		{
-			Gdiplus::SizeF size(Gdiplus::REAL(image->GetWidth()), Gdiplus::REAL(image->GetHeight()));
-			Gdiplus::Rect scaled;
-
-			GdiExtensions::ScaleAndCenterTo(_canvasArea, size, scaled);
-			GdiExtensions::Zoom(scaled, _zoomPercent);
-			scaled.Offset(_mouseHandler->MouseDragOffset());
-
-			if (_mouseHandler->IsDragging())
-			{
-				const Gdiplus::Pen pen(Gdiplus::Color::Gray, 2.0f);
-				buffer.DrawRectangle(&pen, scaled);
-			}
-			else
-			{
-				buffer.DrawImage(image, scaled);
-			}
-		}
-
-		context.Graphics().DrawImage(&bitmap, 0, 0, _canvasArea.Width, _canvasArea.Height);
-	}
-
-	void MainWindow::OnImageChanged(std::filesystem::path path)
-	{
-		_zoomPercent = 0;
-		_mouseHandler->ResetOffsets();
-
-		Invalidate();
-
-		const std::wstring title = L"Picture Browser 2.2 - " + path.filename().wstring();
-		SetWindowText(_window, title.c_str());
-	}
-
-	void MainWindow::OnZoom(WPARAM wParam)
-	{
-		switch (wParam)
-		{
-			case VK_OEM_MINUS:
-				if (_zoomPercent > 0)
-				{
-					_zoomPercent -= 5;
-					Invalidate();
-				}
-				break;
-			case VK_OEM_PLUS:
-				if (_zoomPercent < 1000)
-				{
-					_zoomPercent += 5;
-					Invalidate();
-				}
-				break;
-		}
-
-		LOGD << _zoomPercent;
 	}
 
 	void MainWindow::OnCommand(WPARAM wParam)
 	{
 		switch (LOWORD(wParam))
 		{
-			case IDC_ZOOM_OUT_BUTTON:
-			{
-				// TODO: disable button if no image is loaded
-				OnZoom(VK_OEM_MINUS);
-				break;
-			}
-			case IDC_ZOOM_IN_BUTTON:
-			{
-				// TODO: disable button if no image is loaded
-				OnZoom(VK_OEM_PLUS);
-				break;
-			}
 			case IDM_EXIT:
 			{
 				DestroyWindow(_window);
@@ -437,23 +308,24 @@ namespace PictureBrowser
 			}
 		}
 	}
-	void MainWindow::Invalidate(bool erase)
-	{
-		const RECT canvasArea =
-		{
-			_canvasArea.GetLeft(),
-			_canvasArea.GetTop(),
-			_canvasArea.GetRight(),
-			_canvasArea.GetBottom()
-		};
 
-		if (!InvalidateRect(_window, &canvasArea, erase))
+	void MainWindow::OnDoubleClick()
+	{
+		WINDOWPLACEMENT placement = {};
+
+		if (!GetWindowPlacement(_window, &placement))
 		{
-			LOGD << L"InvalidateRect failed!";
-			return;
+			std::unreachable();
 		}
 
-		LOGD << canvasArea;
+		const UINT show = placement.showCmd == SW_NORMAL ? SW_SHOWMAXIMIZED : SW_NORMAL;
+
+		if (!ShowWindow(_window, show))
+		{
+			const std::wstring message =
+				show == SW_SHOWMAXIMIZED ? L"maximize screen" : L"show window in normal size";
+			LOGD << L"Failed to " << message;
+		}
 	}
 
 	UINT MainWindow::CheckedState(UINT menuEntry) const

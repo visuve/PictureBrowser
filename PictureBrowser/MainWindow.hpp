@@ -2,7 +2,7 @@
 
 #include "ImageCache.hpp"
 #include "FileListWidget.hpp"
-#include "MouseHandler.hpp"
+#include "CanvasWidget.hpp"
 #include "Window.hpp"
 
 namespace PictureBrowser
@@ -20,21 +20,14 @@ namespace PictureBrowser
 		void RecalculatePaintArea();
 		void OnCreate();
 		void OnResize();
-		void OnErase() const;
-		void OnPaint();
-
-		void OnImageChanged(std::filesystem::path);
-		void OnZoom(WPARAM);
 		void OnCommand(WPARAM);
-		void Invalidate(bool erase = false);
+		void OnDoubleClick();
 
 		UINT CheckedState(UINT menuEntry) const;
 		void SetCheckedState(UINT menuEntry, UINT state) const;
 
 		static INT_PTR CALLBACK GenericOkDialog(HWND, UINT, WPARAM, LPARAM);
 
-		int _zoomPercent = 0;
-		HWND _canvas = nullptr;
 		HWND _zoomOutButton = nullptr;
 		HWND _zoomInButton = nullptr;
 		HWND _previousPictureButton = nullptr;
@@ -45,6 +38,6 @@ namespace PictureBrowser
 
 		std::shared_ptr<ImageCache> _imageCache;
 		std::unique_ptr<FileListWidget> _fileListWidget;
-		std::unique_ptr<MouseHandler> _mouseHandler;
+		std::unique_ptr<CanvasWidget> _canvasWidget;
 	};
 }
