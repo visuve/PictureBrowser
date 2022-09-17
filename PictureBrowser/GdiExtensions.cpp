@@ -1,7 +1,7 @@
 #include "PCH.hpp"
 #include "GdiExtensions.hpp"
 
-namespace GdiExtensions
+namespace PictureBrowser::GdiExtensions
 {
 	Gdiplus::RotateFlipType GetRotation(Gdiplus::Image* image)
 	{

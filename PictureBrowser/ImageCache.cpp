@@ -3,79 +3,82 @@
 #include "GdiExtensions.hpp"
 #include "LogWrap.hpp"
 
-void CorrectRotationIfNeeded(Gdiplus::Image* image)
+namespace PictureBrowser
 {
-	const Gdiplus::RotateFlipType rotation = GdiExtensions::GetRotation(image);
-
-	if (rotation != Gdiplus::RotateFlipType::RotateNoneFlipNone)
+	void CorrectRotationIfNeeded(Gdiplus::Image* image)
 	{
-		image->RotateFlip(rotation);
-	}
-}
+		const Gdiplus::RotateFlipType rotation = GdiExtensions::GetRotation(image);
 
-ImageCache::ImageCache(bool useCaching) :
-	_useCaching(useCaching)
-{
-}
-
-ImageCache::~ImageCache()
-{
-	Clear();
-}
-
-bool ImageCache::SetCurrent(const std::filesystem::path& path)
-{
-	if (!Get(path))
-	{
-		return false;
-	}
-
-	_currentImage = path;
-	return true;
-}
-
-Gdiplus::Image* ImageCache::Current()
-{
-	return Get(_currentImage);
-}
-
-Gdiplus::Image* ImageCache::Get(const std::filesystem::path& path)
-{
-	if (_useCaching)
-	{
-		const auto iter = _cache.find(path);
-
-		if (iter != _cache.cend())
+		if (rotation != Gdiplus::RotateFlipType::RotateNoneFlipNone)
 		{
-			return iter->second.get();
+			image->RotateFlip(rotation);
+		}
+	}
+
+	ImageCache::ImageCache(bool useCaching) :
+		_useCaching(useCaching)
+	{
+	}
+
+	ImageCache::~ImageCache()
+	{
+		Clear();
+	}
+
+	bool ImageCache::SetCurrent(const std::filesystem::path& path)
+	{
+		if (!Get(path))
+		{
+			return false;
 		}
 
-		LOGD << L"Not cached: " << path;
+		_currentImage = path;
+		return true;
 	}
 
-	return Load(path);
-}
-
-void ImageCache::Clear()
-{
-	_cache.clear();
-}
-
-Gdiplus::Image* ImageCache::Load(const std::filesystem::path& path)
-{
-	Gdiplus::Image* image = Gdiplus::Image::FromFile(path.c_str());
-
-	if (!image)
+	Gdiplus::Image* ImageCache::Current()
 	{
-		return nullptr;
+		return Get(_currentImage);
 	}
 
-	if (_useCaching)
+	Gdiplus::Image* ImageCache::Get(const std::filesystem::path& path)
 	{
-		CorrectRotationIfNeeded(image);
-		_cache[path].reset(image);
-		LOGD << L"Cached: " << path;
+		if (_useCaching)
+		{
+			const auto iter = _cache.find(path);
+
+			if (iter != _cache.cend())
+			{
+				return iter->second.get();
+			}
+
+			LOGD << L"Not cached: " << path;
+		}
+
+		return Load(path);
 	}
 
-	return image;
+	void ImageCache::Clear()
+	{
+		_cache.clear();
+	}
+
+	Gdiplus::Image* ImageCache::Load(const std::filesystem::path& path)
+	{
+		Gdiplus::Image* image = Gdiplus::Image::FromFile(path.c_str());
+
+		if (!image)
+		{
+			return nullptr;
+		}
+
+		if (_useCaching)
+		{
+			CorrectRotationIfNeeded(image);
+			_cache[path].reset(image);
+			LOGD << L"Cached: " << path;
+		}
+
+		return image;
+	}
 }

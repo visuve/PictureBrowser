@@ -1,48 +1,51 @@
 #include "PCH.hpp"
 #include "KeyboardHandler.hpp"
 
-KeyboardHandler::KeyboardHandler(HWND window, HWND fileListBox, std::function<void(LONG_PTR)> selectImage) :
-	_window(window),
-	_fileListBox(fileListBox),
-	_selectImage(selectImage)
+namespace PictureBrowser
 {
-}
-
-void KeyboardHandler::OnKeyUp(WPARAM wParam)
-{
-	const LONG_PTR count = SendMessage(_fileListBox, LB_GETCOUNT, 0, 0);
-
-	if (!count)
+	KeyboardHandler::KeyboardHandler(HWND window, HWND fileListBox, std::function<void(LONG_PTR)> selectImage) :
+		_window(window),
+		_fileListBox(fileListBox),
+		_selectImage(selectImage)
 	{
-		return;
 	}
 
-	switch (wParam)
+	void KeyboardHandler::OnKeyUp(WPARAM wParam)
 	{
-		case VK_LEFT:
-		case VK_UP:
+		const LONG_PTR count = SendMessage(_fileListBox, LB_GETCOUNT, 0, 0);
+
+		if (!count)
 		{
-			LONG_PTR current = SendMessage(_fileListBox, LB_GETCURSEL, 0, 0);
-
-			if (current > 0)
-			{
-				_selectImage(--current);
-			}
-
 			return;
 		}
-		case VK_RIGHT:
-		case VK_DOWN:
+
+		switch (wParam)
 		{
-			const LONG_PTR lastIndex = count - 1;
-			LONG_PTR current = SendMessage(_fileListBox, LB_GETCURSEL, 0, 0);
-
-			if (current < lastIndex)
+			case VK_LEFT:
+			case VK_UP:
 			{
-				_selectImage(++current);
-			}
+				LONG_PTR current = SendMessage(_fileListBox, LB_GETCURSEL, 0, 0);
 
-			return;
+				if (current > 0)
+				{
+					_selectImage(--current);
+				}
+
+				return;
+			}
+			case VK_RIGHT:
+			case VK_DOWN:
+			{
+				const LONG_PTR lastIndex = count - 1;
+				LONG_PTR current = SendMessage(_fileListBox, LB_GETCURSEL, 0, 0);
+
+				if (current < lastIndex)
+				{
+					_selectImage(++current);
+				}
+
+				return;
+			}
 		}
 	}
 }

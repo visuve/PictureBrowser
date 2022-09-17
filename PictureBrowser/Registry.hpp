@@ -2,7 +2,7 @@
 
 #include "LogWrap.hpp"
 
-namespace Registry
+namespace PictureBrowser::Registry
 {
 	class RegPath
 	{

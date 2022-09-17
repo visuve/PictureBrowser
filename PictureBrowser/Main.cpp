@@ -3,44 +3,48 @@
 #include "Resource.h"
 #include "LogWrap.hpp"
 
-class GdiPlusGuard
+namespace PictureBrowser
 {
-public:
-	GdiPlusGuard() :
-		_status(Gdiplus::GdiplusStartup(&_gdiPlusToken, &_gdiPlusStartupInput, nullptr))
+	class GdiPlusGuard
 	{
-	}
-
-	~GdiPlusGuard()
-	{
-		if (_gdiPlusToken)
+	public:
+		GdiPlusGuard() :
+			_status(Gdiplus::GdiplusStartup(&_gdiPlusToken, &_gdiPlusStartupInput, nullptr))
 		{
-			Gdiplus::GdiplusShutdown(_gdiPlusToken);
 		}
-	}
 
-	operator bool() const
+		~GdiPlusGuard()
+		{
+			if (_gdiPlusToken)
+			{
+				Gdiplus::GdiplusShutdown(_gdiPlusToken);
+			}
+		}
+
+		operator bool() const
+		{
+			return _status == Gdiplus::Status::Ok;
+		}
+	private:
+		Gdiplus::GdiplusStartupInput _gdiPlusStartupInput;
+		ULONG_PTR _gdiPlusToken = 0;
+		Gdiplus::Status _status;
+	};
+
+
+	std::filesystem::path TrimQuotes(const std::wstring& path)
 	{
-		return _status == Gdiplus::Status::Ok;
+		std::wstring copy = path;
+
+		if (path.front() == '"' && path.back() == '"')
+		{
+			copy.pop_back();
+			copy.erase(copy.cbegin());
+			return copy;
+		}
+
+		return path;
 	}
-private:
-	Gdiplus::GdiplusStartupInput _gdiPlusStartupInput;
-	ULONG_PTR _gdiPlusToken = 0;
-	Gdiplus::Status _status;
-};
-
-std::filesystem::path TrimQuotes(const std::wstring& path)
-{
-	std::wstring copy = path;
-
-	if (path.front() == '"' && path.back() == '"')
-	{
-		copy.pop_back();
-		copy.erase(copy.cbegin());
-		return copy;
-	}
-
-	return path;
 }
 
 int APIENTRY wWinMain(
@@ -51,6 +55,8 @@ int APIENTRY wWinMain(
 {
 	UNREFERENCED_PARAMETER(previousInstance);
 
+	using namespace PictureBrowser;
+
 	const GdiPlusGuard gdiGuard;
 
 	if (!gdiGuard)
@@ -58,7 +64,7 @@ int APIENTRY wWinMain(
 		return GetLastError();
 	}
 
-	PictureBrowser::MainWindow mainWindow(instance);
+	MainWindow mainWindow(instance);
 
 	if (!mainWindow.Show(showCommand))
 	{

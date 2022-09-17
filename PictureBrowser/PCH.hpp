@@ -5,7 +5,6 @@
 #include <CommCtrl.h>
 #include <gdiplus.h>
 
-#include <cassert>
 #include <filesystem>
 #include <format>
 #include <functional>

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace GdiExtensions
+namespace PictureBrowser::GdiExtensions
 {
 	class ContextWrapper
 	{

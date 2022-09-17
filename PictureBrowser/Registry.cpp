@@ -1,7 +1,7 @@
 #include "PCH.hpp"
 #include "Registry.hpp"
 
-namespace Registry
+namespace PictureBrowser::Registry
 {
 	RegPath::RegPath(std::wstring_view path) :
 		_subKey(path.substr(0, path.rfind('\\'))),

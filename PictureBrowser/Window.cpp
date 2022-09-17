@@ -21,7 +21,7 @@ namespace PictureBrowser
 
 		ATOM atom = RegisterClassExW(&windowClass);
 
-		assert(atom != 0);
+		_ASSERTE(atom != 0);
 
 		_windowStyle.lpCreateParams = this;
 		_windowStyle.hInstance = instance;
@@ -62,8 +62,8 @@ namespace PictureBrowser
 			// WindowProcedure triggers immediately after CreateWindowEx.
 			// If you call CreateWindowEx before the Window class is fully initialized
 			// a crash will follow in WindowProcedure.
-			assert(window != nullptr);
-			assert(window == _window);
+			_ASSERTE(window != nullptr);
+			_ASSERTE(window == _window);
 		}
 
 		ShowWindow(_window, showCommand);
