@@ -39,22 +39,29 @@ namespace PictureBrowser
 				}
 				break;
 			case WM_COMMAND:
+
+				switch (LOWORD(wParam))
+				{
+					case IDC_PREV_BUTTON:
+						MoveCurrentSelection(-1);
+						break;
+					case IDC_NEXT_BUTTON:
+						MoveCurrentSelection(+1);
+						break;
+					case IDM_OPEN:
+						OnOpenMenu();
+						break;
+					case IDM_POPUP_COPY_PATH:
+						OnPopupClosed();
+						break;
+				}
+
 				if (reinterpret_cast<HWND>(lParam) == _window && HIWORD(wParam) == LBN_SELCHANGE)
 				{
-					OnUpdateSelection();
+					OnSelectionChanged();
 					break;
 				}
 
-				if (LOWORD(wParam) == IDM_OPEN)
-				{
-					OnOpenMenu();
-					break;
-				}
-
-				if (LOWORD(wParam) == IDM_POPUP_COPY_PATH)
-				{
-					OnPopupClosed();
-				}
 				break;
 			case WM_DROPFILES:
 				OnFileDrop(wParam);
@@ -75,7 +82,7 @@ namespace PictureBrowser
 			}
 			case std::filesystem::file_type::directory:
 			{
-				OnUpdateSelection();
+				OnSelectionChanged();
 				break;
 			}
 		}
@@ -87,17 +94,49 @@ namespace PictureBrowser
 		_imageCache->Clear();
 	}
 
+
 	std::filesystem::path FileListWidget::SelectedImage() const
 	{
-		const LONG_PTR current = Send(LB_GETCURSEL, 0, 0);
+		LONG_PTR current = CurrentSelection();
+		return _currentDirectory / ImageFromIndex(current);
+	}
 
-		if (current < 0)
+	LONG_PTR FileListWidget::CurrentSelection() const
+	{
+		LONG_PTR count = Send(LB_GETCOUNT, 0, 0);
+		LONG_PTR cursel = Send(LB_GETCURSEL, 0, 0);
+
+		return std::clamp(Send(LB_GETCURSEL, 0, 0), LONG_PTR(0), count);
+	}
+
+	void FileListWidget::MoveCurrentSelection(LONG_PTR distance)
+	{
+		LONG_PTR count = Send(LB_GETCOUNT, 0, 0);
+		LONG_PTR cursel = Send(LB_GETCURSEL, 0, 0);
+		LONG_PTR nextsel = cursel + distance;
+
+		if (cursel != nextsel && nextsel >= 0 && nextsel < count)
 		{
-			LOGD << L"Failed to get current index or nothing selected. Got: " << current;
-			return {};
+			Send(LB_SETCURSEL, nextsel, 0);
+			OnSelectionChanged(nextsel);
+		}
+	}
+
+	void FileListWidget::OnSelectionChanged(LONG_PTR cursel)
+	{
+		if (cursel < 0)
+		{
+			cursel = CurrentSelection();
 		}
 
-		return _currentDirectory / ImageFromIndex(current);
+		const std::filesystem::path path = _currentDirectory / ImageFromIndex(cursel);
+
+		if (path.empty())
+		{
+			return;
+		}
+
+		LoadPicture(path);
 	}
 
 	void FileListWidget::OnOpenMenu()
@@ -125,18 +164,6 @@ namespace PictureBrowser
 		{
 			LOGD << L"Failed to get path!";
 		}
-	}
-
-	void FileListWidget::OnSelectionChanged()
-	{
-		const std::filesystem::path path = SelectedImage();
-
-		if (path.empty())
-		{
-			return;
-		}
-
-		LoadPicture(path);
 	}
 
 	void FileListWidget::OnFileDrop(WPARAM wParam)
@@ -232,27 +259,6 @@ namespace PictureBrowser
 		EmptyClipboard();
 		SetClipboardData(CF_UNICODETEXT, memory);
 		CloseClipboard();
-	}
-
-	void FileListWidget::OnUpdateSelection()
-	{
-		const LONG_PTR count = Send(LB_GETCOUNT, 0, 0);
-
-		if (!count)
-		{
-			return;
-		}				
-		
-		LONG_PTR current = std::clamp(Send(LB_GETCURSEL, 0, 0), LONG_PTR(0), count);
-
-		const std::filesystem::path path = _currentDirectory / ImageFromIndex(current);
-
-		if (path.empty())
-		{
-			return;
-		}
-
-		LoadPicture(path);
 	}
 
 	std::filesystem::file_type FileListWidget::LoadFileList(const std::filesystem::path& path)

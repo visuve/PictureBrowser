@@ -109,7 +109,7 @@ namespace PictureBrowser
 	{
 		RecalculatePaintArea();
 
-		_zoomOutButton = CreateWindow(
+		_zoomOutButton = AddWidget(
 			WC_BUTTON,
 			L"-",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
@@ -117,12 +117,9 @@ namespace PictureBrowser
 			_mainArea.Y,
 			ButtonWidth,
 			ButtonHeight,
-			_window,
-			reinterpret_cast<HMENU>(IDC_ZOOM_OUT_BUTTON),
-			Instance(),
-			nullptr);
+			reinterpret_cast<HMENU>(IDC_ZOOM_OUT_BUTTON));
 
-		_zoomInButton = CreateWindow(
+		_zoomInButton = AddWidget(
 			WC_BUTTON,
 			L"+",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
@@ -130,12 +127,9 @@ namespace PictureBrowser
 			_mainArea.Y,
 			ButtonWidth,
 			ButtonHeight,
-			_window,
-			reinterpret_cast<HMENU>(IDC_ZOOM_IN_BUTTON),
-			Instance(),
-			nullptr);
+			reinterpret_cast<HMENU>(IDC_ZOOM_IN_BUTTON));
 
-		_previousPictureButton = CreateWindow(
+		_previousPictureButton = AddWidget(
 			WC_BUTTON,
 			L"<",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
@@ -143,12 +137,9 @@ namespace PictureBrowser
 			_mainArea.Height - ButtonHeight,
 			ButtonWidth,
 			ButtonHeight,
-			_window,
-			reinterpret_cast<HMENU>(IDC_PREV_BUTTON),
-			Instance(),
-			nullptr);
+			reinterpret_cast<HMENU>(IDC_PREV_BUTTON));
 
-		_nextPictureButton = CreateWindow(
+		_nextPictureButton = AddWidget(
 			WC_BUTTON,
 			L">",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
@@ -156,10 +147,7 @@ namespace PictureBrowser
 			_mainArea.Height - ButtonHeight,
 			ButtonWidth,
 			ButtonHeight,
-			_window,
-			reinterpret_cast<HMENU>(IDC_NEXT_BUTTON),
-			Instance(),
-			nullptr);
+			reinterpret_cast<HMENU>(IDC_NEXT_BUTTON));
 
 		const bool useCaching = Registry::Get(L"Software\\PictureBrowser\\UseCaching", true);
 		SetCheckedState(IDM_OPTIONS_USE_CACHING, useCaching ? MFS_CHECKED : MFS_UNCHECKED);
@@ -208,8 +196,7 @@ namespace PictureBrowser
 			LOGD << L"Failed move minus button!";
 		}
 
-		if (!SetWindowPos(
-			_zoomOutButton,
+		if (!_zoomOutButton.SetPosition(
 			HWND_TOP,
 			_mainArea.GetLeft(),
 			_mainArea.GetTop(),
@@ -220,8 +207,7 @@ namespace PictureBrowser
 			LOGD << L"Failed move minus button!";
 		}
 
-		if (!SetWindowPos(
-			_zoomInButton,
+		if (!_zoomInButton.SetPosition(
 			HWND_TOP,
 			_mainArea.GetRight() - ButtonWidth,
 			_mainArea.GetTop(),
@@ -232,8 +218,7 @@ namespace PictureBrowser
 			LOGD << L"Failed move plus button!";
 		}
 
-		if (!SetWindowPos(
-			_previousPictureButton,
+		if (!_previousPictureButton.SetPosition(
 			HWND_TOP,
 			_mainArea.GetLeft(),
 			_mainArea.GetBottom() - ButtonHeight,
@@ -244,8 +229,7 @@ namespace PictureBrowser
 			LOGD << L"Failed move previous button!";
 		}
 
-		if (!SetWindowPos(
-			_nextPictureButton,
+		if (!_nextPictureButton.SetPosition(
 			HWND_TOP,
 			_mainArea.GetRight() - ButtonWidth,
 			_mainArea.GetBottom() - ButtonHeight,

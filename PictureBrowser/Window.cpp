@@ -14,9 +14,11 @@ namespace PictureBrowser
 		HBRUSH brush, 
 		const wchar_t* menuName)
 	{
+		// TODO: add more ctor parameters to allow more flexible usage
+
 		WNDCLASSEXW windowClass;
 		windowClass.cbSize = sizeof(WNDCLASSEXW);
-		windowClass.style = CS_HREDRAW | CS_VREDRAW;
+		windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
 		windowClass.lpfnWndProc = WindowProcedure;
 		windowClass.cbClsExtra = 0;
 		windowClass.cbWndExtra = 0;

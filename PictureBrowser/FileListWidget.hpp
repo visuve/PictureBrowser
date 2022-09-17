@@ -21,10 +21,12 @@ namespace PictureBrowser
 		std::filesystem::path SelectedImage() const;
 
 	private:
+		LONG_PTR CurrentSelection() const;
+		void MoveCurrentSelection(LONG_PTR distance);
+		void OnSelectionChanged(LONG_PTR cursel = -1);
+
 		void OnOpenMenu();
-		void OnSelectionChanged();
 		void OnFileDrop(WPARAM);
-		void OnUpdateSelection();
 		void OnContextMenu(LPARAM);
 		void OnPopupClosed();
 

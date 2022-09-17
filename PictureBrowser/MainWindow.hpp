@@ -28,10 +28,10 @@ namespace PictureBrowser
 
 		static INT_PTR CALLBACK GenericOkDialog(HWND, UINT, WPARAM, LPARAM);
 
-		HWND _zoomOutButton = nullptr;
-		HWND _zoomInButton = nullptr;
-		HWND _previousPictureButton = nullptr;
-		HWND _nextPictureButton = nullptr;
+		Widget _zoomOutButton;
+		Widget _zoomInButton;
+		Widget _previousPictureButton;
+		Widget _nextPictureButton;
 		Gdiplus::Rect _fileListArea;
 		Gdiplus::Rect _mainArea;
 		Gdiplus::Rect _canvasArea;

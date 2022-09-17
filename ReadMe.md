@@ -9,8 +9,3 @@
 - Visual Studio 2022
 	- https://www.visualstudio.com/
 	- C++ desktop development workload selected
-
-## TODO:
-
-- Subclass the canvas
-	- The current architecture is horrible
