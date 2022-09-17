@@ -7,100 +7,118 @@
 
 namespace PictureBrowser
 {
-	MainWindow* _mainWindow = nullptr;
-
 	constexpr UINT Padding = 5;
 	constexpr UINT ButtonWidth = 50;
 	constexpr UINT ButtonHeight = 25;
 	constexpr UINT FileListWidth = 250;
 
-	MainWindow::MainWindow()
+	MainWindow::MainWindow(HINSTANCE instance) :
+		Window(instance, 
+			L"PictureBrowser", 
+			L"Picture Browser 2.2", 
+			800, 
+			800,
+			LoadIcon(instance, MAKEINTRESOURCE(IDI_PICTURE_BROWSER)),
+			LoadCursor(instance, IDC_CROSS),
+			reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1),
+			MAKEINTRESOURCEW(IDC_MENU))
 	{
-		_mainWindow = this;
 	}
 
 	MainWindow::~MainWindow()
 	{
-		_mainWindow = nullptr;
-	}
-
-	ATOM MainWindow::Register() const
-	{
-		WNDCLASSEXW windowClass = { 0 };
-
-		windowClass.cbSize = sizeof(WNDCLASSEX);
-		windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-		windowClass.lpfnWndProc = WindowProcedure;
-		windowClass.cbClsExtra = 0;
-		windowClass.cbWndExtra = 0;
-		windowClass.hInstance = _instance;
-		windowClass.hIcon = LoadIcon(_instance, MAKEINTRESOURCE(IDI_PICTURE_BROWSER));
-		windowClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
-		windowClass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
-		windowClass.lpszMenuName = MAKEINTRESOURCEW(IDC_MENU);
-		windowClass.lpszClassName = L"PictureBrowser";
-		windowClass.hIconSm = LoadIcon(_instance, MAKEINTRESOURCE(IDI_PICTURE_BROWSER));
-
-		return RegisterClassEx(&windowClass);
-	}
-
-	bool MainWindow::InitInstance(HINSTANCE instance, int showCommand)
-	{
-		_instance = instance;
-
-		if (!Register())
-		{
-			LOGD << L"Failed to register main window!";
-			return false;
-		}
-
-		_window = CreateWindowEx(
-			WS_EX_ACCEPTFILES,
-			L"PictureBrowser",
-			L"Picture Browser 2.2",
-			WS_OVERLAPPEDWINDOW,
-			CW_USEDEFAULT,
-			CW_USEDEFAULT,
-			800,
-			800,
-			nullptr,
-			nullptr,
-			_instance,
-			nullptr);
-
-		if (!_window)
-		{
-			LOGD << L"Failed to create main window!";
-			return false;
-		}
-
-		if (!ShowWindow(_window, showCommand))
-		{
-			LOGD << L"Failed to show window!";
-		}
-
-		if (!UpdateWindow(_window))
-		{
-			LOGD << L"Failed to update window!";
-		}
-
-		OnResize();
-
-		// SetWindowTheme(_window, L" ", L" "); // This will make even worse looks
-
-		return true;
 	}
 
 	void MainWindow::Open(const std::filesystem::path& path)
 	{
-		_fileListHandler->Open(path);
+		if (_fileListHandler)
+		{
+			_fileListHandler->Open(path);
+		}
 	}
 
-	void MainWindow::RecalculatePaintArea(HWND window)
+	bool MainWindow::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam)
+	{
+		switch (message)
+		{
+			case WM_CREATE:
+			{
+				OnCreate();
+				break;
+			}
+			case WM_DESTROY:
+			{
+				_fileListHandler->Clear();
+				PostQuitMessage(0);
+				break;
+			}
+			case WM_SIZE:
+			{
+				OnResize();
+				break;
+			}
+			case WM_PAINT:
+			{
+				DefWindowProc(_window, message, wParam, lParam);
+				OnPaint();
+				break;
+			}
+			case WM_ERASEBKGND:
+			{
+				OnErase();
+				break;
+			}
+			case WM_CONTEXTMENU:
+			{
+				OnContextMenu(wParam, lParam);
+				break;
+			}
+			case WM_KEYUP:
+			{
+				_keyboardHandler->OnKeyUp(wParam);
+				break;
+			}
+			case WM_LBUTTONDBLCLK:
+			case WM_RBUTTONDBLCLK:
+			{
+				_mouseHandler->OnDoubleClick();
+				break;
+			}
+			case WM_LBUTTONDOWN:
+			{
+				_mouseHandler->OnLeftMouseDown(lParam);
+				break;
+			}
+			case WM_MOUSEMOVE:
+			{
+				_mouseHandler->OnMouseMove(lParam);
+				break;
+			}
+			case WM_LBUTTONUP:
+			{
+				_mouseHandler->OnLeftMouseUp(lParam);
+				break;
+			}
+			case WM_COMMAND:
+			{
+				OnCommand(wParam);
+				break;
+			}
+			case WM_DROPFILES:
+			{
+				_fileListHandler->OnFileDrop(wParam);
+				break;
+			}
+		}
+
+		return false;
+	}
+
+	void MainWindow::RecalculatePaintArea()
 	{
 		RECT clientArea = { };
 
-		if (!GetClientRect(window, &clientArea))
+		if (!GetClientRect(_window, &clientArea))
 		{
 			LOGD << L"GetClientRect failed!";
 			clientArea.top = 0;
@@ -129,9 +147,9 @@ namespace PictureBrowser
 		LOGD << L"Canvas area: " << _canvasArea;
 	}
 
-	void MainWindow::OnCreate(HWND window)
+	void MainWindow::OnCreate()
 	{
-		RecalculatePaintArea(window);
+		RecalculatePaintArea();
 
 		_fileListBox = CreateWindow(
 			WC_LISTBOX,
@@ -141,9 +159,9 @@ namespace PictureBrowser
 			_fileListArea.Y,
 			_fileListArea.Width,
 			_fileListArea.Height,
-			window,
+			_window,
 			reinterpret_cast<HMENU>(IDC_LISTBOX),
-			_instance,
+			Instance(),
 			nullptr);
 
 		_canvas = CreateWindow(
@@ -154,9 +172,9 @@ namespace PictureBrowser
 			_canvasArea.Y,
 			_canvasArea.Width,
 			_canvasArea.Height,
-			window,
+			_window,
 			reinterpret_cast<HMENU>(IDC_ZOOM_OUT_BUTTON),
-			_instance,
+			Instance(),
 			nullptr);
 
 		_zoomOutButton = CreateWindow(
@@ -167,9 +185,9 @@ namespace PictureBrowser
 			_mainArea.Y,
 			ButtonWidth,
 			ButtonHeight,
-			window,
+			_window,
 			reinterpret_cast<HMENU>(IDC_ZOOM_OUT_BUTTON),
-			_instance,
+			Instance(),
 			nullptr);
 
 		_zoomInButton = CreateWindow(
@@ -180,9 +198,9 @@ namespace PictureBrowser
 			_mainArea.Y,
 			ButtonWidth,
 			ButtonHeight,
-			window,
+			_window,
 			reinterpret_cast<HMENU>(IDC_ZOOM_IN_BUTTON),
-			_instance,
+			Instance(),
 			nullptr);
 
 		_previousPictureButton = CreateWindow(
@@ -193,9 +211,9 @@ namespace PictureBrowser
 			_mainArea.Height - ButtonHeight,
 			ButtonWidth,
 			ButtonHeight,
-			window,
+			_window,
 			reinterpret_cast<HMENU>(IDC_PREV_BUTTON),
-			_instance,
+			Instance(),
 			nullptr);
 
 		_nextPictureButton = CreateWindow(
@@ -206,9 +224,9 @@ namespace PictureBrowser
 			_mainArea.Height - ButtonHeight,
 			ButtonWidth,
 			ButtonHeight,
-			window,
+			_window,
 			reinterpret_cast<HMENU>(IDC_NEXT_BUTTON),
-			_instance,
+			Instance(),
 			nullptr);
 
 		const bool useCaching = Registry::Get(L"Software\\PictureBrowser\\UseCaching", true);
@@ -217,25 +235,25 @@ namespace PictureBrowser
 		_imageCache = std::make_shared<ImageCache>(useCaching);
 
 		_fileListHandler = std::make_unique<FileListHandler>(
-			window,
+			_window,
 			_fileListBox,
 			_imageCache,
 			std::bind(&MainWindow::OnImageChanged, this, std::placeholders::_1));
 		
 		_mouseHandler = std::make_unique<MouseHandler>(
-			window,
+			_window,
 			_canvas,
 			std::bind(&MainWindow::Invalidate, this, true));
 
 		_keyboardHandler = std::make_unique<KeyboardHandler>(
-			window,
+			_window,
 			_fileListBox,
 			std::bind(&FileListHandler::SelectImage, _fileListHandler.get(), std::placeholders::_1));
 	}
 
 	void MainWindow::OnResize()
 	{
-		RecalculatePaintArea(_window);
+		RecalculatePaintArea();
 
 		if (!SetWindowPos(
 			_fileListBox,
@@ -314,9 +332,9 @@ namespace PictureBrowser
 
 	void MainWindow::OnContextMenu(WPARAM wParam, LPARAM lParam)
 	{
-		if (reinterpret_cast<HWND>(wParam) == _mainWindow->_fileListBox)
+		if (reinterpret_cast<HWND>(wParam) == _fileListBox)
 		{
-			_mainWindow->_fileListHandler->OnContextMenu(lParam);
+			_fileListHandler->OnContextMenu(lParam);
 		}
 	}
 
@@ -450,12 +468,12 @@ namespace PictureBrowser
 			}
 			case IDM_ABOUT:
 			{
-				DialogBox(_mainWindow->_instance, MAKEINTRESOURCE(IDD_ABOUT), _window, GenericOkDialog);
+				DialogBox(Instance(), MAKEINTRESOURCE(IDD_ABOUT), _window, GenericOkDialog);
 				break;
 			}
 			case IDM_KEYBOARD:
 			{
-				DialogBox(_mainWindow->_instance, MAKEINTRESOURCE(IDD_KEYBOARD), _window, GenericOkDialog);
+				DialogBox(Instance(), MAKEINTRESOURCE(IDD_KEYBOARD), _window, GenericOkDialog);
 				break;
 			}
 			case IDM_OPEN:
@@ -538,87 +556,6 @@ namespace PictureBrowser
 		{
 			LOGD << L"SetMenuItemInfo failed!";
 		}
-	}
-
-	LRESULT CALLBACK MainWindow::WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
-	{
-		switch (message)
-		{
-			case WM_CREATE:
-			{
-				_mainWindow->OnCreate(window);
-				break;
-			}
-			case WM_DESTROY:
-			{
-				_mainWindow->_fileListHandler->Clear();
-				PostQuitMessage(0);
-				break;
-			}
-			case WM_SIZE:
-			{
-				_mainWindow->OnResize();
-				break;
-			}
-			case WM_PAINT:
-			{
-				DefWindowProc(window, message, wParam, lParam);
-				_mainWindow->OnPaint();
-				break;
-			}
-			case WM_ERASEBKGND:
-			{
-				_mainWindow->OnErase();
-				break;
-			}
-			case WM_CONTEXTMENU:
-			{
-				_mainWindow->OnContextMenu(wParam, lParam);
-				break;
-			}
-			case WM_KEYUP:
-			{
-				_mainWindow->_keyboardHandler->OnKeyUp(wParam);
-				break;
-			}
-			case WM_LBUTTONDBLCLK:
-			case WM_RBUTTONDBLCLK:
-			{
-				_mainWindow->_mouseHandler->OnDoubleClick();
-				break;
-			}
-			case WM_LBUTTONDOWN:
-			{
-				_mainWindow->_mouseHandler->OnLeftMouseDown(lParam);
-				break;
-			}
-			case WM_MOUSEMOVE:
-			{
-				_mainWindow->_mouseHandler->OnMouseMove(lParam);
-				break;
-			}
-			case WM_LBUTTONUP:
-			{
-				_mainWindow->_mouseHandler->OnLeftMouseUp(lParam);
-				break;
-			}
-			case WM_COMMAND:
-			{
-				_mainWindow->OnCommand(wParam);
-				break;
-			}
-			case WM_DROPFILES:
-			{
-				_mainWindow->_fileListHandler->OnFileDrop(wParam);
-				break;
-			}
-			default:
-			{
-				return DefWindowProc(window, message, wParam, lParam);
-			}
-		}
-
-		return EXIT_SUCCESS;
 	}
 
 	INT_PTR CALLBACK MainWindow::GenericOkDialog(HWND dialog, UINT message, WPARAM wParam, LPARAM lParam)

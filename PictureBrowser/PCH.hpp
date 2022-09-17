@@ -5,8 +5,15 @@
 #include <CommCtrl.h>
 #include <gdiplus.h>
 
+#include <cassert>
 #include <filesystem>
 #include <format>
 #include <functional>
 #include <memory>
 #include <map>
+
+template <typename T>
+void Clear(T* x)
+{
+	memset(x, 0, sizeof(T));
+}

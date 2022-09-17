@@ -4,23 +4,22 @@
 #include "FileListHandler.hpp"
 #include "KeyboardHandler.hpp"
 #include "MouseHandler.hpp"
+#include "Window.hpp"
 
 namespace PictureBrowser
 {
-	class MainWindow
+	class MainWindow : public Window
 	{
 	public:
-		MainWindow();
+		MainWindow(HINSTANCE);
 		~MainWindow();
 
-		bool InitInstance(HINSTANCE, int);
 		void Open(const std::filesystem::path&);
+		bool HandleMessage(UINT, WPARAM, LPARAM) override;
 
 	private:
-		ATOM Register() const;
-
-		void RecalculatePaintArea(HWND);
-		void OnCreate(HWND);
+		void RecalculatePaintArea();
+		void OnCreate();
 		void OnResize();
 		void OnContextMenu(WPARAM, LPARAM);
 		void OnErase() const;
@@ -34,18 +33,15 @@ namespace PictureBrowser
 		UINT CheckedState(UINT menuEntry) const;
 		void SetCheckedState(UINT menuEntry, UINT state) const;
 
-		static LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
 		static INT_PTR CALLBACK GenericOkDialog(HWND, UINT, WPARAM, LPARAM);
 
 		int _zoomPercent = 0;
-		HWND _window = nullptr;
 		HWND _canvas = nullptr;
 		HWND _zoomOutButton = nullptr;
 		HWND _zoomInButton = nullptr;
 		HWND _previousPictureButton = nullptr;
 		HWND _nextPictureButton = nullptr;
 		HWND _fileListBox = nullptr;
-		HINSTANCE _instance = nullptr;
 		Gdiplus::Rect _fileListArea;
 		Gdiplus::Rect _mainArea;
 		Gdiplus::Rect _canvasArea;

@@ -58,9 +58,9 @@ int APIENTRY wWinMain(
 		return GetLastError();
 	}
 
-	PictureBrowser::MainWindow mainWindow;
+	PictureBrowser::MainWindow mainWindow(instance);
 
-	if (!mainWindow.InitInstance(instance, showCommand))
+	if (!mainWindow.Show(showCommand))
 	{
 		return GetLastError();
 	}

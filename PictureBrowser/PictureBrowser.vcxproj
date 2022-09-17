@@ -28,6 +28,8 @@
     <ClInclude Include="Registry.hpp" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="MainWindow.hpp" />
+    <ClInclude Include="Widget.hpp" />
+    <ClInclude Include="Window.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FileListHandler.cpp" />
@@ -42,6 +44,8 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Registry.cpp" />
+    <ClCompile Include="Widget.cpp" />
+    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="PictureBrowser.rc" />
