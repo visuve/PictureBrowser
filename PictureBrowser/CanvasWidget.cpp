@@ -100,13 +100,13 @@ namespace PictureBrowser
 
 		Gdiplus::Rect area(0, 0, width, height);
 
-		Gdiplus::Bitmap bitmap(width, height);
-		Gdiplus::Graphics buffer(&bitmap);
+		Gdiplus::Bitmap buffer(width, height);
+		Gdiplus::Graphics graphics(&buffer);
 
 		const Gdiplus::SolidBrush grayBrush(Gdiplus::Color::DarkGray);
-		buffer.FillRectangle(&grayBrush, 0, 0, width, height);
+		graphics.FillRectangle(&grayBrush, 0, 0, width, height);
 
-		Gdiplus::Image* image = _imageCache->Current();
+		Gdiplus::Bitmap* image = _imageCache->Current();
 
 		if (image)
 		{
@@ -120,15 +120,15 @@ namespace PictureBrowser
 			if (_isDragging)
 			{
 				const Gdiplus::Pen pen(Gdiplus::Color::Gray, 2.0f);
-				buffer.DrawRectangle(&pen, scaled);
+				graphics.DrawRectangle(&pen, scaled);
 			}
 			else
 			{
-				buffer.DrawImage(image, scaled);
+				graphics.DrawImage(image, scaled);
 			}
 		}
 
-		context.Graphics().DrawImage(&bitmap, 0, 0, width, height);
+		context.Graphics().DrawImage(&buffer, 0, 0, width, height);
 	}
 
 	void CanvasWidget::Invalidate() const

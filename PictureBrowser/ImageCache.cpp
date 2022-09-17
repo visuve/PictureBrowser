@@ -36,12 +36,12 @@ namespace PictureBrowser
 		return true;
 	}
 
-	Gdiplus::Image* ImageCache::Current()
+	Gdiplus::Bitmap* ImageCache::Current()
 	{
 		return Get(_currentImage);
 	}
 
-	Gdiplus::Image* ImageCache::Get(const std::filesystem::path& path)
+	Gdiplus::Bitmap* ImageCache::Get(const std::filesystem::path& path)
 	{
 		if (_useCaching)
 		{
@@ -63,7 +63,7 @@ namespace PictureBrowser
 		_cache.clear();
 	}
 
-	Gdiplus::Image* ImageCache::Load(const std::filesystem::path& path)
+	Gdiplus::Bitmap* ImageCache::Load(const std::filesystem::path& path)
 	{
 		Gdiplus::Image* image = Gdiplus::Image::FromFile(path.c_str());
 
@@ -72,13 +72,23 @@ namespace PictureBrowser
 			return nullptr;
 		}
 
+		CorrectRotationIfNeeded(image);
+
+		UINT width = image->GetWidth();
+		UINT height = image->GetHeight();
+		Gdiplus::PixelFormat format = image->GetPixelFormat();
+
+		Gdiplus::Bitmap* bitmap = new Gdiplus::Bitmap(width, height, format);
+		Gdiplus::Graphics graphics(bitmap);
+		graphics.DrawImage(image, 0, 0, width, height);
+
 		if (_useCaching)
 		{
-			CorrectRotationIfNeeded(image);
-			_cache[path].reset(image);
+			_cache.emplace(path, bitmap);
 			LOGD << L"Cached: " << path;
 		}
 
-		return image;
+		delete image;
+		return bitmap;
 	}
 }
