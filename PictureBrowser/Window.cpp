@@ -52,7 +52,7 @@ namespace PictureBrowser
 	{
 	}
 
-	bool Window::Show(int showCommand)
+	void Window::Show(int showCommand)
 	{
 		if (!_window)
 		{
@@ -78,7 +78,6 @@ namespace PictureBrowser
 		}
 
 		ShowWindow(_window, showCommand);
-		return true;
 	}
 
 	LRESULT Window::WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam)

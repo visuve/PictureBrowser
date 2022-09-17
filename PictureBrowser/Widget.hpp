@@ -30,7 +30,8 @@ namespace PictureBrowser
 		std::wstring Text() const;
 
 		SIZE Size() const;
-		RECT Area() const;
+		RECT WindowRect() const;
+		RECT ClientRect() const;
 		bool SetPosition(HWND z, int x, int y, int w, int h, UINT flags);
 		LRESULT Send(UINT message, WPARAM wParam, LPARAM lParam) const;
 

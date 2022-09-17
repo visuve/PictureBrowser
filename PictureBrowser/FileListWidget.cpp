@@ -195,8 +195,7 @@ namespace PictureBrowser
 
 		if (!ScreenToClient(_window, &p))
 		{
-			LOGD << L"ScreenToClient failed";
-			return;
+			std::unreachable();
 		}
 
 		LRESULT result = Send(LB_ITEMFROMPOINT,	0, MAKELPARAM(p.x, p.y));

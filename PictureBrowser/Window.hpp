@@ -22,7 +22,7 @@ namespace PictureBrowser
 
 		virtual ~Window();
 
-		bool Show(int showCommand);
+		void Show(int showCommand);
 
 	protected:
 		static LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam);

@@ -86,15 +86,27 @@ namespace PictureBrowser
 
 	SIZE Widget::Size() const
 	{
-		RECT area = Area();
+		RECT area = WindowRect();
 		return { area.right - area.left, area.bottom - area.top };
 	}
 	
-	RECT Widget::Area() const
+	RECT Widget::WindowRect() const
 	{ 
 		RECT area;
 
 		if (!GetWindowRect(_window, &area))
+		{
+			std::unreachable();
+		}
+
+		return area;
+	}
+
+	RECT Widget::ClientRect() const
+	{
+		RECT area;
+
+		if (!GetClientRect(_window, &area))
 		{
 			std::unreachable();
 		}

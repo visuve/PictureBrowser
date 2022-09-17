@@ -64,36 +64,35 @@ int APIENTRY wWinMain(
 		return GetLastError();
 	}
 
-	MainWindow mainWindow(instance);
-
-	if (!mainWindow.Show(showCommand))
-	{
-		return GetLastError();
-	}
-
-	if (commandLine && commandLine[0] != '\0')
-	{
-		mainWindow.Open(TrimQuotes(commandLine));
-	}
-
-	int run = 0;
 	MSG msg = { 0 };
 
-	do
 	{
-		run = GetMessage(&msg, nullptr, 0, 0);
+		MainWindow mainWindow(instance);
+		mainWindow.Show(showCommand);
 
-		if (run == -1)
+		if (commandLine && commandLine[0] != '\0')
 		{
-			LOGD << uint32_t(GetLastError());
-			break;
+			mainWindow.Open(TrimQuotes(commandLine));
 		}
-		else
+
+		int run = 0;
+
+		do
 		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-	} while (run != 0);
+			run = GetMessage(&msg, nullptr, 0, 0);
+
+			if (run == -1)
+			{
+				LOGD << uint32_t(GetLastError());
+				break;
+			}
+			else
+			{
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+		} while (run != 0);
+	}
 
 	return static_cast<int>(msg.wParam);
 }

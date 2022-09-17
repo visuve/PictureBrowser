@@ -82,7 +82,7 @@ namespace PictureBrowser
 		context.Graphics().FillRectangle(&grayBrush, area);
 	}
 
-	void CanvasWidget::OnPaint()
+	void CanvasWidget::OnPaint() const
 	{
 		// TODO: this function could be simplified
 
@@ -133,8 +133,13 @@ namespace PictureBrowser
 
 	void CanvasWidget::Invalidate() const
 	{
-		// TODO: invalidate only the canvas, not the entire parent
-		if (!InvalidateRect(_parent, nullptr, false))
+		RECT child = ClientRect();
+
+		UINT points = sizeof(RECT) / sizeof(POINT);
+
+		MapWindowPoints(_window, _parent, reinterpret_cast<LPPOINT>(&child), points);
+
+		if (!InvalidateRect(_parent, &child, false))
 		{
 			std::unreachable();
 		}

@@ -19,7 +19,7 @@ namespace PictureBrowser
 
 	private:
 		void OnErase() const;
-		void OnPaint();
+		void OnPaint() const;
 		void Invalidate() const;
 		void OnZoom(WPARAM);
 

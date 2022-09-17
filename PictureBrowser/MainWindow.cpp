@@ -300,10 +300,7 @@ namespace PictureBrowser
 
 		const UINT show = placement.showCmd == SW_NORMAL ? SW_SHOWMAXIMIZED : SW_NORMAL;
 
-		if (!ShowWindow(_window, show))
-		{
-			std::unreachable();
-		}
+		Show(show);
 	}
 
 	UINT MainWindow::CheckedState(UINT menuEntry) const
