@@ -25,13 +25,16 @@ namespace PictureBrowser
 		
 		bool Intercept(HWND window);
 		bool Intercept(Widget* other);
+		bool Listen();
 
 		std::wstring Text() const;
+		bool SetPosition(HWND z, int x, int y, int w, int h, UINT flags);
 		LRESULT Send(UINT message, WPARAM wParam, LPARAM lParam) const;
 
 		virtual void HandleMessage(UINT, WPARAM, LPARAM, UINT_PTR, DWORD_PTR);
 
-	private:
+	protected:
+		HWND _parent = nullptr;
 		HWND _window = nullptr;
 	};
 };

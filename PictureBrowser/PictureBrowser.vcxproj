@@ -18,10 +18,9 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="FileListHandler.hpp" />
+    <ClInclude Include="FileListWidget.hpp" />
     <ClInclude Include="GdiExtensions.hpp" />
     <ClInclude Include="ImageCache.hpp" />
-    <ClInclude Include="KeyboardHandler.hpp" />
     <ClInclude Include="LogWrap.hpp" />
     <ClInclude Include="MouseHandler.hpp" />
     <ClInclude Include="PCH.hpp" />
@@ -32,10 +31,9 @@
     <ClInclude Include="Window.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="FileListHandler.cpp" />
+    <ClCompile Include="FileListWidget.cpp" />
     <ClCompile Include="GdiExtensions.cpp" />
     <ClCompile Include="ImageCache.cpp" />
-    <ClCompile Include="KeyboardHandler.cpp" />
     <ClCompile Include="LogWrap.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Main.cpp" />

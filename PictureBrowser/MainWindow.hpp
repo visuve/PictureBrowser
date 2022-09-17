@@ -1,8 +1,7 @@
 #pragma once
 
 #include "ImageCache.hpp"
-#include "FileListHandler.hpp"
-#include "KeyboardHandler.hpp"
+#include "FileListWidget.hpp"
 #include "MouseHandler.hpp"
 #include "Window.hpp"
 
@@ -21,7 +20,6 @@ namespace PictureBrowser
 		void RecalculatePaintArea();
 		void OnCreate();
 		void OnResize();
-		void OnContextMenu(WPARAM, LPARAM);
 		void OnErase() const;
 		void OnPaint();
 
@@ -41,14 +39,12 @@ namespace PictureBrowser
 		HWND _zoomInButton = nullptr;
 		HWND _previousPictureButton = nullptr;
 		HWND _nextPictureButton = nullptr;
-		HWND _fileListBox = nullptr;
 		Gdiplus::Rect _fileListArea;
 		Gdiplus::Rect _mainArea;
 		Gdiplus::Rect _canvasArea;
 
 		std::shared_ptr<ImageCache> _imageCache;
-		std::unique_ptr<FileListHandler> _fileListHandler;
-		std::unique_ptr<KeyboardHandler> _keyboardHandler;
+		std::unique_ptr<FileListWidget> _fileListWidget;
 		std::unique_ptr<MouseHandler> _mouseHandler;
 	};
 }

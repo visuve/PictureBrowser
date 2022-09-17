@@ -1,23 +1,68 @@
 #include "PCH.hpp"
-#include "FileListHandler.hpp"
+#include "FileListWidget.hpp"
 #include "LogWrap.hpp"
 #include "Resource.h"
 
 namespace PictureBrowser
 {
-	FileListHandler::FileListHandler(
-		HWND window,
-		HWND fileListBox,
+	FileListWidget::FileListWidget(
+		HWND parent,
 		const std::shared_ptr<ImageCache>& imageCache,
 		const std::function<void(std::filesystem::path)>& imageChanged) :
-		_window(window),
-		_fileListBox(fileListBox),
+		Widget(
+			0,
+			WC_LISTBOX,
+			L"Filelist...",
+			WS_VISIBLE | WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY | LBS_HASSTRINGS,
+			0,
+			0,
+			100,
+			700,
+			parent,
+			reinterpret_cast<HMENU>(IDC_LISTBOX),
+			GetModuleHandle(nullptr),
+			nullptr),
 		_imageCache(imageCache),
 		_imageChanged(imageChanged)
 	{
 	}
 
-	void FileListHandler::Open(const std::filesystem::path& path)
+	void FileListWidget::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR)
+	{
+		switch (message)
+		{
+			case WM_CONTEXTMENU:
+				if (reinterpret_cast<HWND>(wParam) == _window)
+				{
+					OnContextMenu(lParam);
+				}
+				break;
+			case WM_COMMAND:
+				if (reinterpret_cast<HWND>(lParam) == _window && HIWORD(wParam) == LBN_SELCHANGE)
+				{
+					OnUpdateSelection();
+					break;
+				}
+
+				if (LOWORD(wParam) == IDM_OPEN)
+				{
+					OnOpenMenu();
+					break;
+				}				
+				
+				if (LOWORD(wParam) == IDM_POPUP_COPY_PATH)
+				{
+					OnPopupClosed();
+				}
+				break;
+			case WM_DROPFILES:
+				OnFileDrop(wParam);
+				break;
+		}
+
+	}
+
+	void FileListWidget::Open(const std::filesystem::path& path)
 	{
 		_imageCache->Clear();
 
@@ -30,26 +75,21 @@ namespace PictureBrowser
 			}
 			case std::filesystem::file_type::directory:
 			{
-				SelectImage(0);
-				break;
-			}
-			default:
-			{
-				// Invalidate();
+				OnUpdateSelection();
 				break;
 			}
 		}
 	}
 
-	void FileListHandler::Clear()
+	void FileListWidget::Clear()
 	{
 		_currentDirectory.clear();
 		_imageCache->Clear();
 	}
 
-	std::filesystem::path FileListHandler::SelectedImage() const
+	std::filesystem::path FileListWidget::SelectedImage() const
 	{
-		const LONG_PTR current = SendMessage(_fileListBox, LB_GETCURSEL, 0, 0);
+		const LONG_PTR current = Send(LB_GETCURSEL, 0, 0);
 
 		if (current < 0)
 		{
@@ -60,13 +100,13 @@ namespace PictureBrowser
 		return _currentDirectory / ImageFromIndex(current);
 	}
 
-	void FileListHandler::OnOpenMenu()
+	void FileListWidget::OnOpenMenu()
 	{
 		OPENFILENAME openFile = { 0 };
 		wchar_t filePath[0x1000] = { 0 };
 
 		openFile.lStructSize = sizeof(openFile);
-		openFile.hwndOwner = _window;
+		openFile.hwndOwner = _parent;
 		openFile.lpstrFile = filePath;
 		openFile.nMaxFile = 0xFFF;
 		openFile.lpstrFilter =
@@ -87,7 +127,7 @@ namespace PictureBrowser
 		}
 	}
 
-	void FileListHandler::OnSelectionChanged()
+	void FileListWidget::OnSelectionChanged()
 	{
 		const std::filesystem::path path = SelectedImage();
 
@@ -99,7 +139,7 @@ namespace PictureBrowser
 		LoadPicture(path);
 	}
 
-	void FileListHandler::OnFileDrop(WPARAM wParam)
+	void FileListWidget::OnFileDrop(WPARAM wParam)
 	{
 		const HDROP dropInfo = reinterpret_cast<HDROP>(wParam);
 		const UINT required = DragQueryFile(dropInfo, 0, nullptr, 0);
@@ -119,26 +159,24 @@ namespace PictureBrowser
 		SetFocus(_window); // Somehow loses focus without
 	}
 
-	void FileListHandler::OnContextMenu(LPARAM lParam)
+	void FileListWidget::OnContextMenu(LPARAM lParam)
 	{
 		const int16_t x = LOWORD(lParam);
 		const int16_t y = HIWORD(lParam);
 
 		POINT p = { x, y };
 
-		if (!ScreenToClient(_fileListBox, &p))
+		if (!ScreenToClient(_window, &p))
 		{
+			LOGD << L"ScreenToClient failed";
 			return;
 		}
 
-		LRESULT result = SendMessage(
-			_fileListBox,
-			LB_ITEMFROMPOINT,
-			0,
-			MAKELPARAM(p.x, p.y));
+		LRESULT result = Send(LB_ITEMFROMPOINT,	0, MAKELPARAM(p.x, p.y));
 
 		if (result < 0)
 		{
+			LOGD << L"LB_ITEMFROMPOINT failed";
 			return;
 		}
 
@@ -154,14 +192,14 @@ namespace PictureBrowser
 
 		HMENU menu = CreatePopupMenu();
 
-		InsertMenu(menu, 0, MF_STRING, IDC_POPUP_COPY, L"Copy filename to clipboard");
+		InsertMenu(menu, 0, MF_STRING, IDM_POPUP_COPY_PATH, L"Copy filename to clipboard");
 
-		TrackPopupMenu(menu, TPM_TOPALIGN | TPM_LEFTALIGN, x, y, 0, _window, nullptr);
+		TrackPopupMenu(menu, TPM_TOPALIGN | TPM_LEFTALIGN, x, y, 0, _parent, nullptr);
 
 		DestroyMenu(menu);
 	}
 
-	void FileListHandler::OnPopupClosed()
+	void FileListWidget::OnPopupClosed()
 	{
 		std::wstring filename = ImageFromIndex(_contextMenuIndex);
 
@@ -196,13 +234,16 @@ namespace PictureBrowser
 		CloseClipboard();
 	}
 
-	void FileListHandler::SelectImage(LONG_PTR current)
+	void FileListWidget::OnUpdateSelection()
 	{
-		if (SendMessage(_fileListBox, LB_SETCURSEL, current, 0) < 0)
+		const LONG_PTR count = Send(LB_GETCOUNT, 0, 0);
+
+		if (!count)
 		{
-			LOGD << L"Failed to send LB_SETCURSEL!";
 			return;
-		}
+		}				
+		
+		LONG_PTR current = std::clamp(Send(LB_GETCURSEL, 0, 0), LONG_PTR(0), count);
 
 		const std::filesystem::path path = _currentDirectory / ImageFromIndex(current);
 
@@ -214,7 +255,7 @@ namespace PictureBrowser
 		LoadPicture(path);
 	}
 
-	std::filesystem::file_type FileListHandler::LoadFileList(const std::filesystem::path& path)
+	std::filesystem::file_type FileListWidget::LoadFileList(const std::filesystem::path& path)
 	{
 		std::wstring jpgFilter = L"\\*.jpg";
 		std::wstring pngFilter = L"\\*.png";
@@ -240,6 +281,7 @@ namespace PictureBrowser
 			case std::filesystem::file_type::regular:
 			{
 				if (_wcsicmp(path.extension().c_str(), L".jpg") != 0 &&
+					_wcsicmp(path.extension().c_str(), L".jpeg") != 0 &&
 					_wcsicmp(path.extension().c_str(), L".png") != 0)
 				{
 					MessageBox(_window,
@@ -276,22 +318,22 @@ namespace PictureBrowser
 			}
 		}
 
-		if (!SendMessage(_fileListBox, LB_RESETCONTENT, 0, 0))
+		if (!Send(LB_RESETCONTENT, 0, 0))
 		{
 			LOGD << L"Failed to send message LB_RESETCONTENT!";
 		}
 
-		if (!SendMessage(_fileListBox, LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(jpgFilter.c_str())))
+		if (!Send(LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(jpgFilter.c_str())))
 		{
 			LOGD << L"Failed to send JPG filter update!";
 		}
 
-		if (!SendMessage(_fileListBox, LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(pngFilter.c_str())))
+		if (!Send(LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(pngFilter.c_str())))
 		{
 			LOGD << L"Failed to send PNG filter update!";
 		}
 
-		const LONG_PTR count = SendMessage(_fileListBox, LB_GETCOUNT, 0, 0);
+		const LONG_PTR count = Send(LB_GETCOUNT, 0, 0);
 
 		if (!count)
 		{
@@ -308,11 +350,11 @@ namespace PictureBrowser
 		}
 
 		if (status == std::filesystem::file_type::regular &&
-			!SendMessage(_fileListBox, LB_SELECTSTRING, 0, reinterpret_cast<LPARAM>(path.filename().c_str())))
+			!Send(LB_SELECTSTRING, 0, reinterpret_cast<LPARAM>(path.filename().c_str())))
 		{
 			LOGD << L"Failed to send message LB_SELECTSTRING!";
 		}
-		else if (!SendMessage(_fileListBox, LB_SETCURSEL, 0, 0))
+		else if (!Send(LB_SETCURSEL, 0, 0))
 		{
 			LOGD << L"Failed to send message LB_SETCURSEL !";
 		}
@@ -320,14 +362,14 @@ namespace PictureBrowser
 		return status;
 	}
 
-	void FileListHandler::LoadPicture(const std::filesystem::path& path)
+	void FileListWidget::LoadPicture(const std::filesystem::path& path)
 	{
 		if (!std::filesystem::is_regular_file(path))
 		{
 			const std::wstring message =
 				path.wstring() + L" does not appear to be a file!";
 
-			MessageBox(_window,
+			MessageBox(_parent,
 				message.c_str(),
 				L"Unsupported file format!",
 				MB_OK | MB_ICONINFORMATION);
@@ -340,7 +382,7 @@ namespace PictureBrowser
 			const std::wstring message =
 				L"Failed to load:\n" + path.wstring();
 
-			MessageBox(_window,
+			MessageBox(_parent,
 				message.c_str(),
 				L"FUBAR",
 				MB_OK | MB_ICONINFORMATION);
@@ -351,9 +393,9 @@ namespace PictureBrowser
 		_imageChanged(path);
 	}
 
-	std::filesystem::path FileListHandler::ImageFromIndex(LONG_PTR index) const
+	std::filesystem::path FileListWidget::ImageFromIndex(LONG_PTR index) const
 	{
-		LRESULT result = SendMessage(_fileListBox, LB_GETTEXTLEN, index, 0);
+		LRESULT result = Send(LB_GETTEXTLEN, index, 0);
 
 		if (result <= 0)
 		{
@@ -363,7 +405,7 @@ namespace PictureBrowser
 		const size_t length = static_cast<size_t>(result);
 		std::wstring buffer(length, '\0');
 
-		if (SendMessage(_fileListBox, LB_GETTEXT, index, reinterpret_cast<LPARAM>(buffer.data())) != length)
+		if (Send(LB_GETTEXT, index, reinterpret_cast<LPARAM>(buffer.data())) != length)
 		{
 			LOGD << L"Failed to send LB_GETTEXT!";
 			return {};

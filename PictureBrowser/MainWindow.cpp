@@ -31,9 +31,9 @@ namespace PictureBrowser
 
 	void MainWindow::Open(const std::filesystem::path& path)
 	{
-		if (_fileListHandler)
+		if (_fileListWidget)
 		{
-			_fileListHandler->Open(path);
+			_fileListWidget->Open(path);
 		}
 	}
 
@@ -48,7 +48,7 @@ namespace PictureBrowser
 			}
 			case WM_DESTROY:
 			{
-				_fileListHandler->Clear();
+				_fileListWidget->Clear();
 				PostQuitMessage(0);
 				break;
 			}
@@ -66,16 +66,6 @@ namespace PictureBrowser
 			case WM_ERASEBKGND:
 			{
 				OnErase();
-				break;
-			}
-			case WM_CONTEXTMENU:
-			{
-				OnContextMenu(wParam, lParam);
-				break;
-			}
-			case WM_KEYUP:
-			{
-				_keyboardHandler->OnKeyUp(wParam);
 				break;
 			}
 			case WM_LBUTTONDBLCLK:
@@ -102,11 +92,6 @@ namespace PictureBrowser
 			case WM_COMMAND:
 			{
 				OnCommand(wParam);
-				break;
-			}
-			case WM_DROPFILES:
-			{
-				_fileListHandler->OnFileDrop(wParam);
 				break;
 			}
 		}
@@ -150,19 +135,6 @@ namespace PictureBrowser
 	void MainWindow::OnCreate()
 	{
 		RecalculatePaintArea();
-
-		_fileListBox = CreateWindow(
-			WC_LISTBOX,
-			L"Filelist...",
-			WS_VISIBLE | WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY | LBS_HASSTRINGS,
-			_fileListArea.X,
-			_fileListArea.Y,
-			_fileListArea.Width,
-			_fileListArea.Height,
-			_window,
-			reinterpret_cast<HMENU>(IDC_LISTBOX),
-			Instance(),
-			nullptr);
 
 		_canvas = CreateWindow(
 			WC_STATIC,
@@ -234,29 +206,24 @@ namespace PictureBrowser
 
 		_imageCache = std::make_shared<ImageCache>(useCaching);
 
-		_fileListHandler = std::make_unique<FileListHandler>(
+		_fileListWidget = std::make_unique<FileListWidget>(
 			_window,
-			_fileListBox,
 			_imageCache,
 			std::bind(&MainWindow::OnImageChanged, this, std::placeholders::_1));
+
+		_fileListWidget->Intercept(_window);
 		
 		_mouseHandler = std::make_unique<MouseHandler>(
 			_window,
 			_canvas,
 			std::bind(&MainWindow::Invalidate, this, true));
-
-		_keyboardHandler = std::make_unique<KeyboardHandler>(
-			_window,
-			_fileListBox,
-			std::bind(&FileListHandler::SelectImage, _fileListHandler.get(), std::placeholders::_1));
 	}
 
 	void MainWindow::OnResize()
 	{
 		RecalculatePaintArea();
 
-		if (!SetWindowPos(
-			_fileListBox,
+		if (!_fileListWidget->SetPosition(
 			HWND_TOP,
 			0,
 			0,
@@ -328,14 +295,6 @@ namespace PictureBrowser
 		}
 
 		Invalidate();
-	}
-
-	void MainWindow::OnContextMenu(WPARAM wParam, LPARAM lParam)
-	{
-		if (reinterpret_cast<HWND>(wParam) == _fileListBox)
-		{
-			_fileListHandler->OnContextMenu(lParam);
-		}
 	}
 
 	void MainWindow::OnErase() const
@@ -444,23 +403,6 @@ namespace PictureBrowser
 				OnZoom(VK_OEM_PLUS);
 				break;
 			}
-			case IDC_PREV_BUTTON:
-			{
-				// TODO: disable button if no image is loaded
-				_keyboardHandler->OnKeyUp(VK_LEFT);
-				break;
-			}
-			case IDC_NEXT_BUTTON:
-			{
-				// TODO: disable button if no image is loaded
-				_keyboardHandler->OnKeyUp(VK_RIGHT);
-				break;
-			}
-			case IDC_POPUP_COPY:
-			{
-				_fileListHandler->OnPopupClosed();
-				break;
-			}
 			case IDM_EXIT:
 			{
 				DestroyWindow(_window);
@@ -474,11 +416,6 @@ namespace PictureBrowser
 			case IDM_KEYBOARD:
 			{
 				DialogBox(Instance(), MAKEINTRESOURCE(IDD_KEYBOARD), _window, GenericOkDialog);
-				break;
-			}
-			case IDM_OPEN:
-			{
-				_fileListHandler->OnOpenMenu();
 				break;
 			}
 			case IDM_OPTIONS_USE_CACHING:
@@ -496,15 +433,6 @@ namespace PictureBrowser
 					SetCheckedState(IDM_OPTIONS_USE_CACHING, MFS_CHECKED);
 				}
 
-				break;
-			}
-		}
-
-		switch (HIWORD(wParam))
-		{
-			case LBN_SELCHANGE:
-			{
-				_fileListHandler->OnSelectionChanged();
 				break;
 			}
 		}

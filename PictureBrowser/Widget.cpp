@@ -49,7 +49,8 @@ namespace PictureBrowser
 			parent,
 			menu,
 			instance,
-			data))
+			data)),
+		_parent(parent)
 	{
 	}
 
@@ -60,7 +61,12 @@ namespace PictureBrowser
 
 	bool Widget::Intercept(Widget* widget)
 	{
-		return SetWindowSubclass(widget->_window, SubClassProcedure, ++Identifier, reinterpret_cast<DWORD_PTR>(this));
+		return Intercept(widget->_window);
+	}
+
+	bool Widget::Listen()
+	{
+		return Intercept(this);
 	}
 
 	std::wstring Widget::Text() const
@@ -77,6 +83,11 @@ namespace PictureBrowser
 		return buffer;
 	}
 
+	bool Widget::SetPosition(HWND z, int x, int y, int w, int h, UINT flags)
+	{
+		return SetWindowPos(_window, z, x, y, w, h, flags);
+	}
+
 	LRESULT Widget::Send(UINT message, WPARAM wParam, LPARAM lParam) const
 	{
 		return SendMessage(_window, message, wParam, lParam);
@@ -84,9 +95,5 @@ namespace PictureBrowser
 
 	void Widget::HandleMessage(UINT message, WPARAM, LPARAM, UINT_PTR, DWORD_PTR)
 	{
-		if (message == WM_COMMAND) // Just as an example
-		{
-			OutputDebugStringW(L"DING!\n");
-		}
 	}
 }

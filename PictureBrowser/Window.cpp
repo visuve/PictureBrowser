@@ -3,7 +3,16 @@
 
 namespace PictureBrowser
 {
-	Window::Window(HINSTANCE instance, const wchar_t* className, const wchar_t* title, int width, int height, HICON icon, HCURSOR cursor, HBRUSH brush, const wchar_t* menuName)
+	Window::Window(
+		HINSTANCE instance, 
+		const wchar_t* className, 
+		const wchar_t* title, 
+		int width, 
+		int height, 
+		HICON icon, 
+		HCURSOR cursor, 
+		HBRUSH brush, 
+		const wchar_t* menuName)
 	{
 		WNDCLASSEXW windowClass;
 		windowClass.cbSize = sizeof(WNDCLASSEXW);
@@ -34,7 +43,7 @@ namespace PictureBrowser
 		_windowStyle.style = WS_OVERLAPPEDWINDOW;
 		_windowStyle.lpszName = title;
 		_windowStyle.lpszClass = MAKEINTATOM(atom);
-		_windowStyle.dwExStyle = 0;
+		_windowStyle.dwExStyle = WS_EX_ACCEPTFILES;
 	}
 
 	Window::~Window()

@@ -12,5 +12,5 @@
 
 ## TODO:
 
-- Create a widget class and handle messages in each widget
+- Subclass the canvas
 	- The current architecture is horrible

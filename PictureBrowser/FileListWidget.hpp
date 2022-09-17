@@ -1,30 +1,37 @@
 #pragma once
 
 #include "ImageCache.hpp"
+#include "Window.hpp"
 
 namespace PictureBrowser
 {
-	class FileListHandler
+	class FileListWidget : public Widget
 	{
 	public:
-		FileListHandler(HWND window, HWND fileListBox, const std::shared_ptr<ImageCache>& imageCache, const std::function<void(std::filesystem::path)>& imageChanged);
+		FileListWidget(
+			HWND parent, 
+			const std::shared_ptr<ImageCache>& imageCache, 
+			const std::function<void(std::filesystem::path)>& imageChanged);
+
+		void HandleMessage(UINT, WPARAM, LPARAM, UINT_PTR, DWORD_PTR) override;
+
 		void Open(const std::filesystem::path& path);
 		void Clear();
 		std::filesystem::path SelectedImage() const;
-		void OnOpenMenu();
-		void OnSelectionChanged();
-		void OnFileDrop(WPARAM wParam);
-		void SelectImage(LONG_PTR current);
-		void OnContextMenu(LPARAM);
-		void OnPopupClosed();
 
 	private:
+		void OnOpenMenu();
+		void OnSelectionChanged();
+		void OnFileDrop(WPARAM);
+		void OnUpdateSelection();
+		void OnContextMenu(LPARAM);
+		void OnPopupClosed();
+		void OnKeyUp(WPARAM);
+
 		std::filesystem::file_type LoadFileList(const std::filesystem::path&);
 		void LoadPicture(const std::filesystem::path& path);
 		std::filesystem::path ImageFromIndex(LONG_PTR index) const;
 
-		HWND _window = nullptr;
-		HWND _fileListBox = nullptr;
 		std::shared_ptr<ImageCache> _imageCache;
 		std::filesystem::path _currentDirectory;
 		std::function<void(std::filesystem::path)> _imageChanged;
