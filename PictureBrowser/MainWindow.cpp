@@ -78,11 +78,7 @@ namespace PictureBrowser
 
 		if (!GetClientRect(_window, &clientArea))
 		{
-			LOGD << L"GetClientRect failed!";
-			clientArea.top = 0;
-			clientArea.left = 0;
-			clientArea.right = 800;
-			clientArea.bottom = 600;
+			std::unreachable();
 		}
 
 		_fileListArea.X = clientArea.left + Padding;
@@ -182,7 +178,7 @@ namespace PictureBrowser
 			_fileListArea.Height,
 			SWP_NOMOVE | SWP_NOZORDER))
 		{
-			LOGD << L"Failed to move file list!";
+			std::unreachable();
 		}
 
 		if (!_canvasWidget->SetPosition(
@@ -193,7 +189,7 @@ namespace PictureBrowser
 			_canvasArea.Height,
 			SWP_NOZORDER))
 		{
-			LOGD << L"Failed move minus button!";
+			std::unreachable();
 		}
 
 		if (!_zoomOutButton.SetPosition(
@@ -204,7 +200,7 @@ namespace PictureBrowser
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
 		{
-			LOGD << L"Failed move minus button!";
+			std::unreachable();
 		}
 
 		if (!_zoomInButton.SetPosition(
@@ -215,7 +211,7 @@ namespace PictureBrowser
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
 		{
-			LOGD << L"Failed move plus button!";
+			std::unreachable();
 		}
 
 		if (!_previousPictureButton.SetPosition(
@@ -226,7 +222,7 @@ namespace PictureBrowser
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
 		{
-			LOGD << L"Failed move previous button!";
+			std::unreachable();
 		}
 
 		if (!_nextPictureButton.SetPosition(
@@ -237,7 +233,7 @@ namespace PictureBrowser
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
 		{
-			LOGD << L"Failed to move next button!";
+			std::unreachable();
 		}
 
 		const RECT canvasArea =
@@ -306,9 +302,7 @@ namespace PictureBrowser
 
 		if (!ShowWindow(_window, show))
 		{
-			const std::wstring message =
-				show == SW_SHOWMAXIMIZED ? L"maximize screen" : L"show window in normal size";
-			LOGD << L"Failed to " << message;
+			std::unreachable();
 		}
 	}
 
@@ -321,8 +315,7 @@ namespace PictureBrowser
 
 		if (!GetMenuItemInfo(menu, IDM_OPTIONS_USE_CACHING, FALSE, &menuItemInfo))
 		{
-			LOGD << L"GetMenuItemInfo failed!";
-			return MFS_DEFAULT; // Maybe not the best idea...
+			std::unreachable();
 		}
 
 		return menuItemInfo.fState;
@@ -338,7 +331,7 @@ namespace PictureBrowser
 
 		if (!SetMenuItemInfo(menu, IDM_OPTIONS_USE_CACHING, FALSE, &menuItemInfo))
 		{
-			LOGD << L"SetMenuItemInfo failed!";
+			std::unreachable();
 		}
 	}
 

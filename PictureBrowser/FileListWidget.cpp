@@ -13,7 +13,7 @@ namespace PictureBrowser
 		Widget(
 			0,
 			WC_LISTBOX,
-			L"Filelist...",
+			ClassName(FileListWidget),
 			WS_VISIBLE | WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY | LBS_HASSTRINGS,
 			5,
 			5,
@@ -324,9 +324,9 @@ namespace PictureBrowser
 			}
 		}
 
-		if (!Send(LB_RESETCONTENT, 0, 0))
+		if (Send(LB_RESETCONTENT, 0, 0) != 0) // This message does not return a value.
 		{
-			LOGD << L"Failed to send message LB_RESETCONTENT!";
+			std::unreachable();
 		}
 
 		if (!Send(LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(jpgFilter.c_str())))
@@ -360,9 +360,9 @@ namespace PictureBrowser
 		{
 			LOGD << L"Failed to send message LB_SELECTSTRING!";
 		}
-		else if (!Send(LB_SETCURSEL, 0, 0))
+		else if (Send(LB_SETCURSEL, 0, 0) == LB_ERR)
 		{
-			LOGD << L"Failed to send message LB_SETCURSEL !";
+			std::unreachable();
 		}
 
 		return status;
