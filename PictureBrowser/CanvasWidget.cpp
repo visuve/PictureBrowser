@@ -31,9 +31,6 @@ namespace PictureBrowser
 			case WM_PAINT:
 				OnPaint();
 				break;
-			case WM_ERASEBKGND:
-				OnErase();
-				break;
 			case WM_COMMAND:
 			{
 				switch (LOWORD(wParam))
@@ -70,16 +67,6 @@ namespace PictureBrowser
 				break;
 			}
 		}
-	}
-
-	void CanvasWidget::OnErase() const
-	{
-		SIZE size = Size();
-
-		const Gdiplus::Rect area(0, 0, size.cx, size.cy);
-		GdiExtensions::ContextWrapper context(_window);
-		const Gdiplus::SolidBrush grayBrush(Gdiplus::Color::LightGreen);
-		context.Graphics().FillRectangle(&grayBrush, area);
 	}
 
 	void CanvasWidget::OnPaint() const

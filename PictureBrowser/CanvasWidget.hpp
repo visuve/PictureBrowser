@@ -18,7 +18,6 @@ namespace PictureBrowser
 		void OnImageChanged(std::filesystem::path path);
 
 	private:
-		void OnErase() const;
 		void OnPaint() const;
 		void Invalidate() const;
 		void OnZoom(WPARAM);
