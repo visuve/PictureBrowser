@@ -93,10 +93,10 @@ namespace PictureBrowser
 			return;
 		}
 
-		SIZE size = Size();
+		SIZE clientSize = Size();
 
-		const INT width = size.cx;
-		const INT height = size.cy;
+		const INT width = clientSize.cx;
+		const INT height = clientSize.cy;
 
 		Gdiplus::Rect area(0, 0, width, height);
 
@@ -110,10 +110,10 @@ namespace PictureBrowser
 
 		if (image)
 		{
-			Gdiplus::SizeF size(Gdiplus::REAL(image->GetWidth()), Gdiplus::REAL(image->GetHeight()));
+			Gdiplus::SizeF imageSize(Gdiplus::REAL(image->GetWidth()), Gdiplus::REAL(image->GetHeight()));
 			Gdiplus::Rect scaled;
 
-			GdiExtensions::ScaleAndCenterTo(area, size, scaled);
+			GdiExtensions::ScaleAndCenterTo(area, imageSize, scaled);
 			GdiExtensions::Zoom(scaled, _zoomPercent);
 			scaled.Offset(_mouseDragOffset);
 
