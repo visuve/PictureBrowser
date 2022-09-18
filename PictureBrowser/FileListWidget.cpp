@@ -194,7 +194,8 @@ namespace PictureBrowser
 		openFile.lpstrFile = filePath.data();
 		openFile.nMaxFile = static_cast<DWORD>(filePath.size());
 		openFile.lpstrFilter =
-			L"Joint Photographic Experts Group (*.jpg)\0*.jpg\0Portable Network Graphics (*.png)\0*.png\0";
+			L"Joint Photographic Experts Group (*.jpg|*.jpeg)\0*.jpg;*.jpeg\0"
+			L"Portable Network Graphics(*.png)\0 * .png\0";
 		openFile.nFilterIndex = 1;
 		openFile.lpstrFileTitle = nullptr;
 		openFile.nMaxFileTitle = 0;
@@ -292,6 +293,7 @@ namespace PictureBrowser
 	std::filesystem::file_type FileListWidget::LoadFileList(const std::filesystem::path& path)
 	{
 		std::wstring jpgFilter = L"\\*.jpg";
+		std::wstring jpegFilter = L"\\*.jpeg";
 		std::wstring pngFilter = L"\\*.png";
 
 		const std::filesystem::file_type status = std::filesystem::status(path).type();
@@ -327,6 +329,7 @@ namespace PictureBrowser
 				}
 
 				jpgFilter.insert(0, path.parent_path().wstring());
+				jpegFilter.insert(0, path.parent_path().wstring());
 				pngFilter.insert(0, path.parent_path().wstring());
 				_currentDirectory = path.parent_path();
 				break;
@@ -334,6 +337,7 @@ namespace PictureBrowser
 			case std::filesystem::file_type::directory:
 			{
 				jpgFilter.insert(0, path.wstring());
+				jpegFilter.insert(0, path.wstring());
 				pngFilter.insert(0, path.wstring());
 				_currentDirectory = path;
 				break;
@@ -360,6 +364,11 @@ namespace PictureBrowser
 		if (!Send(LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(jpgFilter.c_str())))
 		{
 			LOGD << L"Failed to send JPG filter update!";
+		}
+
+		if (!Send(LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(jpegFilter.c_str())))
+		{
+			LOGD << L"Failed to send JPEG filter update!";
 		}
 
 		if (!Send(LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(pngFilter.c_str())))
