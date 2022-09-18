@@ -60,7 +60,7 @@ namespace PictureBrowser
 	{
 	public:
 		template <typename T>
-		NullStream& operator << (T)
+		constexpr NullStream& operator << (T)
 		{
 			return *this;
 		}

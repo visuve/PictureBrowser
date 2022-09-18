@@ -20,7 +20,7 @@
 namespace PictureBrowser
 {
 	template <typename T>
-	void ZeroInit(T* x)
+	constexpr void ZeroInit(T* x)
 	{
 		memset(x, 0, sizeof(T));
 	}
