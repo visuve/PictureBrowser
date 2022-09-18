@@ -5,6 +5,52 @@
 
 namespace PictureBrowser
 {
+	class GlobalMemory
+	{
+	public:
+		GlobalMemory(const void* data, size_t size, uint32_t flags = GMEM_MOVEABLE) :
+			_memory(GlobalAlloc(flags, size))
+		{
+			if (_memory)
+			{
+				_lock = GlobalLock(_memory);
+			}
+
+			if (_lock)
+			{
+				memcpy(_lock, data, size);
+			}
+		}
+
+		GlobalMemory(const GlobalMemory&) = delete;
+		GlobalMemory(GlobalMemory&&) = delete;
+		GlobalMemory& operator = (const GlobalMemory&) = delete;
+		GlobalMemory& operator = (GlobalMemory&&) = delete;
+
+		~GlobalMemory()
+		{
+			if (_lock)
+			{
+				GlobalUnlock(_memory);
+			}
+			else if (_memory)
+			{
+				// Did not acquire the lock, allocated for nothing
+				GlobalFree(_memory);
+			}
+		}
+
+		HGLOBAL Data() const
+		{
+			return _memory;
+		}
+
+	private:
+		HGLOBAL _memory;
+		void* _lock = nullptr;
+	};
+
+
 	FileListWidget::FileListWidget(
 		HINSTANCE instance,
 		HWND parent,
@@ -236,27 +282,11 @@ namespace PictureBrowser
 
 		size_t bytes = filename.size() * sizeof(wchar_t) + sizeof(wchar_t);
 
-		HGLOBAL memory = GlobalAlloc(GMEM_MOVEABLE, bytes);
-
-		if (!memory)
-		{
-			return;
-		}
-
-		void* lock = GlobalLock(memory);
-
-		if (!lock)
-		{
-			return;
-		}
-
-		memcpy(lock, filename.c_str(), bytes);
-
-		GlobalUnlock(memory);
+		GlobalMemory memory(filename.c_str(), bytes);
 
 		OpenClipboard(0);
 		EmptyClipboard();
-		SetClipboardData(CF_UNICODETEXT, memory);
+		SetClipboardData(CF_UNICODETEXT, memory.Data());
 		CloseClipboard();
 	}
 
