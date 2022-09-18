@@ -50,6 +50,8 @@ namespace PictureBrowser
 
 		LogWrap& operator << (const RECT& rect);
 
+		LogWrap& operator << (const SIZE& size);
+
 	private:
 		std::wstring _buffer;
 	};

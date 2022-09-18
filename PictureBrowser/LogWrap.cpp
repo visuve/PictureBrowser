@@ -110,4 +110,10 @@ namespace PictureBrowser
 		_buffer.append(std::format(L"L={} T={} R={} B={}", rect.left, rect.top, rect.right, rect.bottom));
 		return *this;
 	}
+
+	LogWrap& LogWrap::operator << (const SIZE& size)
+	{
+		_buffer.append(std::format(L"W={} H={}", size.cx, size.cy));
+		return *this;
+	}
 }
