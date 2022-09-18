@@ -88,19 +88,21 @@ namespace PictureBrowser::GdiExtensions
 		return _property;
 	}
 
-	void ScaleAndCenterTo(const Gdiplus::Rect& source, const Gdiplus::SizeF& size, Gdiplus::Rect& dest)
+	void ScaleAndCenterTo(const Gdiplus::Size& canvas, const Gdiplus::Size& image, Gdiplus::Rect& dest)
 	{
-		float canvasWidth = static_cast<float>(source.Width);
-		float canvasHeight = static_cast<float>(source.Height);
+		const float canvasWidth = static_cast<float>(canvas.Width);
+		const float canvasHeight = static_cast<float>(canvas.Height);
+		const float imageWidth = static_cast<float>(image.Width);
+		const float imageHeight = static_cast<float>(image.Height);
 
 		float aspectRatio = min(
-			canvasWidth / size.Width,
-			canvasHeight / size.Height);
+			canvasWidth / imageWidth,
+			canvasHeight / imageHeight);
 
-		dest.X = int(canvasWidth - size.Width * aspectRatio) / 2;
-		dest.Y = int(canvasHeight - size.Height * aspectRatio) / 2;
-		dest.Width = int(size.Width * aspectRatio);
-		dest.Height = int(size.Height * aspectRatio);
+		dest.X = int(canvasWidth - imageWidth * aspectRatio) / 2;
+		dest.Y = int(canvasHeight - imageHeight * aspectRatio) / 2;
+		dest.Width = int(imageWidth * aspectRatio);
+		dest.Height = int(imageHeight * aspectRatio);
 	}
 
 	void Zoom(Gdiplus::Rect& rect, int zoomPercent)

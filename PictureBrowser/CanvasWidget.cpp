@@ -69,53 +69,58 @@ namespace PictureBrowser
 		}
 	}
 
+	void CanvasWidget::Resize()
+	{
+		SIZE size = ClientSize();
+
+		_background = std::make_unique<Gdiplus::Bitmap>(size.cx, size.cy);
+		_graphics = std::make_unique<Gdiplus::Graphics>(_background.get());
+	}
+
 	void CanvasWidget::OnPaint() const
 	{
-		// TODO: this function could be simplified
-
 		GdiExtensions::ContextWrapper context(_window);
 
 		if (!context.IsValid())
 		{
-			return;
+			std::unreachable();
 		}
 
-		SIZE clientSize = ClientSize();
+		if (!_background || !_graphics)
+		{
+			std::unreachable();
+		}
 
-		const INT width = clientSize.cx;
-		const INT height = clientSize.cy;
-
-		Gdiplus::Rect area(0, 0, width, height);
-
-		Gdiplus::Bitmap buffer(width, height);
-		Gdiplus::Graphics graphics(&buffer);
+		const INT width = _background->GetWidth();
+		const INT height = _background->GetHeight();
 
 		const Gdiplus::SolidBrush grayBrush(Gdiplus::Color::DarkGray);
-		graphics.FillRectangle(&grayBrush, 0, 0, width, height);
+		_graphics->FillRectangle(&grayBrush, 0, 0, width, height);
 
 		Gdiplus::Bitmap* image = _imageCache->Current();
 
 		if (image)
 		{
-			Gdiplus::SizeF imageSize(Gdiplus::REAL(image->GetWidth()), Gdiplus::REAL(image->GetHeight()));
+			Gdiplus::Size canvasSize(width, height);
+			Gdiplus::Size imageSize(image->GetWidth(), image->GetHeight());
 			Gdiplus::Rect scaled;
 
-			GdiExtensions::ScaleAndCenterTo(area, imageSize, scaled);
+			GdiExtensions::ScaleAndCenterTo(canvasSize, imageSize, scaled);
 			GdiExtensions::Zoom(scaled, _zoomPercent);
 			scaled.Offset(_mouseDragOffset);
 
 			if (_isDragging)
 			{
 				const Gdiplus::Pen pen(Gdiplus::Color::Gray, 2.0f);
-				graphics.DrawRectangle(&pen, scaled);
+				_graphics->DrawRectangle(&pen, scaled);
 			}
 			else
 			{
-				graphics.DrawImage(image, scaled);
+				_graphics->DrawImage(image, scaled);
 			}
 		}
 
-		context.Graphics().DrawImage(&buffer, 0, 0, width, height);
+		context.Graphics().DrawImage(_background.get(), 0, 0, width, height);
 	}
 
 	void CanvasWidget::Invalidate() const

@@ -17,6 +17,8 @@ namespace PictureBrowser
 
 		void OnImageChanged(std::filesystem::path path);
 
+		void Resize();
+
 	private:
 		void OnPaint() const;
 		void Invalidate() const;
@@ -26,13 +28,14 @@ namespace PictureBrowser
 		void OnMouseMove(LPARAM);
 		bool UpdateMousePosition(LPARAM);
 		void OnLeftMouseUp(LPARAM);
-		void OnDoubleClick();
 
 		int _zoomPercent = 0;
 		bool _isDragging = false;
 		Gdiplus::Point _mouseDragStart;
 		Gdiplus::Point _mouseDragOffset;
 		std::shared_ptr<ImageCache> _imageCache;
+		std::unique_ptr<Gdiplus::Bitmap> _background;
+		std::unique_ptr<Gdiplus::Graphics> _graphics;
 	};
 }
 

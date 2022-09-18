@@ -46,7 +46,7 @@ namespace PictureBrowser::GdiExtensions
 		Gdiplus::PropertyItem* _property = nullptr;
 	};
 
-	void ScaleAndCenterTo(const Gdiplus::Rect& source, const Gdiplus::SizeF& size, Gdiplus::Rect& dest);
+	void ScaleAndCenterTo(const Gdiplus::Size& source, const Gdiplus::Size& size, Gdiplus::Rect& dest);
 	void Zoom(Gdiplus::Rect& rect, int zoomPercent);
 
 	Gdiplus::RotateFlipType PropertyToRotateFlipType(Gdiplus::PropertyItem* prop);

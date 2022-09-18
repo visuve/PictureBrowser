@@ -236,6 +236,11 @@ namespace PictureBrowser
 			std::unreachable();
 		}
 
+		if (_canvasWidget)
+		{
+			_canvasWidget->Resize();
+		}
+
 		const RECT canvasArea =
 		{
 			_canvasArea.GetLeft(),
