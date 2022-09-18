@@ -5,7 +5,7 @@ namespace PictureBrowser
 {
 	UINT_PTR Identifier = 0;
 
-	LRESULT SubClassProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uid, DWORD_PTR data)
+	LRESULT CALLBACK SubClassProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uid, DWORD_PTR data)
 	{
 		if (message == WM_NCDESTROY)
 		{
