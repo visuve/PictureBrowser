@@ -38,7 +38,8 @@ int APIENTRY wWinMain(
 		return GetLastError();
 	}
 
-	MSG msg = { 0 };
+	MSG message;
+	ZeroInit(&message);
 
 	{
 		MainWindow mainWindow(instance);
@@ -53,7 +54,7 @@ int APIENTRY wWinMain(
 
 		do
 		{
-			run = GetMessage(&msg, nullptr, 0, 0);
+			run = GetMessage(&message, nullptr, 0, 0);
 
 			if (run == -1)
 			{
@@ -62,11 +63,11 @@ int APIENTRY wWinMain(
 			}
 			else
 			{
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
+				TranslateMessage(&message);
+				DispatchMessage(&message);
 			}
 		} while (run != 0);
 	}
 
-	return static_cast<int>(msg.wParam);
+	return static_cast<int>(message.wParam);
 }

@@ -36,7 +36,7 @@ namespace PictureBrowser
 		}
 	}
 
-	bool MainWindow::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam)
+	bool MainWindow::HandleMessage(UINT message, WPARAM wParam, LPARAM)
 	{
 		switch (message)
 		{
@@ -311,11 +311,12 @@ namespace PictureBrowser
 	UINT MainWindow::CheckedState(UINT menuEntry) const
 	{
 		const HMENU menu = GetMenu(_window);
-		MENUITEMINFO menuItemInfo = { 0 };
+		MENUITEMINFO menuItemInfo;
+		ZeroInit(&menuItemInfo);
 		menuItemInfo.cbSize = sizeof(MENUITEMINFO);
 		menuItemInfo.fMask = MIIM_STATE;
 
-		if (!GetMenuItemInfo(menu, IDM_OPTIONS_USE_CACHING, FALSE, &menuItemInfo))
+		if (!GetMenuItemInfo(menu, menuEntry, FALSE, &menuItemInfo))
 		{
 			std::unreachable();
 		}
@@ -326,12 +327,13 @@ namespace PictureBrowser
 	void MainWindow::SetCheckedState(UINT menuEntry, UINT state) const
 	{
 		const HMENU menu = GetMenu(_window);
-		MENUITEMINFO menuItemInfo = { 0 };
+		MENUITEMINFO menuItemInfo;
+		ZeroInit(&menuItemInfo);
 		menuItemInfo.cbSize = sizeof(MENUITEMINFO);
 		menuItemInfo.fMask = MIIM_STATE;
 		menuItemInfo.fState = state;
 
-		if (!SetMenuItemInfo(menu, IDM_OPTIONS_USE_CACHING, FALSE, &menuItemInfo))
+		if (!SetMenuItemInfo(menu, menuEntry, FALSE, &menuItemInfo))
 		{
 			std::unreachable();
 		}

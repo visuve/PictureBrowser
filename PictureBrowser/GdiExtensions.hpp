@@ -28,7 +28,7 @@ namespace PictureBrowser::GdiExtensions
 	private:
 		const HWND _window;
 		const HDC _deviceContext;
-		PAINTSTRUCT _paintScruct = { 0 };
+		PAINTSTRUCT _paintScruct = { };
 		Gdiplus::Graphics _graphics;
 	};
 

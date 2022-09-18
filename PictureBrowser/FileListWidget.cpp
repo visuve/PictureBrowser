@@ -184,13 +184,15 @@ namespace PictureBrowser
 
 	void FileListWidget::OnOpenMenu()
 	{
-		OPENFILENAME openFile = { 0 };
-		wchar_t filePath[0x1000] = { 0 };
+		OPENFILENAMEW openFile;
+		ZeroInit(&openFile);
 
-		openFile.lStructSize = sizeof(openFile);
+		std::wstring filePath(0x1000, '\0');
+
+		openFile.lStructSize = sizeof(OPENFILENAMEW);
 		openFile.hwndOwner = _parent;
-		openFile.lpstrFile = filePath;
-		openFile.nMaxFile = 0xFFF;
+		openFile.lpstrFile = filePath.data();
+		openFile.nMaxFile = static_cast<DWORD>(filePath.size());
 		openFile.lpstrFilter =
 			L"Joint Photographic Experts Group (*.jpg)\0*.jpg\0Portable Network Graphics (*.png)\0*.png\0";
 		openFile.nFilterIndex = 1;
@@ -201,7 +203,7 @@ namespace PictureBrowser
 
 		if (GetOpenFileName(&openFile))
 		{
-			Open(openFile.lpstrFile);
+			Open(filePath);
 		}
 		else
 		{
@@ -437,13 +439,11 @@ namespace PictureBrowser
 			return {};
 		}
 
-		const size_t length = static_cast<size_t>(result);
-		std::wstring buffer(length, '\0');
+		std::wstring buffer(static_cast<size_t>(result), '\0');
 
-		if (Send(LB_GETTEXT, index, reinterpret_cast<LPARAM>(buffer.data())) != length)
+		if (Send(LB_GETTEXT, index, reinterpret_cast<LPARAM>(buffer.data())) != result)
 		{
-			LOGD << L"Failed to send LB_GETTEXT!";
-			return {};
+			std::unreachable();
 		}
 
 		return buffer;

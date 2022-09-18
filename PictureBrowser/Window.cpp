@@ -16,7 +16,7 @@ namespace PictureBrowser
 	{
 		// TODO: add more ctor parameters to allow more flexible usage
 
-		WNDCLASSEXW windowClass;
+		WNDCLASSEXW windowClass = { };
 		windowClass.cbSize = sizeof(WNDCLASSEXW);
 		windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
 		windowClass.lpfnWndProc = WindowProcedure;
@@ -73,11 +73,15 @@ namespace PictureBrowser
 			// WindowProcedure triggers immediately after CreateWindowEx.
 			// If you call CreateWindowEx before the Window class is fully initialized
 			// a crash will follow in WindowProcedure.
+			UNREFERENCED_PARAMETER(window); // In release mode...
 			_ASSERTE(window != nullptr);
 			_ASSERTE(window == _window);
 		}
 
-		ShowWindow(_window, showCommand);
+		if (_window)
+		{
+			ShowWindow(_window, showCommand);
+		}
 	}
 
 	LRESULT Window::WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam)

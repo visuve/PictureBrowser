@@ -94,7 +94,7 @@ namespace PictureBrowser
 		const INT width = _background->GetWidth();
 		const INT height = _background->GetHeight();
 
-		const Gdiplus::SolidBrush grayBrush(Gdiplus::Color::DarkGray);
+		const Gdiplus::SolidBrush grayBrush(static_cast<Gdiplus::ARGB>(Gdiplus::Color::DarkGray));
 		_graphics->FillRectangle(&grayBrush, 0, 0, width, height);
 
 		Gdiplus::Bitmap* image = _imageCache->Current();
@@ -111,7 +111,7 @@ namespace PictureBrowser
 
 			if (_isDragging)
 			{
-				const Gdiplus::Pen pen(Gdiplus::Color::Gray, 2.0f);
+				const Gdiplus::Pen pen(static_cast<Gdiplus::ARGB>(Gdiplus::Color::Gray), 2.0f);
 				_graphics->DrawRectangle(&pen, scaled);
 			}
 			else
@@ -141,8 +141,8 @@ namespace PictureBrowser
 	{
 		_zoomPercent = 0;
 
-		Clear(&_mouseDragStart);
-		Clear(&_mouseDragOffset);
+		ZeroInit(&_mouseDragStart);
+		ZeroInit(&_mouseDragOffset);
 
 		Invalidate();
 
