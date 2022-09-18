@@ -2,6 +2,20 @@
 
 namespace PictureBrowser::GdiExtensions
 {
+	class Environment
+	{
+	public:
+		Environment();
+		~Environment();
+
+		operator bool() const;
+
+	private:
+		Gdiplus::GdiplusStartupInput _gdiPlusStartupInput;
+		ULONG_PTR _gdiPlusToken = 0;
+		Gdiplus::Status _status;
+	};
+
 	class ContextWrapper
 	{
 	public:

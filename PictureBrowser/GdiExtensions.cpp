@@ -3,6 +3,24 @@
 
 namespace PictureBrowser::GdiExtensions
 {
+	Environment::Environment() :
+		_status(Gdiplus::GdiplusStartup(&_gdiPlusToken, &_gdiPlusStartupInput, nullptr))
+	{
+	}
+
+	Environment::~Environment()
+	{
+		if (_gdiPlusToken)
+		{
+			Gdiplus::GdiplusShutdown(_gdiPlusToken);
+		}
+	}
+
+	Environment::operator bool() const
+	{
+		return _status == Gdiplus::Status::Ok;
+	}
+
 	Gdiplus::RotateFlipType GetRotation(Gdiplus::Image* image)
 	{
 		const PropertyWrapper prop(image, PropertyTagOrientation);

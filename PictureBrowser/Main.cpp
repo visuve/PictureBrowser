@@ -2,36 +2,10 @@
 #include "MainWindow.hpp"
 #include "Resource.h"
 #include "LogWrap.hpp"
+#include "GdiExtensions.hpp"
 
 namespace PictureBrowser
 {
-	class GdiPlusGuard
-	{
-	public:
-		GdiPlusGuard() :
-			_status(Gdiplus::GdiplusStartup(&_gdiPlusToken, &_gdiPlusStartupInput, nullptr))
-		{
-		}
-
-		~GdiPlusGuard()
-		{
-			if (_gdiPlusToken)
-			{
-				Gdiplus::GdiplusShutdown(_gdiPlusToken);
-			}
-		}
-
-		operator bool() const
-		{
-			return _status == Gdiplus::Status::Ok;
-		}
-	private:
-		Gdiplus::GdiplusStartupInput _gdiPlusStartupInput;
-		ULONG_PTR _gdiPlusToken = 0;
-		Gdiplus::Status _status;
-	};
-
-
 	std::filesystem::path TrimQuotes(const std::wstring& path)
 	{
 		std::wstring copy = path;
@@ -57,9 +31,9 @@ int APIENTRY wWinMain(
 
 	using namespace PictureBrowser;
 
-	const GdiPlusGuard gdiGuard;
+	const GdiExtensions::Environment environment;
 
-	if (!gdiGuard)
+	if (!environment)
 	{
 		return GetLastError();
 	}
