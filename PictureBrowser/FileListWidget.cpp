@@ -50,7 +50,6 @@ namespace PictureBrowser
 		void* _lock = nullptr;
 	};
 
-
 	FileListWidget::FileListWidget(
 		HINSTANCE instance,
 		HWND parent,
@@ -140,7 +139,6 @@ namespace PictureBrowser
 		_imageCache->Clear();
 	}
 
-
 	std::filesystem::path FileListWidget::SelectedImage() const
 	{
 		LONG_PTR current = CurrentSelection();
@@ -151,8 +149,7 @@ namespace PictureBrowser
 	{
 		LONG_PTR count = Send(LB_GETCOUNT, 0, 0);
 		LONG_PTR cursel = Send(LB_GETCURSEL, 0, 0);
-
-		return std::clamp(Send(LB_GETCURSEL, 0, 0), LONG_PTR(0), count);
+		return std::clamp(cursel, LONG_PTR(0), count);
 	}
 
 	void FileListWidget::MoveCurrentSelection(LONG_PTR distance)
