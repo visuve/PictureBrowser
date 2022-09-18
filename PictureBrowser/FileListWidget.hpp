@@ -14,7 +14,7 @@ namespace PictureBrowser
 			const std::shared_ptr<ImageCache>& imageCache, 
 			const std::function<void(std::filesystem::path)>& imageChanged);
 
-		void HandleMessage(UINT, WPARAM, LPARAM, UINT_PTR, DWORD_PTR) override;
+		void HandleMessage(UINT, WPARAM, LPARAM) override;
 
 		void Open(const std::filesystem::path& path);
 		void Clear();

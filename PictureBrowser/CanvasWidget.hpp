@@ -13,7 +13,7 @@ namespace PictureBrowser
 			HWND parent,
 			const std::shared_ptr<ImageCache>& imageCache);
 
-		void HandleMessage(UINT, WPARAM, LPARAM, UINT_PTR, DWORD_PTR) override;
+		void HandleMessage(UINT, WPARAM, LPARAM) override;
 
 		void OnImageChanged(std::filesystem::path path);
 

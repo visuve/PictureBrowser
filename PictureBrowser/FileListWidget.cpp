@@ -73,7 +73,7 @@ namespace PictureBrowser
 	{
 	}
 
-	void FileListWidget::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR)
+	void FileListWidget::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		switch (message)
 		{

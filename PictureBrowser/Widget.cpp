@@ -17,7 +17,7 @@ namespace PictureBrowser
 
 			if (self)
 			{
-				self->HandleMessage(message, wParam, lParam, uid, data);
+				self->HandleMessage(message, wParam, lParam);
 			}
 		}
 
@@ -124,7 +124,7 @@ namespace PictureBrowser
 		return SendMessage(_window, message, wParam, lParam);
 	}
 
-	void Widget::HandleMessage(UINT message, WPARAM, LPARAM, UINT_PTR, DWORD_PTR)
+	void Widget::HandleMessage(UINT, WPARAM, LPARAM)
 	{
 	}
 }

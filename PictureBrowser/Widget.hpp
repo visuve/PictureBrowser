@@ -35,7 +35,7 @@ namespace PictureBrowser
 		bool SetPosition(HWND z, int x, int y, int w, int h, UINT flags);
 		LRESULT Send(UINT message, WPARAM wParam, LPARAM lParam) const;
 
-		virtual void HandleMessage(UINT, WPARAM, LPARAM, UINT_PTR, DWORD_PTR);
+		virtual void HandleMessage(UINT, WPARAM, LPARAM);
 
 	protected:
 		HWND _parent = nullptr;

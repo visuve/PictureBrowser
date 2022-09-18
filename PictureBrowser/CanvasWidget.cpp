@@ -24,7 +24,7 @@ namespace PictureBrowser
 	{
 	}
 
-	void CanvasWidget::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR)
+	void CanvasWidget::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		switch (message)
 		{
