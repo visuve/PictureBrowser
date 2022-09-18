@@ -37,7 +37,7 @@ namespace PictureBrowser::Registry
 			&_key,
 			nullptr) != ERROR_SUCCESS)
 		{
-			LOGD << L"RegCreateKeyEx failed.";
+			std::unreachable();
 		}
 	}
 
@@ -47,7 +47,7 @@ namespace PictureBrowser::Registry
 		{
 			if (RegCloseKey(_key) != ERROR_SUCCESS)
 			{
-				LOGD << L"RegCloseKey failed.";
+				std::unreachable();
 			}
 		}
 	}

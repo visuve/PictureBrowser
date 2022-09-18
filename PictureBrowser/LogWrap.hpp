@@ -53,6 +53,21 @@ namespace PictureBrowser
 	private:
 		std::wstring _buffer;
 	};
+
+	class NullStream
+	{
+	public:
+		template <typename T>
+		NullStream& operator << (T)
+		{
+			return *this;
+		}
+	};
 }
 
+#ifdef _DEBUG
 #define LOGD PictureBrowser::LogWrap(__FUNCTIONW__, __LINE__)
+#else
+#define LOGD NullStream()
+#endif
+
