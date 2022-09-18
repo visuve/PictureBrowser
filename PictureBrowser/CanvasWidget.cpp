@@ -80,7 +80,7 @@ namespace PictureBrowser
 			return;
 		}
 
-		SIZE clientSize = Size();
+		SIZE clientSize = ClientSize();
 
 		const INT width = clientSize.cx;
 		const INT height = clientSize.cy;

@@ -84,12 +84,6 @@ namespace PictureBrowser
 		return buffer;
 	}
 
-	SIZE Widget::Size() const
-	{
-		RECT area = WindowRect();
-		return { area.right - area.left, area.bottom - area.top };
-	}
-	
 	RECT Widget::WindowRect() const
 	{ 
 		RECT area;
@@ -102,6 +96,12 @@ namespace PictureBrowser
 		return area;
 	}
 
+	SIZE Widget::WindowSize() const
+	{
+		RECT area = WindowRect();
+		return { area.right - area.left, area.bottom - area.top };
+	}
+
 	RECT Widget::ClientRect() const
 	{
 		RECT area;
@@ -112,6 +112,12 @@ namespace PictureBrowser
 		}
 
 		return area;
+	}
+
+	SIZE Widget::ClientSize() const
+	{
+		RECT area = ClientRect();
+		return { area.right - area.left, area.bottom - area.top };
 	}
 
 	bool Widget::SetPosition(HWND z, int x, int y, int w, int h, UINT flags)
