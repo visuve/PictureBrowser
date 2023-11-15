@@ -8,10 +8,9 @@ namespace PictureBrowser
 {
 	std::filesystem::path TrimQuotes(const std::wstring& path)
 	{
-		std::wstring copy = path;
-
 		if (path.front() == '"' && path.back() == '"')
 		{
+			std::wstring copy = path;
 			copy.pop_back();
 			copy.erase(copy.cbegin());
 			return copy;
