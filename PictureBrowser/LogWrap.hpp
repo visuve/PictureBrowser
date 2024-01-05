@@ -33,12 +33,14 @@ namespace PictureBrowser
 		LogWrap& operator << (DWORD value);
 		LogWrap& operator << (LSTATUS value);
 
-		template<std::size_t N>
+		template<size_t N>
 		LogWrap& operator << (const wchar_t(&value)[N])
 		{
 			_buffer.append(value);
 			return *this;
 		}
+
+		LogWrap& operator << (std::wstring_view value);
 
 		LogWrap& operator << (const std::wstring& value);
 

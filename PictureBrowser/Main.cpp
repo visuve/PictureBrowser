@@ -6,14 +6,13 @@
 
 namespace PictureBrowser
 {
-	std::filesystem::path TrimQuotes(const std::wstring& path)
+	std::filesystem::path TrimQuotes(std::wstring_view path)
 	{
 		if (path.front() == '"' && path.back() == '"')
 		{
-			std::wstring copy = path;
-			copy.pop_back();
-			copy.erase(copy.cbegin());
-			return copy;
+			path.remove_prefix(1);
+			path.remove_suffix(1);
+			return path;
 		}
 
 		return path;

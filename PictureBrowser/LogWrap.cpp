@@ -81,6 +81,12 @@ namespace PictureBrowser
 		return *this;
 	}
 
+	LogWrap& LogWrap::operator << (std::wstring_view value)
+	{
+		_buffer.append(value);
+		return *this;
+	}
+
 	LogWrap& LogWrap::operator << (const std::wstring& value)
 	{
 		_buffer.append(value);
@@ -99,7 +105,7 @@ namespace PictureBrowser
 		return *this;
 	}
 
-	LogWrap& LogWrap::operator<<(const POINT& point)
+	LogWrap& LogWrap::operator << (const POINT& point)
 	{
 		_buffer.append(std::format(L"X={} Y={}", point.x, point.y));
 		return *this;
