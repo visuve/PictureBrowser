@@ -36,12 +36,12 @@ namespace PictureBrowser
 		return true;
 	}
 
-	Gdiplus::Image* ImageCache::Current()
+	std::shared_ptr<Gdiplus::Bitmap> ImageCache::Current()
 	{
 		return Get(_currentImage);
 	}
 
-	Gdiplus::Image* ImageCache::Get(const std::filesystem::path& path)
+	std::shared_ptr<Gdiplus::Bitmap> ImageCache::Get(const std::filesystem::path& path)
 	{
 		if (_useCaching)
 		{
@@ -49,7 +49,7 @@ namespace PictureBrowser
 
 			if (iter != _cache.cend())
 			{
-				return iter->second.get();
+				return iter->second;
 			}
 
 			LOGD << L"Not cached: " << path;
@@ -63,38 +63,31 @@ namespace PictureBrowser
 		_cache.clear();
 	}
 
-	Gdiplus::Image* ImageCache::Load(const std::filesystem::path& path)
+	std::shared_ptr<Gdiplus::Bitmap> ImageCache::Load(const std::filesystem::path& path)
 	{
-		Gdiplus::Image* image = Gdiplus::Image::FromFile(path.c_str());
+		Gdiplus::Image image(path.c_str());
 
-		if (!image)
+		if (image.GetLastStatus() != Gdiplus::Status::Ok)
 		{
 			return nullptr;
 		}
 
-		CorrectRotationIfNeeded(image);
+		CorrectRotationIfNeeded(&image);
 
-		UINT width = image->GetWidth();
-		UINT height = image->GetHeight();
-		Gdiplus::PixelFormat format = image->GetPixelFormat();
+		UINT width = image.GetWidth();
+		UINT height = image.GetHeight();
 
-		if ((format & PixelFormat8bppIndexed) == PixelFormat8bppIndexed)
-		{
-			// Somehow images with 8 bit depth are not drawn correclty otherwise...
-			format = PixelFormat24bppRGB;
-		}
+		auto buffer = std::make_shared<Gdiplus::Bitmap>(width, height, PixelFormat24bppRGB);
 
-		Gdiplus::Bitmap* bitmap = new Gdiplus::Bitmap(width, height, format);
-		Gdiplus::Graphics graphics(bitmap);
-		graphics.DrawImage(image, 0, 0, width, height);
+		Gdiplus::Graphics graphics(buffer.get());
+		graphics.DrawImage(&image, 0, 0, width, height);
 
 		if (_useCaching)
 		{
-			_cache.emplace(path, bitmap);
+			_cache.emplace(path, buffer);
 			LOGD << L"Cached: " << path;
 		}
 
-		delete image;
-		return bitmap;
+		return buffer;
 	}
 }

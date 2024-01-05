@@ -99,12 +99,12 @@ namespace PictureBrowser
 		const Gdiplus::SolidBrush grayBrush(static_cast<Gdiplus::ARGB>(Gdiplus::Color::DarkGray));
 		_graphics->FillRectangle(&grayBrush, 0, 0, width, height);
 
-		Gdiplus::Image* image = _imageCache->Current();
+		std::shared_ptr<Gdiplus::Bitmap> bitmap = _imageCache->Current();
 
-		if (image)
+		if (bitmap)
 		{
 			Gdiplus::Size canvasSize(width, height);
-			Gdiplus::Size imageSize(image->GetWidth(), image->GetHeight());
+			Gdiplus::Size imageSize(bitmap->GetWidth(), bitmap->GetHeight());
 			Gdiplus::Rect scaled;
 
 			GdiExtensions::ScaleAndCenterTo(canvasSize, imageSize, scaled);
@@ -118,7 +118,7 @@ namespace PictureBrowser
 			}
 			else
 			{
-				_graphics->DrawImage(image, scaled);
+				_graphics->DrawImage(bitmap.get(), scaled);
 			}
 		}
 
