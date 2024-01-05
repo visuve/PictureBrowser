@@ -97,7 +97,7 @@ namespace PictureBrowser
 		const Gdiplus::SolidBrush grayBrush(static_cast<Gdiplus::ARGB>(Gdiplus::Color::DarkGray));
 		_graphics->FillRectangle(&grayBrush, 0, 0, width, height);
 
-		Gdiplus::Bitmap* image = _imageCache->Current();
+		Gdiplus::Image* image = _imageCache->Current();
 
 		if (image)
 		{

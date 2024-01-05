@@ -36,12 +36,12 @@ namespace PictureBrowser
 		return true;
 	}
 
-	Gdiplus::Bitmap* ImageCache::Current()
+	Gdiplus::Image* ImageCache::Current()
 	{
 		return Get(_currentImage);
 	}
 
-	Gdiplus::Bitmap* ImageCache::Get(const std::filesystem::path& path)
+	Gdiplus::Image* ImageCache::Get(const std::filesystem::path& path)
 	{
 		if (_useCaching)
 		{
@@ -63,7 +63,7 @@ namespace PictureBrowser
 		_cache.clear();
 	}
 
-	Gdiplus::Bitmap* ImageCache::Load(const std::filesystem::path& path)
+	Gdiplus::Image* ImageCache::Load(const std::filesystem::path& path)
 	{
 		Gdiplus::Image* image = Gdiplus::Image::FromFile(path.c_str());
 
