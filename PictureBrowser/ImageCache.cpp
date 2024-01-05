@@ -78,6 +78,12 @@ namespace PictureBrowser
 		UINT height = image->GetHeight();
 		Gdiplus::PixelFormat format = image->GetPixelFormat();
 
+		if ((format & PixelFormat8bppIndexed) == PixelFormat8bppIndexed)
+		{
+			// Somehow images with 8 bit depth are not drawn correclty otherwise...
+			format = PixelFormat24bppRGB;
+		}
+
 		Gdiplus::Bitmap* bitmap = new Gdiplus::Bitmap(width, height, format);
 		Gdiplus::Graphics graphics(bitmap);
 		graphics.DrawImage(image, 0, 0, width, height);
