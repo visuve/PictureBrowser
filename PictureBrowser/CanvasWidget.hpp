@@ -34,7 +34,7 @@ namespace PictureBrowser
 		Gdiplus::Point _mouseDragStart;
 		Gdiplus::Point _mouseDragOffset;
 		std::shared_ptr<ImageCache> _imageCache;
-		std::unique_ptr<Gdiplus::Bitmap> _background;
+		std::unique_ptr<Gdiplus::Image> _buffer;
 		std::unique_ptr<Gdiplus::Graphics> _graphics;
 	};
 }

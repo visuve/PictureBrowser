@@ -73,8 +73,8 @@ namespace PictureBrowser
 	{
 		SIZE size = ClientSize();
 
-		_background = std::make_unique<Gdiplus::Bitmap>(size.cx, size.cy);
-		_graphics = std::make_unique<Gdiplus::Graphics>(_background.get());
+		_buffer = std::make_unique<Gdiplus::Bitmap>(size.cx, size.cy);
+		_graphics = std::make_unique<Gdiplus::Graphics>(_buffer.get());
 	}
 
 	void CanvasWidget::OnPaint() const
@@ -86,13 +86,13 @@ namespace PictureBrowser
 			std::unreachable();
 		}
 
-		if (!_background || !_graphics)
+		if (!_buffer || !_graphics)
 		{
 			std::unreachable();
 		}
 
-		const INT width = _background->GetWidth();
-		const INT height = _background->GetHeight();
+		const INT width = _buffer->GetWidth();
+		const INT height = _buffer->GetHeight();
 
 		const Gdiplus::SolidBrush grayBrush(static_cast<Gdiplus::ARGB>(Gdiplus::Color::DarkGray));
 		_graphics->FillRectangle(&grayBrush, 0, 0, width, height);
@@ -120,7 +120,7 @@ namespace PictureBrowser
 			}
 		}
 
-		context.Graphics().DrawImage(_background.get(), 0, 0, width, height);
+		context.Graphics().DrawImage(_buffer.get(), 0, 0, width, height);
 	}
 
 	void CanvasWidget::Invalidate() const
