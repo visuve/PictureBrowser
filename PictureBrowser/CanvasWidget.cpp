@@ -79,6 +79,8 @@ namespace PictureBrowser
 
 	void CanvasWidget::OnPaint() const
 	{
+		const auto start = std::chrono::high_resolution_clock::now();
+
 		GdiExtensions::ContextWrapper context(_window);
 
 		if (!context.IsValid())
@@ -121,6 +123,9 @@ namespace PictureBrowser
 		}
 
 		context.Graphics().DrawImage(_buffer.get(), 0, 0, width, height);
+
+		const auto diff = std::chrono::high_resolution_clock::now() - start;
+		LOGD << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count() << L"ms";
 	}
 
 	void CanvasWidget::Invalidate() const
