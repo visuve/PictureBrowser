@@ -2,10 +2,33 @@
 #include "MainWindow.hpp"
 #include "Resource.h"
 #include "LogWrap.hpp"
-#include "GdiExtensions.hpp"
 
 namespace PictureBrowser
 {
+	class ComEnvironment
+	{
+	public:
+		ComEnvironment() :
+			_result(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE))
+		{
+		}
+
+		~ComEnvironment()
+		{
+			if (_result != S_FALSE)
+			{
+				CoUninitialize();
+			}
+		}
+
+		operator bool() const
+		{
+			return _result == S_OK;
+		}
+	private:
+		HRESULT _result = S_FALSE;
+	};
+
 	std::filesystem::path TrimQuotes(std::wstring_view path)
 	{
 		if (path.front() == '"' && path.back() == '"')
@@ -29,11 +52,11 @@ int APIENTRY wWinMain(
 
 	using namespace PictureBrowser;
 
-	const GdiExtensions::Environment environment;
+	const ComEnvironment comEnv;
 
-	if (!environment)
+	if (!comEnv)
 	{
-		return GetLastError();
+		return ERROR_BAD_ENVIRONMENT;
 	}
 
 	MSG message;

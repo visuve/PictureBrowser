@@ -2,6 +2,9 @@
 
 namespace PictureBrowser
 {
+
+#define ClassName(x) L#x
+
 	class Widget
 	{
 	public:

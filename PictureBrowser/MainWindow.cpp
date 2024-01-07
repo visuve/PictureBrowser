@@ -2,7 +2,6 @@
 #include "Resource.h"
 #include "MainWindow.hpp"
 #include "LogWrap.hpp"
-#include "GdiExtensions.hpp"
 #include "Registry.hpp"
 
 namespace PictureBrowser
@@ -81,20 +80,25 @@ namespace PictureBrowser
 			std::unreachable();
 		}
 
-		_fileListArea.X = clientArea.left + Padding;
-		_fileListArea.Y = clientArea.top + Padding;
-		_fileListArea.Width = FileListWidth;
-		_fileListArea.Height = clientArea.bottom - Padding;
+		clientArea.left += Padding;
+		clientArea.top += Padding;
+		clientArea.right -= Padding;
+		clientArea.bottom -= Padding;
 
-		_mainArea.X = _fileListArea.GetRight() + Padding;
-		_mainArea.Y = clientArea.top + Padding;
-		_mainArea.Width = clientArea.right - _fileListArea.GetRight() - Padding * 2;
-		_mainArea.Height = clientArea.bottom - Padding * 2;
+		_fileListArea.left = clientArea.left;
+		_fileListArea.top = clientArea.top;
+		_fileListArea.right = FileListWidth;
+		_fileListArea.bottom = clientArea.bottom;
 
-		_canvasArea.X = _mainArea.X;
-		_canvasArea.Y = _mainArea.Y + Padding + ButtonHeight;
-		_canvasArea.Width = _mainArea.Width;
-		_canvasArea.Height = _mainArea.Height - Padding * 2 - ButtonHeight * 2;
+		_mainArea.left = _fileListArea.right + (Padding * 2);
+		_mainArea.top = clientArea.top;
+		_mainArea.right = clientArea.right;
+		_mainArea.bottom = clientArea.bottom;
+
+		_canvasArea.left = _mainArea.left;
+		_canvasArea.top = _mainArea.top + ButtonHeight + Padding;
+		_canvasArea.right = _mainArea.right - FileListWidth - (Padding * 2);
+		_canvasArea.bottom = _mainArea.bottom - (ButtonHeight * 2) - (Padding * 3);
 
 		LOGD << L"File list area: " << _fileListArea;
 		LOGD << L"Main area: " << _mainArea;
@@ -109,8 +113,8 @@ namespace PictureBrowser
 			WC_BUTTON,
 			L"-",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			_mainArea.X,
-			_mainArea.Y,
+			_mainArea.left,
+			_mainArea.top,
 			ButtonWidth,
 			ButtonHeight,
 			reinterpret_cast<HMENU>(IDC_ZOOM_OUT_BUTTON));
@@ -119,8 +123,8 @@ namespace PictureBrowser
 			WC_BUTTON,
 			L"+",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			_mainArea.Width - ButtonWidth,
-			_mainArea.Y,
+			_mainArea.right,
+			_mainArea.top,
 			ButtonWidth,
 			ButtonHeight,
 			reinterpret_cast<HMENU>(IDC_ZOOM_IN_BUTTON));
@@ -129,8 +133,8 @@ namespace PictureBrowser
 			WC_BUTTON,
 			L"<",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			_mainArea.X,
-			_mainArea.Height - ButtonHeight,
+			_mainArea.left,
+			_mainArea.bottom,
 			ButtonWidth,
 			ButtonHeight,
 			reinterpret_cast<HMENU>(IDC_PREV_BUTTON));
@@ -139,8 +143,8 @@ namespace PictureBrowser
 			WC_BUTTON,
 			L">",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
-			_mainArea.Width - ButtonWidth,
-			_mainArea.Height - ButtonHeight,
+			_mainArea.right,
+			_mainArea.bottom,
 			ButtonWidth,
 			ButtonHeight,
 			reinterpret_cast<HMENU>(IDC_NEXT_BUTTON));
@@ -172,10 +176,10 @@ namespace PictureBrowser
 
 		if (!_fileListWidget->SetPosition(
 			HWND_TOP,
-			0,
-			0,
-			_fileListArea.Width,
-			_fileListArea.Height,
+			_fileListArea.left,
+			_fileListArea.top,
+			_fileListArea.right,
+			_fileListArea.bottom,
 			SWP_NOMOVE | SWP_NOZORDER))
 		{
 			std::unreachable();
@@ -183,10 +187,10 @@ namespace PictureBrowser
 
 		if (!_canvasWidget->SetPosition(
 			HWND_TOP,
-			_canvasArea.GetLeft(),
-			_canvasArea.GetTop(),
-			_canvasArea.Width,
-			_canvasArea.Height,
+			_canvasArea.left,
+			_canvasArea.top,
+			_canvasArea.right,
+			_canvasArea.bottom,
 			SWP_NOZORDER))
 		{
 			std::unreachable();
@@ -194,8 +198,8 @@ namespace PictureBrowser
 
 		if (!_zoomOutButton.SetPosition(
 			HWND_TOP,
-			_mainArea.GetLeft(),
-			_mainArea.GetTop(),
+			_mainArea.left,
+			_mainArea.top,
 			0,
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
@@ -205,8 +209,8 @@ namespace PictureBrowser
 
 		if (!_zoomInButton.SetPosition(
 			HWND_TOP,
-			_mainArea.GetRight() - ButtonWidth,
-			_mainArea.GetTop(),
+			_mainArea.right - ButtonWidth,
+			_mainArea.top,
 			0,
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
@@ -216,8 +220,8 @@ namespace PictureBrowser
 
 		if (!_previousPictureButton.SetPosition(
 			HWND_TOP,
-			_mainArea.GetLeft(),
-			_mainArea.GetBottom() - ButtonHeight,
+			_mainArea.left,
+			_mainArea.bottom - ButtonHeight,
 			0,
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
@@ -227,8 +231,8 @@ namespace PictureBrowser
 
 		if (!_nextPictureButton.SetPosition(
 			HWND_TOP,
-			_mainArea.GetRight() - ButtonWidth,
-			_mainArea.GetBottom() - ButtonHeight,
+			_mainArea.right - ButtonWidth,
+			_mainArea.bottom - ButtonHeight,
 			0,
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
@@ -238,15 +242,7 @@ namespace PictureBrowser
 
 		_canvasWidget->Resize();
 
-		const RECT canvasArea =
-		{
-			_canvasArea.GetLeft(),
-			_canvasArea.GetTop(),
-			_canvasArea.GetRight(),
-			_canvasArea.GetBottom()
-		};
-
-		if (!InvalidateRect(_window, &canvasArea, false))
+		if (!InvalidateRect(_window, &_canvasArea, false))
 		{
 			std::unreachable();
 		}

@@ -63,6 +63,18 @@ namespace PictureBrowser
 		return *this;
 	}
 
+	LogWrap& LogWrap::operator << (float value)
+	{
+		_buffer.append(std::to_wstring(value));
+		return *this;
+	}
+
+	LogWrap& LogWrap::operator << (double value)
+	{
+		_buffer.append(std::to_wstring(value));
+		return *this;
+	}
+
 	LogWrap& LogWrap::operator << (wchar_t value)
 	{
 		_buffer.push_back(value);
@@ -99,27 +111,21 @@ namespace PictureBrowser
 		return *this;
 	}
 
-	LogWrap& LogWrap::operator << (const Gdiplus::Rect& rect)
-	{
-		_buffer.append(std::format(L"X={} Y={} W={} H={}", rect.X, rect.Y, rect.Width, rect.Height));
-		return *this;
-	}
-
 	LogWrap& LogWrap::operator << (const POINT& point)
 	{
 		_buffer.append(std::format(L"X={} Y={}", point.x, point.y));
 		return *this;
 	}
 
-	LogWrap& LogWrap::operator << (const RECT& rect)
-	{
-		_buffer.append(std::format(L"L={} T={} R={} B={}", rect.left, rect.top, rect.right, rect.bottom));
-		return *this;
-	}
-
 	LogWrap& LogWrap::operator << (const SIZE& size)
 	{
 		_buffer.append(std::format(L"W={} H={}", size.cx, size.cy));
+		return *this;
+	}
+
+	LogWrap& LogWrap::operator << (const RECT& rect)
+	{
+		_buffer.append(std::format(L"L={} T={} R={} B={}", rect.left, rect.top, rect.right, rect.bottom));
 		return *this;
 	}
 }

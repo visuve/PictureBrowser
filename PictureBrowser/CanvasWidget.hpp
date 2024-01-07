@@ -9,13 +9,13 @@ namespace PictureBrowser
 	{
 	public:
 		CanvasWidget(
-			HINSTANCE instance, 
+			HINSTANCE instance,
 			HWND parent,
 			const std::shared_ptr<ImageCache>& imageCache);
 
 		void HandleMessage(UINT, WPARAM, LPARAM) override;
 
-		void OnImageChanged(std::filesystem::path path);
+		void OnImageChanged(const std::filesystem::path& path);
 
 		void Resize();
 
@@ -29,13 +29,15 @@ namespace PictureBrowser
 		bool UpdateMousePosition(LPARAM);
 		void OnLeftMouseUp(LPARAM);
 
-		int _zoomPercent = 0;
+		float _zoomPercent = 0.0f;
 		bool _isDragging = false;
-		Gdiplus::Point _mouseDragStart;
-		Gdiplus::Point _mouseDragOffset;
+		D2D_POINT_2F _mouseDragStart = {};
+		D2D_POINT_2F _mouseDragOffset = {};
 		std::shared_ptr<ImageCache> _imageCache;
-		std::unique_ptr<Gdiplus::Image> _buffer;
-		std::unique_ptr<Gdiplus::Graphics> _graphics;
+
+		ComPtr<ID2D1Factory> _factory;
+		ComPtr<ID2D1HwndRenderTarget> _renderTarget;
+		ComPtr<ID2D1SolidColorBrush> _brush;
 	};
 }
 

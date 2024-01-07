@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ImageCache.hpp"
-#include "Window.hpp"
+#include "Widget.hpp"
 
 namespace PictureBrowser
 {

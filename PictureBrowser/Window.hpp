@@ -4,8 +4,6 @@
 
 namespace PictureBrowser
 {
-#define ClassName(x) L#x
-
 	class Window
 	{
 	public:

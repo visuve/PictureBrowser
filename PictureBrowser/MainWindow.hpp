@@ -32,9 +32,9 @@ namespace PictureBrowser
 		Widget _zoomInButton;
 		Widget _previousPictureButton;
 		Widget _nextPictureButton;
-		Gdiplus::Rect _fileListArea;
-		Gdiplus::Rect _mainArea;
-		Gdiplus::Rect _canvasArea;
+		RECT _fileListArea = {};
+		RECT _mainArea = {};
+		RECT _canvasArea = {};
 
 		std::shared_ptr<ImageCache> _imageCache;
 		std::unique_ptr<FileListWidget> _fileListWidget;

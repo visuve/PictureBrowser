@@ -11,7 +11,7 @@
   <ItemDefinitionGroup>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>Gdiplus.lib;Comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d2d1.lib;Comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>PictureBrowser.exe.manifest</AdditionalManifestFiles>
@@ -24,7 +24,6 @@
   <ItemGroup>
     <ClInclude Include="CanvasWidget.hpp" />
     <ClInclude Include="FileListWidget.hpp" />
-    <ClInclude Include="GdiExtensions.hpp" />
     <ClInclude Include="ImageCache.hpp" />
     <ClInclude Include="LogWrap.hpp" />
     <ClInclude Include="PCH.hpp" />
@@ -37,7 +36,6 @@
   <ItemGroup>
     <ClCompile Include="CanvasWidget.cpp" />
     <ClCompile Include="FileListWidget.cpp" />
-    <ClCompile Include="GdiExtensions.cpp" />
     <ClCompile Include="ImageCache.cpp" />
     <ClCompile Include="LogWrap.cpp" />
     <ClCompile Include="MainWindow.cpp" />

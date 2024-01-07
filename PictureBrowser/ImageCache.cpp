@@ -1,23 +1,22 @@
 #include "PCH.hpp"
 #include "ImageCache.hpp"
-#include "GdiExtensions.hpp"
 #include "LogWrap.hpp"
 
 namespace PictureBrowser
 {
-	void CorrectRotationIfNeeded(Gdiplus::Image* image)
-	{
-		const Gdiplus::RotateFlipType rotation = GdiExtensions::GetRotation(image);
-
-		if (rotation != Gdiplus::RotateFlipType::RotateNoneFlipNone)
-		{
-			image->RotateFlip(rotation);
-		}
-	}
-
 	ImageCache::ImageCache(bool useCaching) :
 		_useCaching(useCaching)
 	{
+		HRESULT hr = CoCreateInstance(
+			CLSID_WICImagingFactory,
+			NULL,
+			CLSCTX_INPROC_SERVER,
+			IID_PPV_ARGS(&_wicFactory));
+
+		if (FAILED(hr))
+		{
+			std::unreachable();
+		}
 	}
 
 	ImageCache::~ImageCache()
@@ -36,18 +35,18 @@ namespace PictureBrowser
 		return true;
 	}
 
-	std::shared_ptr<Gdiplus::Bitmap> ImageCache::Current()
+	ComPtr<ID2D1Bitmap> ImageCache::Current()
 	{
 		return Get(_currentImage);
 	}
 
-	std::shared_ptr<Gdiplus::Bitmap> ImageCache::Get(const std::filesystem::path& path)
+	ComPtr<ID2D1Bitmap> ImageCache::Get(const std::filesystem::path& path)
 	{
 		if (_useCaching)
 		{
 			const auto iter = _cache.find(path);
 
-			if (iter != _cache.cend())
+			if (iter != _cache.end())
 			{
 				return iter->second;
 			}
@@ -63,31 +62,82 @@ namespace PictureBrowser
 		_cache.clear();
 	}
 
-	std::shared_ptr<Gdiplus::Bitmap> ImageCache::Load(const std::filesystem::path& path)
+	// TODO: this method should be cleaned up a bit
+	ComPtr<ID2D1Bitmap> ImageCache::Load(const std::filesystem::path& path)
 	{
-		Gdiplus::Image image(path.c_str());
+		if (!_renderTarget)
+		{
+			std::unreachable();
+		}
 
-		if (image.GetLastStatus() != Gdiplus::Status::Ok)
+		ComPtr<IWICBitmapDecoder> decoder;
+
+		HRESULT hr = _wicFactory->CreateDecoderFromFilename(
+			path.c_str(),
+			nullptr,
+			GENERIC_READ,
+			WICDecodeMetadataCacheOnDemand,
+			&decoder);
+
+		if (FAILED(hr))
 		{
 			return nullptr;
 		}
 
-		CorrectRotationIfNeeded(&image);
+		ComPtr<IWICBitmapFrameDecode> frame;
 
-		UINT width = image.GetWidth();
-		UINT height = image.GetHeight();
+		hr = decoder->GetFrame(0, &frame);
 
-		auto buffer = std::make_shared<Gdiplus::Bitmap>(width, height, PixelFormat24bppRGB);
+		if (FAILED(hr))
+		{
+			return nullptr;
+		}
 
-		Gdiplus::Graphics graphics(buffer.get());
-		graphics.DrawImage(&image, 0, 0, width, height);
+		ComPtr<IWICFormatConverter> formatConverter;
+
+		hr = _wicFactory->CreateFormatConverter(&formatConverter);
+
+		if (FAILED(hr))
+		{
+			return nullptr;
+		}
+
+		// I wonder why GUID_WICPixelFormat24bppBGR does not work
+
+		hr = formatConverter->Initialize(
+			frame.Get(),
+			GUID_WICPixelFormat32bppBGR,
+			WICBitmapDitherTypeNone,
+			nullptr,
+			0.0f,
+			WICBitmapPaletteTypeCustom);
+
+		if (FAILED(hr))
+		{
+			return nullptr;
+		}
+
+		ComPtr<ID2D1Bitmap> bitmap;
+		
+		hr = _renderTarget->CreateBitmapFromWicBitmap(
+			formatConverter.Get(),
+			nullptr,
+			&bitmap);
+
+		if (FAILED(hr))
+		{
+			return nullptr;
+		}
+
+		// TODO: rotate the image if it has rotation flags set
 
 		if (_useCaching)
 		{
-			_cache.emplace(path, buffer);
+			_cache.emplace(path, bitmap);
 			LOGD << L"Cached: " << path;
 		}
 
-		return buffer;
+		return bitmap;
 	}
+
 }

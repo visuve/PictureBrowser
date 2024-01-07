@@ -29,6 +29,9 @@ namespace PictureBrowser
 		LogWrap& operator << (uint32_t value);
 		LogWrap& operator << (uint64_t value);
 
+		LogWrap& operator << (float value);
+		LogWrap& operator << (double value);
+
 		LogWrap& operator << (wchar_t value);
 		LogWrap& operator << (DWORD value);
 		LogWrap& operator << (LSTATUS value);
@@ -46,13 +49,11 @@ namespace PictureBrowser
 
 		LogWrap& operator << (const std::filesystem::path& value);
 
-		LogWrap& operator << (const Gdiplus::Rect& rect);
-
 		LogWrap& operator << (const POINT& point);
 
-		LogWrap& operator << (const RECT& rect);
-
 		LogWrap& operator << (const SIZE& size);
+
+		LogWrap& operator << (const RECT& rect);
 
 	private:
 		std::wstring _buffer;

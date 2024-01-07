@@ -1,21 +1,18 @@
 #pragma once
 
-#pragma warning(push)
+#define NOMINMAX
 
-#pragma warning(disable:4458)
-
-#include <SDKDDKVer.h>
 #include <Windows.h>
 #include <CommCtrl.h>
-#include <gdiplus.h>
+#include <d2d1.h>
+#include <wincodec.h>
+#include <wrl/client.h>
 
 #include <filesystem>
 #include <format>
 #include <functional>
 #include <memory>
 #include <map>
-
-#pragma warning(pop)
 
 namespace PictureBrowser
 {
@@ -26,4 +23,6 @@ namespace PictureBrowser
 	}
 
 	constexpr UINT Padding = 5;
+
+	using Microsoft::WRL::ComPtr;
 }
