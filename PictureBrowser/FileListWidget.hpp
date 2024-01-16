@@ -28,7 +28,8 @@ namespace PictureBrowser
 		void OnOpenMenu();
 		void OnFileDrop(WPARAM);
 		void OnContextMenu(LPARAM);
-		void OnPopupClosed();
+		void OnCopyPath() const;
+		void OnDeletePath() const;
 
 		std::filesystem::file_type LoadFileList(const std::filesystem::path&);
 		void LoadPicture(const std::filesystem::path& path);

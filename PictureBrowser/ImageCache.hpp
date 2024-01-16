@@ -11,6 +11,7 @@ namespace PictureBrowser
 		bool SetCurrent(const std::filesystem::path& path);
 		ComPtr<ID2D1Bitmap> Current();
 		ComPtr<ID2D1Bitmap> Get(const std::filesystem::path& path);
+		bool Delete(const std::filesystem::path& path);
 
 		void Clear();
 

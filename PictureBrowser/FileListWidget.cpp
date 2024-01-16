@@ -97,7 +97,10 @@ namespace PictureBrowser
 						OnOpenMenu();
 						break;
 					case IDM_POPUP_COPY_PATH:
-						OnPopupClosed();
+						OnCopyPath();
+						break;
+					case IDM_POPUP_DELETE_PATH:
+						OnDeletePath();
 						break;
 				}
 
@@ -264,14 +267,15 @@ namespace PictureBrowser
 
 		HMENU menu = CreatePopupMenu();
 
-		InsertMenu(menu, 0, MF_STRING, IDM_POPUP_COPY_PATH, L"Copy filename to clipboard");
+		InsertMenuW(menu, 0, MF_STRING, IDM_POPUP_COPY_PATH, L"Copy filename to clipboard");
+		InsertMenuW(menu, 1, MF_STRING, IDM_POPUP_DELETE_PATH, L"Delete file");
 
 		TrackPopupMenu(menu, TPM_TOPALIGN | TPM_LEFTALIGN, x, y, 0, _parent, nullptr);
 
 		DestroyMenu(menu);
 	}
 
-	void FileListWidget::OnPopupClosed()
+	void FileListWidget::OnCopyPath() const
 	{
 		std::wstring filename = ImageFromIndex(_contextMenuIndex);
 
@@ -288,6 +292,43 @@ namespace PictureBrowser
 		EmptyClipboard();
 		SetClipboardData(CF_UNICODETEXT, memory.Data());
 		CloseClipboard();
+	}
+
+	void FileListWidget::OnDeletePath() const
+	{
+		const std::wstring filename = ImageFromIndex(_contextMenuIndex);
+
+		if (filename.empty())
+		{
+			return;
+		}
+
+		std::wstring message = L"Are you sure you want to delete: " + filename;
+
+		if (MessageBoxW(
+			nullptr,
+			message.c_str(),
+			L"Confirm Delete",
+			MB_ICONQUESTION | MB_YESNO) != IDYES)
+		{
+			return;
+		}
+
+		const std::filesystem::path file = _currentDirectory / filename;
+
+		if (_imageCache->Delete(file))
+		{
+			Send(LB_DELETESTRING, _contextMenuIndex, 0);
+			return;
+		}
+
+		message = L"Failed to delete: " + filename;
+
+		MessageBoxW(
+			nullptr,
+			message.c_str(),
+			L"An error occurred!",
+			MB_ICONEXCLAMATION | MB_OK);
 	}
 
 	std::filesystem::file_type FileListWidget::LoadFileList(const std::filesystem::path& path)

@@ -57,6 +57,23 @@ namespace PictureBrowser
 		return Load(path);
 	}
 
+	bool ImageCache::Delete(const std::filesystem::path& path)
+	{
+		if (_useCaching)
+		{
+			const auto iter = _cache.find(path);
+
+			if (iter == _cache.end())
+			{
+				std::unreachable();
+			}
+
+			_cache.erase(iter);
+		}
+
+		return DeleteFileW(path.c_str());
+	}
+
 	void ImageCache::Clear()
 	{
 		_cache.clear();
