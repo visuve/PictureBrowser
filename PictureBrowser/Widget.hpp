@@ -38,6 +38,7 @@ namespace PictureBrowser
 		SIZE ClientSize() const;
 		bool SetPosition(HWND z, int x, int y, int w, int h, UINT flags);
 		LRESULT Send(UINT message, WPARAM wParam, LPARAM lParam) const;
+		bool Post(UINT message, WPARAM wParam, LPARAM lParam) const;
 
 		virtual void HandleMessage(UINT, WPARAM, LPARAM);
 

@@ -127,7 +127,12 @@ namespace PictureBrowser
 
 	LRESULT Widget::Send(UINT message, WPARAM wParam, LPARAM lParam) const
 	{
-		return SendMessage(_window, message, wParam, lParam);
+		return SendMessageW(_window, message, wParam, lParam);
+	}
+
+	bool Widget::Post(UINT message, WPARAM wParam, LPARAM lParam) const
+	{
+		return PostMessageW(_window, message, wParam, lParam);
 	}
 
 	void Widget::HandleMessage(UINT, WPARAM, LPARAM)
