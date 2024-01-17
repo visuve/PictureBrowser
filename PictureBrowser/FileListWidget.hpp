@@ -28,6 +28,7 @@ namespace PictureBrowser
 		void OnOpenMenu();
 		void OnFileDrop(WPARAM);
 		void OnContextMenu(LPARAM);
+		void OnOpenPath() const;
 		void OnCopyPath() const;
 		void OnDeletePath() const;
 

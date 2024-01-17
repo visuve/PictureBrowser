@@ -19,8 +19,9 @@
 #define IDM_KEYBOARD                    603
 #define IDM_OPEN                        604
 #define IDM_OPTIONS_USE_CACHING         605
-#define IDM_POPUP_COPY_PATH             606
-#define IDM_POPUP_DELETE_PATH           607
+#define IDM_POPUP_OPEN_PATH             606
+#define IDM_POPUP_COPY_PATH             607
+#define IDM_POPUP_DELETE_PATH           608
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

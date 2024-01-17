@@ -3,6 +3,7 @@
 #define NOMINMAX
 
 #include <Windows.h>
+#include <Shlobj.h>
 #include <CommCtrl.h>
 #include <d2d1.h>
 #include <wincodec.h>

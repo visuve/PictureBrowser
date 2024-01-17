@@ -5,20 +5,49 @@
 
 namespace PictureBrowser
 {
+	class ItemIdList
+	{
+	public:
+		ItemIdList(const std::filesystem::path& path) :
+			_data(ILCreateFromPathW(path.c_str()))
+		{
+			if (!_data)
+			{
+				throw std::runtime_error("ILCreateFromPathW failed!");
+			}
+		}
+
+		~ItemIdList()
+		{
+			if (_data)
+			{
+				ILFree(_data);
+			}
+		}
+
+		operator LPITEMIDLIST() const
+		{
+			return _data;
+		}
+
+	private:
+		LPITEMIDLIST _data = nullptr;
+	};
+
 	class GlobalMemory
 	{
 	public:
 		GlobalMemory(const void* data, size_t size, uint32_t flags = GMEM_MOVEABLE) :
-			_memory(GlobalAlloc(flags, size))
+			_global(GlobalAlloc(flags, size))
 		{
-			if (_memory)
+			if (_global)
 			{
-				_lock = GlobalLock(_memory);
+				_data = GlobalLock(_global);
 			}
 
-			if (_lock)
+			if (_data)
 			{
-				memcpy(_lock, data, size);
+				memcpy(_data, data, size);
 			}
 		}
 
@@ -29,25 +58,22 @@ namespace PictureBrowser
 
 		~GlobalMemory()
 		{
-			if (_lock)
+			if (_global)
 			{
-				GlobalUnlock(_memory);
-			}
-			else if (_memory)
-			{
-				// Did not acquire the lock, allocated for nothing
-				GlobalFree(_memory);
+				GlobalUnlock(_global);
+
+				GlobalFree(_global);
 			}
 		}
 
-		HGLOBAL Data() const
+		operator HGLOBAL() const
 		{
-			return _memory;
+			return _global;
 		}
 
 	private:
-		HGLOBAL _memory;
-		void* _lock = nullptr;
+		HGLOBAL _global;
+		void* _data = nullptr;
 	};
 
 	FileListWidget::FileListWidget(
@@ -95,6 +121,9 @@ namespace PictureBrowser
 						break;
 					case IDM_OPEN:
 						OnOpenMenu();
+						break;
+					case IDM_POPUP_OPEN_PATH:
+						OnOpenPath();
 						break;
 					case IDM_POPUP_COPY_PATH:
 						OnCopyPath();
@@ -267,12 +296,32 @@ namespace PictureBrowser
 
 		HMENU menu = CreatePopupMenu();
 
-		InsertMenuW(menu, 0, MF_STRING, IDM_POPUP_COPY_PATH, L"Copy filename to clipboard");
-		InsertMenuW(menu, 1, MF_STRING, IDM_POPUP_DELETE_PATH, L"Delete file");
+		InsertMenuW(menu, 0, MF_STRING, IDM_POPUP_OPEN_PATH, L"Open parent directory");
+		InsertMenuW(menu, 1, MF_STRING, IDM_POPUP_COPY_PATH, L"Copy filename");
+		InsertMenuW(menu, 2, MF_STRING, IDM_POPUP_DELETE_PATH, L"Delete file");
 
 		TrackPopupMenu(menu, TPM_TOPALIGN | TPM_LEFTALIGN, x, y, 0, _parent, nullptr);
 
 		DestroyMenu(menu);
+	}
+
+	void FileListWidget::OnOpenPath() const
+	{
+		std::wstring filename = ImageFromIndex(_contextMenuIndex);
+
+		if (filename.empty())
+		{
+			return;
+		}
+
+		const std::filesystem::path path = _currentDirectory / filename;
+
+		ItemIdList list(path);
+
+		if (SHOpenFolderAndSelectItems(list, 0, nullptr, 0) != S_OK)
+		{
+			throw std::runtime_error("SHOpenFolderAndSelectItems failed!");
+		}
 	}
 
 	void FileListWidget::OnCopyPath() const
@@ -290,7 +339,7 @@ namespace PictureBrowser
 
 		OpenClipboard(0);
 		EmptyClipboard();
-		SetClipboardData(CF_UNICODETEXT, memory.Data());
+		SetClipboardData(CF_UNICODETEXT, memory);
 		CloseClipboard();
 	}
 
@@ -314,9 +363,9 @@ namespace PictureBrowser
 			return;
 		}
 
-		const std::filesystem::path file = _currentDirectory / filename;
+		const std::filesystem::path path = _currentDirectory / filename;
 
-		if (_imageCache->Delete(file))
+		if (_imageCache->Delete(path))
 		{
 			Send(LB_DELETESTRING, _contextMenuIndex, 0);
 			return;
