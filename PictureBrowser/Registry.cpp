@@ -26,7 +26,7 @@ namespace PictureBrowser::Registry
 
 	RegHandle::RegHandle(const HKEY hive, const RegPath& path)
 	{
-		if (RegCreateKeyEx(
+		if (RegCreateKeyExW(
 			hive,
 			path.SubKeyName(),
 			0,
@@ -37,24 +37,21 @@ namespace PictureBrowser::Registry
 			&_key,
 			nullptr) != ERROR_SUCCESS)
 		{
-			std::unreachable();
+			throw std::runtime_error("RegCreateKeyExW failed!");
 		}
 	}
 
 	RegHandle::~RegHandle()
 	{
-		if (_key)
+		if (IsValid())
 		{
-			if (RegCloseKey(_key) != ERROR_SUCCESS)
-			{
-				std::unreachable();
-			}
+			RegCloseKey(_key);
 		}
 	}
 
 	bool RegHandle::IsValid()
 	{
-		return _key != nullptr;
+		return _key != nullptr && _key != HKEY(-1);
 	}
 
 	HKEY RegHandle::Get() const

@@ -13,6 +13,7 @@
 #include <functional>
 #include <memory>
 #include <map>
+#include <stdexcept>
 
 namespace PictureBrowser
 {

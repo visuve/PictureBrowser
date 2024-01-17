@@ -64,30 +64,41 @@ int APIENTRY wWinMain(
 
 	{
 		MainWindow mainWindow(instance);
-		mainWindow.Show(showCommand);
 
-		if (commandLine && commandLine[0] != '\0')
+		try
 		{
-			mainWindow.Open(TrimQuotes(commandLine));
+			mainWindow.Show(showCommand);
+
+			if (commandLine && commandLine[0] != '\0')
+			{
+				mainWindow.Open(TrimQuotes(commandLine));
+			}
+
+			int run = 0;
+
+			do
+			{
+				run = GetMessage(&message, nullptr, 0, 0);
+
+				if (run == -1)
+				{
+					LOGD << uint32_t(GetLastError());
+					break;
+				}
+				else
+				{
+					TranslateMessage(&message);
+					DispatchMessageW(&message);
+				}
+			} while (run != 0);
 		}
-
-		int run = 0;
-
-		do
+		catch (const std::exception& e)
 		{
-			run = GetMessage(&message, nullptr, 0, 0);
-
-			if (run == -1)
-			{
-				LOGD << uint32_t(GetLastError());
-				break;
-			}
-			else
-			{
-				TranslateMessage(&message);
-				DispatchMessage(&message);
-			}
-		} while (run != 0);
+			MessageBoxA(nullptr,
+				e.what(),
+				"An unhandled exception occurred!",
+				MB_ICONSTOP | MB_OK);
+		}
 	}
 
 	return static_cast<int>(message.wParam);

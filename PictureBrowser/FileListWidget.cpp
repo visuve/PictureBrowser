@@ -244,7 +244,7 @@ namespace PictureBrowser
 
 		if (!ScreenToClient(_window, &p))
 		{
-			std::unreachable();
+			throw std::runtime_error("ScreenToClient failed!");
 		}
 
 		LRESULT result = Send(LB_ITEMFROMPOINT,	0, MAKELPARAM(p.x, p.y));
@@ -399,7 +399,7 @@ namespace PictureBrowser
 
 		if (Send(LB_RESETCONTENT, 0, 0) != 0) // This message does not return a value.
 		{
-			std::unreachable();
+			throw std::runtime_error("SendMessageW failed!");
 		}
 
 		if (!Send(LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(jpgFilter.c_str())))
@@ -440,7 +440,7 @@ namespace PictureBrowser
 		}
 		else if (Send(LB_SETCURSEL, 0, 0) == LB_ERR)
 		{
-			std::unreachable();
+			throw std::runtime_error("SendMessageW failed!");
 		}
 
 		return status;
@@ -493,7 +493,7 @@ namespace PictureBrowser
 
 		if (Send(LB_GETTEXT, index, reinterpret_cast<LPARAM>(buffer.data())) != result)
 		{
-			std::unreachable();
+			throw std::runtime_error("SendMessageW failed!");
 		}
 
 		return buffer;

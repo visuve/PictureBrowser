@@ -56,7 +56,7 @@ namespace PictureBrowser
 	{
 		if (!_window)
 		{
-			HWND window = CreateWindowEx(
+			HWND window = CreateWindowExW(
 				_windowStyle.dwExStyle,
 				_windowStyle.lpszClass,
 				_windowStyle.lpszName,
@@ -73,9 +73,11 @@ namespace PictureBrowser
 			// WindowProcedure triggers immediately after CreateWindowEx.
 			// If you call CreateWindowEx before the Window class is fully initialized
 			// a crash will follow in WindowProcedure.
-			UNREFERENCED_PARAMETER(window); // In release mode...
-			_ASSERTE(window != nullptr);
-			_ASSERTE(window == _window);
+
+			if (window == nullptr || window != _window)
+			{
+				throw std::runtime_error("CreateWindowExW failed!");
+			}
 		}
 
 		if (_window)

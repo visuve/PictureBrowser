@@ -90,7 +90,7 @@ namespace PictureBrowser
 
 		if (!GetWindowRect(_window, &area))
 		{
-			std::unreachable();
+			throw std::runtime_error("GetWindowRect failed!");
 		}
 
 		return area;
@@ -108,7 +108,7 @@ namespace PictureBrowser
 
 		if (!GetClientRect(_window, &area))
 		{
-			std::unreachable();
+			throw std::runtime_error("GetClientRect failed!");
 		}
 
 		return area;

@@ -15,7 +15,7 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			std::unreachable();
+			throw std::runtime_error("CoCreateInstance failed!");
 		}
 	}
 
@@ -63,12 +63,10 @@ namespace PictureBrowser
 		{
 			const auto iter = _cache.find(path);
 
-			if (iter == _cache.end())
+			if (iter != _cache.end())
 			{
-				std::unreachable();
+				_cache.erase(iter);
 			}
-
-			_cache.erase(iter);
 		}
 
 		return DeleteFileW(path.c_str());
@@ -84,7 +82,7 @@ namespace PictureBrowser
 	{
 		if (!_renderTarget)
 		{
-			std::unreachable();
+			throw std::runtime_error("ID2D1RenderTarget was null!");
 		}
 
 		ComPtr<IWICBitmapDecoder> decoder;

@@ -57,7 +57,7 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			std::unreachable();
+			throw std::runtime_error("D2D1CreateFactory failed!");
 		}
 
 		RECT rect = ClientRect();
@@ -71,7 +71,7 @@ namespace PictureBrowser
 		
 		if (FAILED(hr))
 		{
-			std::unreachable();
+			throw std::runtime_error("CreateHwndRenderTarget failed!");
 		}
 
 		// TODO: I really do not like this, but I could not come up with else
@@ -192,7 +192,7 @@ namespace PictureBrowser
 
 		if (!InvalidateRect(_parent, &child, false))
 		{
-			std::unreachable();
+			throw std::runtime_error("InvalidateRect failed!");
 		}
 	}
 

@@ -77,7 +77,7 @@ namespace PictureBrowser
 
 		if (!GetClientRect(_window, &clientArea))
 		{
-			std::unreachable();
+			throw std::runtime_error("GetClientRect failed!");
 		}
 
 		clientArea.left += Padding;
@@ -182,7 +182,7 @@ namespace PictureBrowser
 			_fileListArea.bottom,
 			SWP_NOMOVE | SWP_NOZORDER))
 		{
-			std::unreachable();
+			throw std::runtime_error("SetWindowPos failed!");
 		}
 
 		if (!_canvasWidget->SetPosition(
@@ -193,7 +193,7 @@ namespace PictureBrowser
 			_canvasArea.bottom,
 			SWP_NOZORDER))
 		{
-			std::unreachable();
+			throw std::runtime_error("SetWindowPos failed!");
 		}
 
 		if (!_zoomOutButton.SetPosition(
@@ -204,7 +204,7 @@ namespace PictureBrowser
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
 		{
-			std::unreachable();
+			throw std::runtime_error("SetWindowPos failed!");
 		}
 
 		if (!_zoomInButton.SetPosition(
@@ -215,7 +215,7 @@ namespace PictureBrowser
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
 		{
-			std::unreachable();
+			throw std::runtime_error("SetWindowPos failed!");
 		}
 
 		if (!_previousPictureButton.SetPosition(
@@ -226,7 +226,7 @@ namespace PictureBrowser
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
 		{
-			std::unreachable();
+			throw std::runtime_error("SetWindowPos failed!");
 		}
 
 		if (!_nextPictureButton.SetPosition(
@@ -237,14 +237,14 @@ namespace PictureBrowser
 			0,
 			SWP_NOSIZE | SWP_NOZORDER))
 		{
-			std::unreachable();
+			throw std::runtime_error("SetWindowPos failed!");
 		}
 
 		_canvasWidget->Resize();
 
 		if (!InvalidateRect(_window, &_canvasArea, false))
 		{
-			std::unreachable();
+			throw std::runtime_error("InvalidateRect failed!");
 		}
 	}
 
@@ -293,7 +293,7 @@ namespace PictureBrowser
 
 		if (!GetWindowPlacement(_window, &placement))
 		{
-			std::unreachable();
+			throw std::runtime_error("GetWindowPlacement failed!");
 		}
 
 		const UINT show = placement.showCmd == SW_NORMAL ? SW_SHOWMAXIMIZED : SW_NORMAL;
@@ -309,9 +309,9 @@ namespace PictureBrowser
 		menuItemInfo.cbSize = sizeof(MENUITEMINFO);
 		menuItemInfo.fMask = MIIM_STATE;
 
-		if (!GetMenuItemInfo(menu, menuEntry, FALSE, &menuItemInfo))
+		if (!GetMenuItemInfoW(menu, menuEntry, FALSE, &menuItemInfo))
 		{
-			std::unreachable();
+			throw std::runtime_error("GetMenuItemInfoW failed!");
 		}
 
 		return menuItemInfo.fState;
@@ -326,9 +326,9 @@ namespace PictureBrowser
 		menuItemInfo.fMask = MIIM_STATE;
 		menuItemInfo.fState = state;
 
-		if (!SetMenuItemInfo(menu, menuEntry, FALSE, &menuItemInfo))
+		if (!SetMenuItemInfoW(menu, menuEntry, FALSE, &menuItemInfo))
 		{
-			std::unreachable();
+			throw std::runtime_error("SetMenuItemInfoW failed!");
 		}
 	}
 
