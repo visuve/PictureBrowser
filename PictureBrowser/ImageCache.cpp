@@ -6,7 +6,7 @@ namespace PictureBrowser
 {
 	WICBitmapTransformOptions OrientationTransformOptions(uint16_t exifOrientation)
 	{
-		_ASSERTE(exifOrientation >= 0 && exifOrientation <= 8);
+		_ASSERTE(exifOrientation <= 8);
 
 		switch (exifOrientation)
 		{

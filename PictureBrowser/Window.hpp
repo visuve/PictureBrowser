@@ -40,7 +40,7 @@ namespace PictureBrowser
 			HMENU menu = nullptr,
 			DWORD extraStyle = 0);
 
-		HWND _window = nullptr;
+		volatile HWND _window = nullptr;
 
 	private:
 		CREATESTRUCT _windowStyle;

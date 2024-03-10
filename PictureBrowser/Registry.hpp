@@ -47,7 +47,7 @@ namespace PictureBrowser::Registry
 		DWORD value = 0;
 		DWORD dataSize = sizeof(DWORD);
 
-		LSTATUS status = RegGetValue(
+		LSTATUS status = RegGetValueW(
 			hive,
 			path.SubKeyName(),
 			path.ValueName(),
@@ -100,7 +100,7 @@ namespace PictureBrowser::Registry
 
 		DWORD dataSize = sizeof(DWORD);
 
-		LSTATUS status = RegSetValueEx(
+		LSTATUS status = RegSetValueExW(
 			key.Get(),
 			path.ValueName(),
 			0,
