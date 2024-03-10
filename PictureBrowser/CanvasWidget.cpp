@@ -57,7 +57,7 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			throw std::runtime_error("D2D1CreateFactory failed!");
+			throw std::system_error(hr, std::system_category(), "D2D1CreateFactory");
 		}
 
 		RECT rect = ClientRect();
@@ -71,7 +71,7 @@ namespace PictureBrowser
 		
 		if (FAILED(hr))
 		{
-			throw std::runtime_error("CreateHwndRenderTarget failed!");
+			throw std::system_error(hr, std::system_category(),"ID2D1Factory::CreateHwndRenderTarget");
 		}
 
 		// TODO: I really do not like this, but I could not come up with else

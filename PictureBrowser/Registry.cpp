@@ -26,7 +26,7 @@ namespace PictureBrowser::Registry
 
 	RegHandle::RegHandle(const HKEY hive, const RegPath& path)
 	{
-		if (RegCreateKeyExW(
+		LSTATUS status = RegCreateKeyExW(
 			hive,
 			path.SubKeyName(),
 			0,
@@ -35,9 +35,11 @@ namespace PictureBrowser::Registry
 			KEY_READ | KEY_WRITE,
 			nullptr,
 			&_key,
-			nullptr) != ERROR_SUCCESS)
+			nullptr);
+
+		if (status != ERROR_SUCCESS)
 		{
-			throw std::runtime_error("RegCreateKeyExW failed!");
+			throw std::system_error(status, std::system_category(), "RegCreateKeyExW");
 		}
 	}
 

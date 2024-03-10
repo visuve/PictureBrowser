@@ -318,9 +318,11 @@ namespace PictureBrowser
 
 		ItemIdList list(path);
 
-		if (SHOpenFolderAndSelectItems(list, 0, nullptr, 0) != S_OK)
+		HRESULT hr = SHOpenFolderAndSelectItems(list, 0, nullptr, 0);
+
+		if (FAILED(hr))
 		{
-			throw std::runtime_error("SHOpenFolderAndSelectItems failed!");
+			throw std::system_error(hr, std::system_category(), "SHOpenFolderAndSelectItems");
 		}
 	}
 

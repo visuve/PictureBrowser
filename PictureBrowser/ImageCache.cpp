@@ -4,6 +4,19 @@
 
 namespace PictureBrowser
 {
+	struct PropertyVariant : PROPVARIANT
+	{
+		PropertyVariant()
+		{
+			PropVariantInit(this);
+		}
+
+		~PropertyVariant()
+		{
+			PropVariantClear(this);
+		}
+	};
+
 	WICBitmapTransformOptions OrientationTransformOptions(uint16_t exifOrientation)
 	{
 		_ASSERTE(exifOrientation <= 8);
@@ -41,7 +54,7 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			throw std::runtime_error("CoCreateInstance failed!");
+			throw std::system_error(hr, std::system_category(), "CoCreateInstance");
 		}
 	}
 
@@ -80,7 +93,26 @@ namespace PictureBrowser
 			LOGD << L"Not cached: " << path;
 		}
 
-		return Load(path);
+		try
+		{
+			return Load(path);
+		}
+		catch (const std::system_error& e)
+		{
+			MessageBoxA(nullptr,
+				e.what(),
+				"An exception occurred!",
+				MB_ICONSTOP | MB_OK);
+		}
+		catch (const std::exception& e)
+		{
+			MessageBoxA(nullptr,
+				e.what(),
+				"An exception occurred!",
+				MB_ICONSTOP | MB_OK);
+		}
+
+		return nullptr;
 	}
 
 	bool ImageCache::Delete(const std::filesystem::path& path)
@@ -123,7 +155,7 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			throw std::runtime_error("IWICImagingFactory::CreateDecoderFromFilename failed!");
+			throw std::system_error(hr, std::system_category(), "IWICImagingFactory::CreateDecoderFromFilename");
 		}
 
 		ComPtr<IWICBitmapFrameDecode> frame;
@@ -132,7 +164,7 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			throw std::runtime_error("IWICBitmapDecoder::GetFrame failed!");
+			throw std::system_error(hr, std::system_category(), "IWICBitmapDecoder::GetFrame");
 		}
 
 		ComPtr<IWICFormatConverter> formatConverter;
@@ -141,7 +173,7 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			throw std::runtime_error("IWICImagingFactory::CreateFormatConverter failed!");
+			throw std::system_error(hr, std::system_category(), "IWICImagingFactory::CreateFormatConverter");
 		}
 
 		// I wonder why GUID_WICPixelFormat24bppBGR does not work
@@ -156,7 +188,7 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			throw std::runtime_error("IWICFormatConverter::Initialize failed!");
+			throw std::system_error(hr, std::system_category(), "IWICFormatConverter::Initialize");
 		}
 
 		ComPtr<IWICMetadataQueryReader> metadata;
@@ -165,48 +197,55 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			throw std::runtime_error("IWICBitmapFrameDecode::GetMetadataQueryReader failed!");
+			throw std::system_error(hr, std::system_category(), "IWICBitmapFrameDecode::GetMetadataQueryReader");
 		}
 
-		PROPVARIANT orientation;
-		PropVariantInit(&orientation);
-
+		PropertyVariant orientation;
 		hr = metadata->GetMetadataByName(L"/app1/ifd/{ushort=274}", &orientation);
-		
 		WICBitmapTransformOptions options = OrientationTransformOptions(orientation.uiVal);
-		PropVariantClear(&orientation);
+
+		IWICBitmapSource* source = formatConverter.Get();
+		ComPtr<IWICBitmapFlipRotator> rotator;
 
 		if (FAILED(hr) && hr != WINCODEC_ERR_PROPERTYNOTFOUND)
 		{
-			throw std::runtime_error("IWICMetadataQueryReader::GetMetadataByName failed!");
+			throw std::system_error(hr, std::system_category(), "IWICMetadataQueryReader::GetMetadataByName");
 		}
-
-		ComPtr<IWICBitmapFlipRotator> rotator;
-
-		hr = _wicFactory->CreateBitmapFlipRotator(&rotator);
-
-		if (FAILED(hr))
+		else
 		{
-			throw std::runtime_error("IWICImagingFactory::CreateBitmapFlipRotator failed!");
-		}
-		
-		hr = rotator->Initialize(formatConverter.Get(), options);
+			hr = _wicFactory->CreateBitmapFlipRotator(&rotator);
 
-		if (FAILED(hr))
-		{
-			throw std::runtime_error("IWICBitmapFlipRotator::Initialize failed!");
+			if (FAILED(hr))
+			{
+				throw std::system_error(hr, std::system_category(), "IWICImagingFactory::CreateBitmapFlipRotator");
+			}
+
+			hr = rotator->Initialize(formatConverter.Get(), options);
+
+			if (FAILED(hr))
+			{
+				throw std::system_error(hr, std::system_category(), "IWICBitmapFlipRotator::Initialize");
+			}
+
+			source = rotator.Get();
 		}
 
 		ComPtr<ID2D1Bitmap> bitmap;
 
+		D2D1_BITMAP_PROPERTIES properties;
+		properties.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
+		properties.pixelFormat.alphaMode = D2D1_ALPHA_MODE_IGNORE;
+		properties.dpiX = 96.0f;
+		properties.dpiY = 96.0f;
+
 		hr = _renderTarget->CreateBitmapFromWicBitmap(
-			rotator.Get(),
-			nullptr,
+			source,
+			properties,
 			&bitmap);
 
 		if (FAILED(hr))
 		{
-			throw std::runtime_error("ID2D1RenderTarget::CreateBitmapFromWicBitmap failed!");
+			throw std::system_error(hr, std::system_category(), "ID2D1RenderTarget::CreateBitmapFromWicBitmap");
 		}
 
 		if (_useCaching)
@@ -217,5 +256,4 @@ namespace PictureBrowser
 
 		return bitmap;
 	}
-
 }

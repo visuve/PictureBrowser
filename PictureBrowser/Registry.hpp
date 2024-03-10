@@ -54,8 +54,7 @@ namespace PictureBrowser::Registry
 			RRF_RT_DWORD,
 			&actualType,
 			&value,
-			&dataSize
-		);
+			&dataSize);
 
 		if (status == ERROR_FILE_NOT_FOUND)
 		{
@@ -106,8 +105,7 @@ namespace PictureBrowser::Registry
 			0,
 			REG_DWORD,
 			u32u8.U8,
-			dataSize
-		);
+			dataSize);
 
 		if (status != ERROR_SUCCESS)
 		{

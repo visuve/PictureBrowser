@@ -92,6 +92,13 @@ int APIENTRY wWinMain(
 				}
 			} while (run != 0);
 		}
+		catch (const std::system_error& e)
+		{
+			MessageBoxA(nullptr,
+				e.what(),
+				"An unhandled exception occurred!",
+				MB_ICONSTOP | MB_OK);
+		}
 		catch (const std::exception& e)
 		{
 			MessageBoxA(nullptr,
