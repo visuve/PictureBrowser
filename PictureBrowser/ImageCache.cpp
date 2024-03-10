@@ -102,7 +102,8 @@ namespace PictureBrowser
 		_cache.clear();
 	}
 
-	// TODO: this method should be cleaned up a bit
+	// TODO: this method should be cleaned up a bit.
+	// TODO: instead of immediate throw, maybe display the error as an image
 	ComPtr<ID2D1Bitmap> ImageCache::Load(const std::filesystem::path& path)
 	{
 		if (!_renderTarget)
@@ -121,7 +122,7 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			return nullptr;
+			throw std::runtime_error("IWICImagingFactory::CreateDecoderFromFilename failed!");
 		}
 
 		ComPtr<IWICBitmapFrameDecode> frame;
@@ -130,7 +131,7 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			return nullptr;
+			throw std::runtime_error("IWICBitmapDecoder::GetFrame failed!");
 		}
 
 		ComPtr<IWICFormatConverter> formatConverter;
@@ -139,7 +140,7 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			return nullptr;
+			throw std::runtime_error("IWICImagingFactory::CreateFormatConverter failed!");
 		}
 
 		// I wonder why GUID_WICPixelFormat24bppBGR does not work
@@ -154,7 +155,7 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			return nullptr;
+			throw std::runtime_error("IWICFormatConverter::Initialize failed!");
 		}
 
 		ComPtr<IWICMetadataQueryReader> metadata;
@@ -163,7 +164,7 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			return nullptr;
+			throw std::runtime_error("IWICBitmapFrameDecode::GetMetadataQueryReader failed!");
 		}
 
 		PROPVARIANT orientation;
@@ -174,9 +175,9 @@ namespace PictureBrowser
 		WICBitmapTransformOptions options = OrientationTransformOptions(orientation.uiVal);
 		PropVariantClear(&orientation);
 
-		if (FAILED(hr))
+		if (FAILED(hr) && hr != WINCODEC_ERR_PROPERTYNOTFOUND)
 		{
-			return nullptr;
+			throw std::runtime_error("IWICMetadataQueryReader::GetMetadataByName failed!");
 		}
 
 		ComPtr<IWICBitmapFlipRotator> rotator;
@@ -185,14 +186,14 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			return nullptr;
+			throw std::runtime_error("IWICImagingFactory::CreateBitmapFlipRotator failed!");
 		}
 		
 		hr = rotator->Initialize(formatConverter.Get(), options);
 
 		if (FAILED(hr))
 		{
-			return nullptr;
+			throw std::runtime_error("IWICBitmapFlipRotator::Initialize failed!");
 		}
 
 		ComPtr<ID2D1Bitmap> bitmap;
@@ -204,7 +205,7 @@ namespace PictureBrowser
 
 		if (FAILED(hr))
 		{
-			return nullptr;
+			throw std::runtime_error("ID2D1RenderTarget::CreateBitmapFromWicBitmap failed!");
 		}
 
 		if (_useCaching)
