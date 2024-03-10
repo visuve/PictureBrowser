@@ -4,6 +4,31 @@
 
 namespace PictureBrowser
 {
+	WICBitmapTransformOptions OrientationTransformOptions(uint16_t exifOrientation)
+	{
+		_ASSERTE(exifOrientation >= 0 && exifOrientation <= 8);
+
+		switch (exifOrientation)
+		{
+			case 2:
+				return WICBitmapTransformFlipHorizontal;
+			case 3:
+				return WICBitmapTransformRotate180;
+			case 4:
+				return WICBitmapTransformFlipVertical;
+			case 5:
+				return WICBitmapTransformOptions(WICBitmapTransformRotate90 | WICBitmapTransformRotate180 | WICBitmapTransformFlipHorizontal);
+			case 6:
+				return WICBitmapTransformRotate90;
+			case 7:
+				return WICBitmapTransformOptions(WICBitmapTransformRotate90 | WICBitmapTransformFlipHorizontal);
+			case 8:
+				return WICBitmapTransformRotate270;
+		}
+
+		return WICBitmapTransformRotate0;
+	}
+
 	ImageCache::ImageCache(bool useCaching) :
 		_useCaching(useCaching)
 	{
@@ -132,10 +157,48 @@ namespace PictureBrowser
 			return nullptr;
 		}
 
-		ComPtr<ID2D1Bitmap> bitmap;
+		ComPtr<IWICMetadataQueryReader> metadata;
+
+		hr = frame->GetMetadataQueryReader(&metadata);
+
+		if (FAILED(hr))
+		{
+			return nullptr;
+		}
+
+		PROPVARIANT orientation;
+		PropVariantInit(&orientation);
+
+		hr = metadata->GetMetadataByName(L"/app1/ifd/{ushort=274}", &orientation);
 		
+		WICBitmapTransformOptions options = OrientationTransformOptions(orientation.uiVal);
+		PropVariantClear(&orientation);
+
+		if (FAILED(hr))
+		{
+			return nullptr;
+		}
+
+		ComPtr<IWICBitmapFlipRotator> rotator;
+
+		hr = _wicFactory->CreateBitmapFlipRotator(&rotator);
+
+		if (FAILED(hr))
+		{
+			return nullptr;
+		}
+		
+		hr = rotator->Initialize(formatConverter.Get(), options);
+
+		if (FAILED(hr))
+		{
+			return nullptr;
+		}
+
+		ComPtr<ID2D1Bitmap> bitmap;
+
 		hr = _renderTarget->CreateBitmapFromWicBitmap(
-			formatConverter.Get(),
+			rotator.Get(),
 			nullptr,
 			&bitmap);
 
@@ -143,8 +206,6 @@ namespace PictureBrowser
 		{
 			return nullptr;
 		}
-
-		// TODO: rotate the image if it has rotation flags set
 
 		if (_useCaching)
 		{
