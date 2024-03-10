@@ -30,7 +30,8 @@ namespace PictureBrowser
 	}
 
 	ImageCache::ImageCache(bool useCaching) :
-		_useCaching(useCaching)
+		_useCaching(useCaching),
+		_cache({ { L"", nullptr } })
 	{
 		HRESULT hr = CoCreateInstance(
 			CLSID_WICImagingFactory,
@@ -99,7 +100,7 @@ namespace PictureBrowser
 
 	void ImageCache::Clear()
 	{
-		_cache.clear();
+		_cache = { { L"", nullptr } };
 	}
 
 	// TODO: this method should be cleaned up a bit.
