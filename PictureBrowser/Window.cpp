@@ -16,7 +16,9 @@ namespace PictureBrowser
 	{
 		// TODO: add more ctor parameters to allow more flexible usage
 
-		WNDCLASSEXW windowClass = { };
+		WNDCLASSEXW windowClass;
+		ZeroInit(windowClass);
+
 		windowClass.cbSize = sizeof(WNDCLASSEXW);
 		windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
 		windowClass.lpfnWndProc = WindowProcedure;
@@ -54,7 +56,7 @@ namespace PictureBrowser
 
 	void Window::Show(int showCommand)
 	{
-		if (!_window)
+		if (!_self)
 		{
 			HWND window = CreateWindowExW(
 				_windowStyle.dwExStyle,
@@ -74,16 +76,13 @@ namespace PictureBrowser
 			// If you call CreateWindowEx before the Window class is fully initialized
 			// a crash will follow in WindowProcedure.
 
-			if (window == nullptr || window != _window)
+			if (window == nullptr || window != _self)
 			{
 				throw std::runtime_error("CreateWindowExW failed!");
 			}
 		}
 
-		if (_window)
-		{
-			ShowWindow(_window, showCommand);
-		}
+		ShowWindow(showCommand);
 	}
 
 	LRESULT Window::WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
@@ -94,8 +93,8 @@ namespace PictureBrowser
 		{
 			auto created = reinterpret_cast<CREATESTRUCT*>(lParam);
 			self = static_cast<Window*>(created->lpCreateParams);
-			self->_window = window;
-			SetWindowLongPtr(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
+			self->_self = window;
+			SetWindowLongPtrW(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
 		}
 		else
 		{
@@ -116,14 +115,20 @@ namespace PictureBrowser
 		return _windowStyle.hInstance;
 	}
 
-	HWND Window::Self() const
-	{
-		return _window;
-	}
-
 	Widget Window::AddWidget(const wchar_t* className, const wchar_t* windowName, DWORD style, int x, int y, int w, int h, HMENU menu, DWORD extraStyle)
 	{
-		return Widget(extraStyle, className, windowName, style, x, y, w, h, _window, menu, Instance(), nullptr);
+		return Widget(extraStyle, className, windowName, style, x, y, w, h, this, menu, Instance(), nullptr);
 	}
 
+	INT_PTR Window::DialogBoxParamW(const wchar_t* templateName, DLGPROC callback, LPARAM initialParameter) const
+	{
+		INT_PTR result = ::DialogBoxParamW(Instance(), templateName, _self, callback, initialParameter);
+
+		if (result <= 0)
+		{
+			throw std::system_error(GetLastError(), std::system_category(), "DialogBoxParamW");
+		}
+
+		return result;
+	}
 }

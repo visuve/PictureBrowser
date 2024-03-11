@@ -73,12 +73,7 @@ namespace PictureBrowser
 
 	void MainWindow::RecalculatePaintArea()
 	{
-		RECT clientArea = { };
-
-		if (!GetClientRect(Self(), &clientArea))
-		{
-			throw std::runtime_error("GetClientRect failed!");
-		}
+		RECT clientArea = GetClientRect();
 
 		clientArea.left += Padding;
 		clientArea.top += Padding;
@@ -156,96 +151,75 @@ namespace PictureBrowser
 
 		_canvasWidget = std::make_unique<CanvasWidget>(
 			Instance(),
-			Self(),
+			this,
 			_imageCache);
 
-		_canvasWidget->Intercept(Self());
+		_canvasWidget->Intercept(this);
 
 		_fileListWidget = std::make_unique<FileListWidget>(
 			Instance(),
-			Self(),
+			this,
 			_imageCache,
 			std::bind(&CanvasWidget::OnImageChanged, _canvasWidget.get(), std::placeholders::_1));
 
-		_fileListWidget->Intercept(Self());
+		_fileListWidget->Intercept(this);
 	}
 
 	void MainWindow::OnResize()
 	{
 		RecalculatePaintArea();
 
-		if (!_fileListWidget->SetPosition(
+		_fileListWidget->SetWindowPos(
 			HWND_TOP,
 			_fileListArea.left,
 			_fileListArea.top,
 			_fileListArea.right,
 			_fileListArea.bottom,
-			SWP_NOMOVE | SWP_NOZORDER))
-		{
-			throw std::runtime_error("SetWindowPos failed!");
-		}
+			SWP_NOMOVE | SWP_NOZORDER);
 
-		if (!_canvasWidget->SetPosition(
+		_canvasWidget->SetWindowPos(
 			HWND_TOP,
 			_canvasArea.left,
 			_canvasArea.top,
 			_canvasArea.right,
 			_canvasArea.bottom,
-			SWP_NOZORDER))
-		{
-			throw std::runtime_error("SetWindowPos failed!");
-		}
+			SWP_NOZORDER);
 
-		if (!_zoomOutButton.SetPosition(
+		_zoomOutButton.SetWindowPos(
 			HWND_TOP,
 			_mainArea.left,
 			_mainArea.top,
 			0,
 			0,
-			SWP_NOSIZE | SWP_NOZORDER))
-		{
-			throw std::runtime_error("SetWindowPos failed!");
-		}
+			SWP_NOSIZE | SWP_NOZORDER);
 
-		if (!_zoomInButton.SetPosition(
+		_zoomInButton.SetWindowPos(
 			HWND_TOP,
 			_mainArea.right - ButtonWidth,
 			_mainArea.top,
 			0,
 			0,
-			SWP_NOSIZE | SWP_NOZORDER))
-		{
-			throw std::runtime_error("SetWindowPos failed!");
-		}
+			SWP_NOSIZE | SWP_NOZORDER);
 
-		if (!_previousPictureButton.SetPosition(
+		_previousPictureButton.SetWindowPos(
 			HWND_TOP,
 			_mainArea.left,
 			_mainArea.bottom - ButtonHeight,
 			0,
 			0,
-			SWP_NOSIZE | SWP_NOZORDER))
-		{
-			throw std::runtime_error("SetWindowPos failed!");
-		}
+			SWP_NOSIZE | SWP_NOZORDER);
 
-		if (!_nextPictureButton.SetPosition(
+		_nextPictureButton.SetWindowPos(
 			HWND_TOP,
 			_mainArea.right - ButtonWidth,
 			_mainArea.bottom - ButtonHeight,
 			0,
 			0,
-			SWP_NOSIZE | SWP_NOZORDER))
-		{
-			throw std::runtime_error("SetWindowPos failed!");
-		}
+			SWP_NOSIZE | SWP_NOZORDER);
 
 		_canvasWidget->Resize();
 
-		if (!InvalidateRect(Self(), &_canvasArea, false))
-		{
-			throw std::runtime_error("InvalidateRect failed!");
-		}
+		InvalidateRect(_canvasArea, false);
 	}
 
 	void MainWindow::OnCommand(WPARAM wParam)
@@ -254,17 +228,17 @@ namespace PictureBrowser
 		{
 			case IDM_EXIT:
 			{
-				DestroyWindow(Self());
+				DestroyWindow();
 				break;
 			}
 			case IDM_ABOUT:
 			{
-				DialogBox(Instance(), MAKEINTRESOURCE(IDD_ABOUT), Self(), GenericOkDialog);
+				DialogBoxParamW(MAKEINTRESOURCE(IDD_ABOUT), GenericOkDialog);
 				break;
 			}
 			case IDM_KEYBOARD:
 			{
-				DialogBox(Instance(), MAKEINTRESOURCE(IDD_KEYBOARD), Self(), GenericOkDialog);
+				DialogBoxParamW(MAKEINTRESOURCE(IDD_KEYBOARD), GenericOkDialog);
 				break;
 			}
 			case IDM_OPTIONS_USE_CACHING:
@@ -289,12 +263,7 @@ namespace PictureBrowser
 
 	void MainWindow::OnDoubleClick()
 	{
-		WINDOWPLACEMENT placement = {};
-
-		if (!GetWindowPlacement(Self(), &placement))
-		{
-			throw std::runtime_error("GetWindowPlacement failed!");
-		}
+		WINDOWPLACEMENT placement = GetWindowPlacement();
 
 		const UINT show = placement.showCmd == SW_NORMAL ? SW_SHOWMAXIMIZED : SW_NORMAL;
 
@@ -303,9 +272,9 @@ namespace PictureBrowser
 
 	UINT MainWindow::CheckedState(UINT menuEntry) const
 	{
-		const HMENU menu = GetMenu(Self());
+		const HMENU menu = GetMenu();
 		MENUITEMINFO menuItemInfo;
-		ZeroInit(&menuItemInfo);
+		ZeroInit(menuItemInfo);
 		menuItemInfo.cbSize = sizeof(MENUITEMINFO);
 		menuItemInfo.fMask = MIIM_STATE;
 
@@ -319,9 +288,9 @@ namespace PictureBrowser
 
 	void MainWindow::SetCheckedState(UINT menuEntry, UINT state) const
 	{
-		const HMENU menu = GetMenu(Self());
+		const HMENU menu = GetMenu();
 		MENUITEMINFO menuItemInfo;
-		ZeroInit(&menuItemInfo);
+		ZeroInit(menuItemInfo);
 		menuItemInfo.cbSize = sizeof(MENUITEMINFO);
 		menuItemInfo.fMask = MIIM_STATE;
 		menuItemInfo.fState = state;
@@ -340,7 +309,7 @@ namespace PictureBrowser
 		{
 			case WM_INITDIALOG:
 			{
-				InvalidateRect(dialog, nullptr, true);
+				::InvalidateRect(dialog, nullptr, true);
 				return static_cast<INT_PTR>(TRUE);
 			}
 			case WM_COMMAND:

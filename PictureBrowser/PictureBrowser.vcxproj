@@ -32,6 +32,7 @@
     <ClInclude Include="MainWindow.hpp" />
     <ClInclude Include="Widget.hpp" />
     <ClInclude Include="Window.hpp" />
+    <ClInclude Include="BaseWindow.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CanvasWidget.cpp" />
@@ -46,6 +47,7 @@
     <ClCompile Include="Registry.cpp" />
     <ClCompile Include="Widget.cpp" />
     <ClCompile Include="Window.cpp" />
+    <ClCompile Include="BaseWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="PictureBrowser.rc" />

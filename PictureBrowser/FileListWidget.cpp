@@ -78,7 +78,7 @@ namespace PictureBrowser
 
 	FileListWidget::FileListWidget(
 		HINSTANCE instance,
-		HWND parent,
+		BaseWindow* parent,
 		const std::shared_ptr<ImageCache>& imageCache,
 		const std::function<void(std::filesystem::path)>& imageChanged) :
 		Widget(
@@ -104,7 +104,7 @@ namespace PictureBrowser
 		switch (message)
 		{
 			case WM_CONTEXTMENU:
-				if (reinterpret_cast<HWND>(wParam) == Self())
+				if (IsMe(wParam))
 				{
 					OnContextMenu(lParam);
 				}
@@ -133,7 +133,7 @@ namespace PictureBrowser
 						break;
 				}
 
-				if (reinterpret_cast<HWND>(lParam) == Self() && HIWORD(wParam) == LBN_SELCHANGE)
+				if (IsMe(lParam) && HIWORD(wParam) == LBN_SELCHANGE)
 				{
 					OnSelectionChanged();
 					break;
@@ -179,20 +179,20 @@ namespace PictureBrowser
 
 	LONG_PTR FileListWidget::CurrentSelection() const
 	{
-		LONG_PTR count = Send(LB_GETCOUNT, 0, 0);
-		LONG_PTR cursel = Send(LB_GETCURSEL, 0, 0);
+		LONG_PTR count = SendMessageW(LB_GETCOUNT, 0, 0);
+		LONG_PTR cursel = SendMessageW(LB_GETCURSEL, 0, 0);
 		return std::clamp(cursel, LONG_PTR(0), count);
 	}
 
 	void FileListWidget::MoveCurrentSelection(LONG_PTR distance)
 	{
-		LONG_PTR count = Send(LB_GETCOUNT, 0, 0);
-		LONG_PTR cursel = Send(LB_GETCURSEL, 0, 0);
+		LONG_PTR count = SendMessageW(LB_GETCOUNT, 0, 0);
+		LONG_PTR cursel = SendMessageW(LB_GETCURSEL, 0, 0);
 		LONG_PTR nextsel = cursel + distance;
 
 		if (cursel != nextsel && nextsel >= 0 && nextsel < count)
 		{
-			Send(LB_SETCURSEL, nextsel, 0);
+			SendMessageW(LB_SETCURSEL, nextsel, 0);
 			OnSelectionChanged(nextsel);
 		}
 	}
@@ -217,12 +217,12 @@ namespace PictureBrowser
 	void FileListWidget::OnOpenMenu()
 	{
 		OPENFILENAMEW openFile;
-		ZeroInit(&openFile);
+		ZeroInit(openFile);
 
 		std::wstring filePath(0x1000, '\0');
 
 		openFile.lStructSize = sizeof(OPENFILENAMEW);
-		openFile.hwndOwner = Parent();
+		openFile.hwndOwner = *_parent;
 		openFile.lpstrFile = filePath.data();
 		openFile.nMaxFile = static_cast<DWORD>(filePath.size());
 		openFile.lpstrFilter =
@@ -261,7 +261,7 @@ namespace PictureBrowser
 		}
 
 		DragFinish(dropInfo);
-		SetFocus(Self()); // Somehow loses focus without
+		SetFocus(); // Somehow loses focus without
 	}
 
 	void FileListWidget::OnContextMenu(LPARAM lParam)
@@ -271,12 +271,9 @@ namespace PictureBrowser
 
 		POINT p = { x, y };
 
-		if (!ScreenToClient(Self(), &p))
-		{
-			throw std::runtime_error("ScreenToClient failed!");
-		}
+		ScreenToClient(p);
 
-		LRESULT result = Send(LB_ITEMFROMPOINT,	0, MAKELPARAM(p.x, p.y));
+		LRESULT result = SendMessageW(LB_ITEMFROMPOINT,	0, MAKELPARAM(p.x, p.y));
 
 		if (result < 0)
 		{
@@ -300,7 +297,7 @@ namespace PictureBrowser
 		InsertMenuW(menu, 1, MF_STRING, IDM_POPUP_COPY_PATH, L"Copy filename");
 		InsertMenuW(menu, 2, MF_STRING, IDM_POPUP_DELETE_PATH, L"Delete file");
 
-		TrackPopupMenu(menu, TPM_TOPALIGN | TPM_LEFTALIGN, x, y, 0, Parent(), nullptr);
+		TrackPopupMenu(menu, TPM_TOPALIGN | TPM_LEFTALIGN, x, y, 0, *_parent, nullptr);
 
 		DestroyMenu(menu);
 	}
@@ -356,8 +353,7 @@ namespace PictureBrowser
 
 		std::wstring message = L"Are you sure you want to delete: " + filename;
 
-		if (MessageBoxW(
-			Parent(),
+		if (_parent->MessageBoxW(
 			message.c_str(),
 			L"Confirm Delete",
 			MB_ICONQUESTION | MB_YESNO) != IDYES)
@@ -369,14 +365,13 @@ namespace PictureBrowser
 
 		if (_imageCache->Delete(path))
 		{
-			Send(LB_DELETESTRING, _contextMenuIndex, 0);
+			SendMessageW(LB_DELETESTRING, _contextMenuIndex, 0);
 			return;
 		}
 
 		message = L"Failed to delete: " + filename;
 
-		MessageBoxW(
-			Parent(),
+		_parent->MessageBoxW(
 			message.c_str(),
 			L"An error occurred!",
 			MB_ICONEXCLAMATION | MB_OK);
@@ -399,8 +394,7 @@ namespace PictureBrowser
 				const std::wstring message =
 					L"The path you have entered does not appear to exist:\n" + path.wstring();
 
-				MessageBoxW(
-					Parent(),
+				_parent->MessageBoxW(
 					message.c_str(),
 					L"I/O error!",
 					MB_OK | MB_ICONINFORMATION);
@@ -413,8 +407,7 @@ namespace PictureBrowser
 					_wcsicmp(path.extension().c_str(), L".jpeg") != 0 &&
 					_wcsicmp(path.extension().c_str(), L".png") != 0)
 				{
-					MessageBoxW(
-						Parent(),
+					_parent->MessageBoxW(
 						L"Only JPG and PNG are supported!",
 						L"Unsupported file format!",
 						MB_OK | MB_ICONINFORMATION);
@@ -441,8 +434,7 @@ namespace PictureBrowser
 				const std::wstring message =
 					L"The path you have entered does not appear to be a file or a folder:\n" + path.wstring();
 
-				MessageBoxW(
-					Parent(),
+				_parent->MessageBoxW(
 					message.c_str(),
 					L"FUBAR",
 					MB_OK | MB_ICONINFORMATION);
@@ -451,35 +443,34 @@ namespace PictureBrowser
 			}
 		}
 
-		if (Send(LB_RESETCONTENT, 0, 0) != 0) // This message does not return a value.
+		if (SendMessageW(LB_RESETCONTENT, 0, 0) != 0) // This message does not return a value.
 		{
 			throw std::runtime_error("SendMessageW failed!");
 		}
 
-		if (!Send(LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(jpgFilter.c_str())))
+		if (!SendMessageW(LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(jpgFilter.c_str())))
 		{
 			LOGD << L"Failed to send JPG filter update!";
 		}
 
-		if (!Send(LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(jpegFilter.c_str())))
+		if (!SendMessageW(LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(jpegFilter.c_str())))
 		{
 			LOGD << L"Failed to send JPEG filter update!";
 		}
 
-		if (!Send(LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(pngFilter.c_str())))
+		if (!SendMessageW(LB_DIR, DDL_READWRITE, reinterpret_cast<LPARAM>(pngFilter.c_str())))
 		{
 			LOGD << L"Failed to send PNG filter update!";
 		}
 
-		const LONG_PTR count = Send(LB_GETCOUNT, 0, 0);
+		const LONG_PTR count = SendMessageW(LB_GETCOUNT, 0, 0);
 
 		if (!count)
 		{
 			const std::wstring message =
 				L"The path you have entered does not appear to have JPG or PNG files!\n" + path.wstring();
 
-			MessageBoxW(
-				Parent(),
+			_parent->MessageBoxW(
 				message.c_str(),
 				L"Empty directory!",
 				MB_OK | MB_ICONINFORMATION);
@@ -488,11 +479,11 @@ namespace PictureBrowser
 		}
 
 		if (status == std::filesystem::file_type::regular &&
-			!Send(LB_SELECTSTRING, 0, reinterpret_cast<LPARAM>(path.filename().c_str())))
+			!SendMessageW(LB_SELECTSTRING, 0, reinterpret_cast<LPARAM>(path.filename().c_str())))
 		{
 			LOGD << L"Failed to send message LB_SELECTSTRING!";
 		}
-		else if (Send(LB_SETCURSEL, 0, 0) == LB_ERR)
+		else if (SendMessageW(LB_SETCURSEL, 0, 0) == LB_ERR)
 		{
 			throw std::runtime_error("SendMessageW failed!");
 		}
@@ -507,8 +498,7 @@ namespace PictureBrowser
 			const std::wstring message =
 				path.wstring() + L" does not appear to be a file!";
 
-			MessageBoxW(
-				Parent(),
+			_parent->MessageBoxW(
 				message.c_str(),
 				L"Unsupported file format!",
 				MB_OK | MB_ICONINFORMATION);
@@ -521,8 +511,7 @@ namespace PictureBrowser
 			const std::wstring message =
 				L"Failed to load:\n" + path.wstring();
 
-			MessageBoxW(
-				Parent(),
+			_parent->MessageBoxW(
 				message.c_str(),
 				L"FUBAR",
 				MB_OK | MB_ICONINFORMATION);
@@ -538,16 +527,16 @@ namespace PictureBrowser
 
 	std::filesystem::path FileListWidget::ImageFromIndex(LONG_PTR index) const
 	{
-		LRESULT result = Send(LB_GETTEXTLEN, index, 0);
+		LRESULT result = SendMessageW(LB_GETTEXTLEN, index, 0);
 
 		if (result <= 0)
 		{
-			return {};
+			return L"";
 		}
 
 		std::wstring buffer(static_cast<size_t>(result), '\0');
 
-		if (Send(LB_GETTEXT, index, reinterpret_cast<LPARAM>(buffer.data())) != result)
+		if (SendMessageW(LB_GETTEXT, index, reinterpret_cast<LPARAM>(buffer.data())) != result)
 		{
 			throw std::runtime_error("SendMessageW failed!");
 		}

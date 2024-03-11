@@ -33,11 +33,11 @@ namespace PictureBrowser
 		int y,
 		int w,
 		int h,
-		HWND parent,
+		BaseWindow* parent,
 		HMENU menu,
 		HINSTANCE instance,
 		void* data) :
-		_window(CreateWindowExW(
+		BaseWindow(CreateWindowExW(
 			extraStyle,
 			className,
 			windowName,
@@ -46,106 +46,26 @@ namespace PictureBrowser
 			y,
 			w,
 			h,
-			parent,
+			*parent,
 			menu,
 			instance,
 			data)),
 		_parent(parent)
 	{
-		_ASSERTE(_window != nullptr);
+		_ASSERTE(_self != nullptr);
 	}
 
-	bool Widget::Intercept(HWND window)
+	void Widget::Intercept(BaseWindow* window)
 	{
-		return SetWindowSubclass(window, SubClassProcedure, ++Identifier, reinterpret_cast<DWORD_PTR>(this));
+		window->SetWindowSubclass(SubClassProcedure, ++Identifier, reinterpret_cast<DWORD_PTR>(this));
 	}
 
-	bool Widget::Intercept(Widget* widget)
+	void Widget::Listen()
 	{
-		return Intercept(widget->_window);
-	}
-
-	bool Widget::Listen()
-	{
-		return Intercept(this);
-	}
-
-	std::wstring Widget::Text() const
-	{
-		std::wstring buffer;
-		int length = GetWindowTextLength(_window);
-
-		if (length > 0)
-		{
-			buffer.resize(length);
-			GetWindowText(_window, &buffer.front(), length + 1);
-		}
-
-		return buffer;
-	}
-
-	RECT Widget::WindowRect() const
-	{ 
-		RECT area;
-
-		if (!GetWindowRect(_window, &area))
-		{
-			throw std::runtime_error("GetWindowRect failed!");
-		}
-
-		return area;
-	}
-
-	SIZE Widget::WindowSize() const
-	{
-		RECT area = WindowRect();
-		return { area.right - area.left, area.bottom - area.top };
-	}
-
-	RECT Widget::ClientRect() const
-	{
-		RECT area;
-
-		if (!GetClientRect(_window, &area))
-		{
-			throw std::runtime_error("GetClientRect failed!");
-		}
-
-		return area;
-	}
-
-	SIZE Widget::ClientSize() const
-	{
-		RECT area = ClientRect();
-		return { area.right - area.left, area.bottom - area.top };
-	}
-
-	bool Widget::SetPosition(HWND z, int x, int y, int w, int h, UINT flags)
-	{
-		return SetWindowPos(_window, z, x, y, w, h, flags);
-	}
-
-	LRESULT Widget::Send(UINT message, WPARAM wParam, LPARAM lParam) const
-	{
-		return SendMessageW(_window, message, wParam, lParam);
-	}
-
-	bool Widget::Post(UINT message, WPARAM wParam, LPARAM lParam) const
-	{
-		return PostMessageW(_window, message, wParam, lParam);
+		Intercept(this);
 	}
 
 	void Widget::HandleMessage(UINT, WPARAM, LPARAM)
 	{
-	}
-
-	HWND Widget::Parent() const
-	{
-		return _parent;
-	}
-
-	HWND Widget::Self() const
-	{
-		return _window;
 	}
 }

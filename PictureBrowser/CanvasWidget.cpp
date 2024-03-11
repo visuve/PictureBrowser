@@ -35,7 +35,7 @@ namespace PictureBrowser
 		}
 	}
 
-	CanvasWidget::CanvasWidget(HINSTANCE instance, HWND parent, const std::shared_ptr<ImageCache>& imageCache) :
+	CanvasWidget::CanvasWidget(HINSTANCE instance, BaseWindow* parent, const std::shared_ptr<ImageCache>& imageCache) :
 		Widget(
 			0,
 			WC_STATIC,
@@ -60,12 +60,12 @@ namespace PictureBrowser
 			throw std::system_error(hr, std::system_category(), "D2D1CreateFactory");
 		}
 
-		RECT rect = ClientRect();
+		RECT rect = GetClientRect();
 
 		D2D1_SIZE_U size = D2D1::SizeU(rect.right, rect.bottom);
 
 		auto rtp = D2D1::RenderTargetProperties();
-		auto hrtp = D2D1::HwndRenderTargetProperties(Self(), size);
+		auto hrtp = D2D1::HwndRenderTargetProperties(*this, size);
 
 		hr = _factory->CreateHwndRenderTarget(rtp, hrtp, &_renderTarget);
 		
@@ -132,7 +132,7 @@ namespace PictureBrowser
 			return;
 		}
 
-		SIZE size = ClientSize();
+		SIZE size = GetClientSize();
 
 		_renderTarget->Resize(D2D1::SizeU(size.cx, size.cy));
 	}
@@ -142,7 +142,7 @@ namespace PictureBrowser
 		const auto start = std::chrono::high_resolution_clock::now();
 
 		PAINTSTRUCT ps;
-		BeginPaint(Self(), &ps);
+		BeginPaint(ps);
 
 		_renderTarget->BeginDraw();
 
@@ -173,10 +173,9 @@ namespace PictureBrowser
 			}
 		}
 
-
 		_renderTarget->EndDraw();
 
-		EndPaint(Self(), &ps);
+		EndPaint(ps);
 
 		const auto diff = std::chrono::high_resolution_clock::now() - start;
 		LOGD << std::chrono::duration_cast<std::chrono::microseconds>(diff).count() << L"us";
@@ -184,30 +183,27 @@ namespace PictureBrowser
 
 	void CanvasWidget::Invalidate() const
 	{
-		RECT child = ClientRect();
+		RECT child = GetClientRect();
 
-		UINT points = sizeof(RECT) / sizeof(POINT);
+		constexpr size_t points = sizeof(RECT) / sizeof(POINT);
 
-		MapWindowPoints(Self(), Parent(), reinterpret_cast<LPPOINT>(&child), points);
+		MapWindowPoints(_parent, { reinterpret_cast<POINT*>(&child), points });
 
-		if (!InvalidateRect(Parent(), &child, false))
-		{
-			throw std::runtime_error("InvalidateRect failed!");
-		}
+		_parent->InvalidateRect(child, false);
 	}
 
 	void CanvasWidget::OnImageChanged(const std::filesystem::path& path)
 	{
 		_zoomPercent = 0.0f;
 
-		ZeroInit(&_mouseDragStart);
-		ZeroInit(&_mouseDragOffset);
+		ZeroInit(_mouseDragStart);
+		ZeroInit(_mouseDragOffset);
 
 		Invalidate();
 
 		// TODO: I really do not like that the child sets the title
 		const std::wstring title = L"Picture Browser 2.2 - " + path.filename().wstring();
-		SetWindowTextW(Parent(), title.c_str());
+		_parent->SetWindowTextW(title.c_str());
 	}
 
 	void CanvasWidget::OnZoom(WPARAM wParam)
@@ -236,7 +232,7 @@ namespace PictureBrowser
 	void CanvasWidget::OnLeftMouseDown(LPARAM lParam)
 	{
 		const POINT point = { LOWORD(lParam), HIWORD(lParam) };
-		_isDragging = DragDetect(Self(), point);
+		_isDragging = DragDetect(point);
 
 		if (!_isDragging)
 		{

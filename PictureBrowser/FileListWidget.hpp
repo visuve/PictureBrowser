@@ -10,7 +10,7 @@ namespace PictureBrowser
 	public:
 		FileListWidget(
 			HINSTANCE instance,
-			HWND parent,
+			BaseWindow* parent,
 			const std::shared_ptr<ImageCache>& imageCache, 
 			const std::function<void(std::filesystem::path)>& imageChanged);
 

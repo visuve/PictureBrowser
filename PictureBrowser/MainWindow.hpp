@@ -32,9 +32,9 @@ namespace PictureBrowser
 		Widget _zoomInButton;
 		Widget _previousPictureButton;
 		Widget _nextPictureButton;
-		RECT _fileListArea = {};
-		RECT _mainArea = {};
-		RECT _canvasArea = {};
+		RECT _fileListArea = { 0, 0, 0, 0 };
+		RECT _mainArea = { 0, 0, 0, 0 };
+		RECT _canvasArea = { 0, 0, 0, 0 };
 
 		std::shared_ptr<ImageCache> _imageCache;
 		std::unique_ptr<FileListWidget> _fileListWidget;

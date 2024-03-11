@@ -60,7 +60,7 @@ int APIENTRY wWinMain(
 	}
 
 	MSG message;
-	ZeroInit(&message);
+	ZeroInit(message);
 
 	{
 		MainWindow mainWindow(instance);

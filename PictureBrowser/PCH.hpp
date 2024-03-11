@@ -15,13 +15,21 @@
 #include <memory>
 #include <map>
 #include <stdexcept>
+#include <span>
 
 namespace PictureBrowser
 {
 	template <typename T>
-	constexpr void ZeroInit(T* x)
+	constexpr void ZeroInit(T& x)
 	{
-		memset(x, 0, sizeof(T));
+		auto begin = reinterpret_cast<uint8_t*>(&x);
+		auto end = reinterpret_cast<uint8_t*>(&x) + sizeof(T);
+
+		while (begin < end)
+		{
+			*begin = 0;
+			++begin;
+		}
 	}
 
 	constexpr UINT Padding = 5;

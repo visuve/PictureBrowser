@@ -1,11 +1,13 @@
 #pragma once
 
+#include "BaseWindow.hpp"
+
 namespace PictureBrowser
 {
 
 #define ClassName(x) L#x
 
-	class Widget
+	class Widget : public BaseWindow
 	{
 	public:
 		Widget() = default;
@@ -19,35 +21,19 @@ namespace PictureBrowser
 			int y,
 			int w,
 			int h,
-			HWND parent,
+			BaseWindow* parent,
 			HMENU menu,
 			HINSTANCE instance,
 			void* data);
 
 		virtual ~Widget() = default;
 		
-		bool Intercept(HWND window);
-		bool Intercept(Widget* other);
-		bool Listen();
-
-		std::wstring Text() const;
-
-		RECT WindowRect() const;
-		SIZE WindowSize() const;
-		RECT ClientRect() const;
-		SIZE ClientSize() const;
-		bool SetPosition(HWND z, int x, int y, int w, int h, UINT flags);
-		LRESULT Send(UINT message, WPARAM wParam, LPARAM lParam) const;
-		bool Post(UINT message, WPARAM wParam, LPARAM lParam) const;
+		void Intercept(BaseWindow* window);
+		void Listen();
 
 		virtual void HandleMessage(UINT, WPARAM, LPARAM);
 
 	protected:
-		HWND Parent() const;
-		HWND Self() const;
-
-	private:
-		HWND _parent = nullptr;
-		HWND _window = nullptr;
+		BaseWindow* _parent = nullptr;
 	};
 };

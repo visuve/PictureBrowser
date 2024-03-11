@@ -10,7 +10,7 @@ namespace PictureBrowser
 	public:
 		CanvasWidget(
 			HINSTANCE instance,
-			HWND parent,
+			BaseWindow* parent,
 			const std::shared_ptr<ImageCache>& imageCache);
 
 		void HandleMessage(UINT, WPARAM, LPARAM) override;
@@ -31,8 +31,8 @@ namespace PictureBrowser
 
 		float _zoomPercent = 0.0f;
 		bool _isDragging = false;
-		D2D_POINT_2F _mouseDragStart = {};
-		D2D_POINT_2F _mouseDragOffset = {};
+		D2D_POINT_2F _mouseDragStart = { 0.0f, 0.0f };
+		D2D_POINT_2F _mouseDragOffset = { 0.0f, 0.0f };
 		std::shared_ptr<ImageCache> _imageCache;
 
 		ComPtr<ID2D1Factory> _factory;

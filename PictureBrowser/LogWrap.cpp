@@ -6,7 +6,7 @@ namespace PictureBrowser
 	LogWrap::~LogWrap()
 	{
 		_buffer.push_back('\n');
-		OutputDebugString(_buffer.c_str());
+		OutputDebugStringW(_buffer.c_str());
 	}
 
 	LogWrap& LogWrap::operator << (bool value)

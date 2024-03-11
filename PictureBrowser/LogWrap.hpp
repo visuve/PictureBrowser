@@ -73,6 +73,6 @@ namespace PictureBrowser
 #ifdef _DEBUG
 #define LOGD PictureBrowser::LogWrap(__FUNCTIONW__, __LINE__)
 #else
-#define LOGD NullStream()
+#define LOGD PictureBrowser::NullStream()
 #endif
 
