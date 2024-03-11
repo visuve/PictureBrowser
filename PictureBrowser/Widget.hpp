@@ -43,6 +43,10 @@ namespace PictureBrowser
 		virtual void HandleMessage(UINT, WPARAM, LPARAM);
 
 	protected:
+		HWND Parent() const;
+		HWND Self() const;
+
+	private:
 		HWND _parent = nullptr;
 		HWND _window = nullptr;
 	};

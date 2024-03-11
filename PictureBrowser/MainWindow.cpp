@@ -75,7 +75,7 @@ namespace PictureBrowser
 	{
 		RECT clientArea = { };
 
-		if (!GetClientRect(_window, &clientArea))
+		if (!GetClientRect(Self(), &clientArea))
 		{
 			throw std::runtime_error("GetClientRect failed!");
 		}
@@ -156,18 +156,18 @@ namespace PictureBrowser
 
 		_canvasWidget = std::make_unique<CanvasWidget>(
 			Instance(),
-			_window, 
+			Self(),
 			_imageCache);
 
-		_canvasWidget->Intercept(_window);
+		_canvasWidget->Intercept(Self());
 
 		_fileListWidget = std::make_unique<FileListWidget>(
 			Instance(),
-			_window,
+			Self(),
 			_imageCache,
 			std::bind(&CanvasWidget::OnImageChanged, _canvasWidget.get(), std::placeholders::_1));
 
-		_fileListWidget->Intercept(_window);
+		_fileListWidget->Intercept(Self());
 	}
 
 	void MainWindow::OnResize()
@@ -242,7 +242,7 @@ namespace PictureBrowser
 
 		_canvasWidget->Resize();
 
-		if (!InvalidateRect(_window, &_canvasArea, false))
+		if (!InvalidateRect(Self(), &_canvasArea, false))
 		{
 			throw std::runtime_error("InvalidateRect failed!");
 		}
@@ -254,17 +254,17 @@ namespace PictureBrowser
 		{
 			case IDM_EXIT:
 			{
-				DestroyWindow(_window);
+				DestroyWindow(Self());
 				break;
 			}
 			case IDM_ABOUT:
 			{
-				DialogBox(Instance(), MAKEINTRESOURCE(IDD_ABOUT), _window, GenericOkDialog);
+				DialogBox(Instance(), MAKEINTRESOURCE(IDD_ABOUT), Self(), GenericOkDialog);
 				break;
 			}
 			case IDM_KEYBOARD:
 			{
-				DialogBox(Instance(), MAKEINTRESOURCE(IDD_KEYBOARD), _window, GenericOkDialog);
+				DialogBox(Instance(), MAKEINTRESOURCE(IDD_KEYBOARD), Self(), GenericOkDialog);
 				break;
 			}
 			case IDM_OPTIONS_USE_CACHING:
@@ -291,7 +291,7 @@ namespace PictureBrowser
 	{
 		WINDOWPLACEMENT placement = {};
 
-		if (!GetWindowPlacement(_window, &placement))
+		if (!GetWindowPlacement(Self(), &placement))
 		{
 			throw std::runtime_error("GetWindowPlacement failed!");
 		}
@@ -303,7 +303,7 @@ namespace PictureBrowser
 
 	UINT MainWindow::CheckedState(UINT menuEntry) const
 	{
-		const HMENU menu = GetMenu(_window);
+		const HMENU menu = GetMenu(Self());
 		MENUITEMINFO menuItemInfo;
 		ZeroInit(&menuItemInfo);
 		menuItemInfo.cbSize = sizeof(MENUITEMINFO);
@@ -319,7 +319,7 @@ namespace PictureBrowser
 
 	void MainWindow::SetCheckedState(UINT menuEntry, UINT state) const
 	{
-		const HMENU menu = GetMenu(_window);
+		const HMENU menu = GetMenu(Self());
 		MENUITEMINFO menuItemInfo;
 		ZeroInit(&menuItemInfo);
 		menuItemInfo.cbSize = sizeof(MENUITEMINFO);

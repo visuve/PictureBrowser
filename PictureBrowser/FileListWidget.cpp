@@ -104,7 +104,7 @@ namespace PictureBrowser
 		switch (message)
 		{
 			case WM_CONTEXTMENU:
-				if (reinterpret_cast<HWND>(wParam) == _window)
+				if (reinterpret_cast<HWND>(wParam) == Self())
 				{
 					OnContextMenu(lParam);
 				}
@@ -133,7 +133,7 @@ namespace PictureBrowser
 						break;
 				}
 
-				if (reinterpret_cast<HWND>(lParam) == _window && HIWORD(wParam) == LBN_SELCHANGE)
+				if (reinterpret_cast<HWND>(lParam) == Self() && HIWORD(wParam) == LBN_SELCHANGE)
 				{
 					OnSelectionChanged();
 					break;
@@ -222,7 +222,7 @@ namespace PictureBrowser
 		std::wstring filePath(0x1000, '\0');
 
 		openFile.lStructSize = sizeof(OPENFILENAMEW);
-		openFile.hwndOwner = _parent;
+		openFile.hwndOwner = Parent();
 		openFile.lpstrFile = filePath.data();
 		openFile.nMaxFile = static_cast<DWORD>(filePath.size());
 		openFile.lpstrFilter =
@@ -261,7 +261,7 @@ namespace PictureBrowser
 		}
 
 		DragFinish(dropInfo);
-		SetFocus(_window); // Somehow loses focus without
+		SetFocus(Self()); // Somehow loses focus without
 	}
 
 	void FileListWidget::OnContextMenu(LPARAM lParam)
@@ -271,7 +271,7 @@ namespace PictureBrowser
 
 		POINT p = { x, y };
 
-		if (!ScreenToClient(_window, &p))
+		if (!ScreenToClient(Self(), &p))
 		{
 			throw std::runtime_error("ScreenToClient failed!");
 		}
@@ -300,7 +300,7 @@ namespace PictureBrowser
 		InsertMenuW(menu, 1, MF_STRING, IDM_POPUP_COPY_PATH, L"Copy filename");
 		InsertMenuW(menu, 2, MF_STRING, IDM_POPUP_DELETE_PATH, L"Delete file");
 
-		TrackPopupMenu(menu, TPM_TOPALIGN | TPM_LEFTALIGN, x, y, 0, _parent, nullptr);
+		TrackPopupMenu(menu, TPM_TOPALIGN | TPM_LEFTALIGN, x, y, 0, Parent(), nullptr);
 
 		DestroyMenu(menu);
 	}
@@ -357,7 +357,7 @@ namespace PictureBrowser
 		std::wstring message = L"Are you sure you want to delete: " + filename;
 
 		if (MessageBoxW(
-			nullptr,
+			Parent(),
 			message.c_str(),
 			L"Confirm Delete",
 			MB_ICONQUESTION | MB_YESNO) != IDYES)
@@ -376,7 +376,7 @@ namespace PictureBrowser
 		message = L"Failed to delete: " + filename;
 
 		MessageBoxW(
-			nullptr,
+			Parent(),
 			message.c_str(),
 			L"An error occurred!",
 			MB_ICONEXCLAMATION | MB_OK);
@@ -399,7 +399,8 @@ namespace PictureBrowser
 				const std::wstring message =
 					L"The path you have entered does not appear to exist:\n" + path.wstring();
 
-				MessageBox(_window,
+				MessageBoxW(
+					Parent(),
 					message.c_str(),
 					L"I/O error!",
 					MB_OK | MB_ICONINFORMATION);
@@ -412,7 +413,8 @@ namespace PictureBrowser
 					_wcsicmp(path.extension().c_str(), L".jpeg") != 0 &&
 					_wcsicmp(path.extension().c_str(), L".png") != 0)
 				{
-					MessageBox(_window,
+					MessageBoxW(
+						Parent(),
 						L"Only JPG and PNG are supported!",
 						L"Unsupported file format!",
 						MB_OK | MB_ICONINFORMATION);
@@ -439,7 +441,8 @@ namespace PictureBrowser
 				const std::wstring message =
 					L"The path you have entered does not appear to be a file or a folder:\n" + path.wstring();
 
-				MessageBox(_window,
+				MessageBoxW(
+					Parent(),
 					message.c_str(),
 					L"FUBAR",
 					MB_OK | MB_ICONINFORMATION);
@@ -475,8 +478,8 @@ namespace PictureBrowser
 			const std::wstring message =
 				L"The path you have entered does not appear to have JPG or PNG files!\n" + path.wstring();
 
-			MessageBox(
-				_window,
+			MessageBoxW(
+				Parent(),
 				message.c_str(),
 				L"Empty directory!",
 				MB_OK | MB_ICONINFORMATION);
@@ -504,7 +507,8 @@ namespace PictureBrowser
 			const std::wstring message =
 				path.wstring() + L" does not appear to be a file!";
 
-			MessageBox(_parent,
+			MessageBoxW(
+				Parent(),
 				message.c_str(),
 				L"Unsupported file format!",
 				MB_OK | MB_ICONINFORMATION);
@@ -517,7 +521,8 @@ namespace PictureBrowser
 			const std::wstring message =
 				L"Failed to load:\n" + path.wstring();
 
-			MessageBox(_parent,
+			MessageBoxW(
+				Parent(),
 				message.c_str(),
 				L"FUBAR",
 				MB_OK | MB_ICONINFORMATION);

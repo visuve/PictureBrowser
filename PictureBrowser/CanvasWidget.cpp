@@ -65,7 +65,7 @@ namespace PictureBrowser
 		D2D1_SIZE_U size = D2D1::SizeU(rect.right, rect.bottom);
 
 		auto rtp = D2D1::RenderTargetProperties();
-		auto hrtp = D2D1::HwndRenderTargetProperties(_window, size);
+		auto hrtp = D2D1::HwndRenderTargetProperties(Self(), size);
 
 		hr = _factory->CreateHwndRenderTarget(rtp, hrtp, &_renderTarget);
 		
@@ -142,7 +142,7 @@ namespace PictureBrowser
 		const auto start = std::chrono::high_resolution_clock::now();
 
 		PAINTSTRUCT ps;
-		BeginPaint(_window, &ps);
+		BeginPaint(Self(), &ps);
 
 		_renderTarget->BeginDraw();
 
@@ -176,7 +176,7 @@ namespace PictureBrowser
 
 		_renderTarget->EndDraw();
 
-		EndPaint(_window, &ps);
+		EndPaint(Self(), &ps);
 
 		const auto diff = std::chrono::high_resolution_clock::now() - start;
 		LOGD << std::chrono::duration_cast<std::chrono::microseconds>(diff).count() << L"us";
@@ -188,9 +188,9 @@ namespace PictureBrowser
 
 		UINT points = sizeof(RECT) / sizeof(POINT);
 
-		MapWindowPoints(_window, _parent, reinterpret_cast<LPPOINT>(&child), points);
+		MapWindowPoints(Self(), Parent(), reinterpret_cast<LPPOINT>(&child), points);
 
-		if (!InvalidateRect(_parent, &child, false))
+		if (!InvalidateRect(Parent(), &child, false))
 		{
 			throw std::runtime_error("InvalidateRect failed!");
 		}
@@ -207,7 +207,7 @@ namespace PictureBrowser
 
 		// TODO: I really do not like that the child sets the title
 		const std::wstring title = L"Picture Browser 2.2 - " + path.filename().wstring();
-		SetWindowText(_parent, title.c_str());
+		SetWindowTextW(Parent(), title.c_str());
 	}
 
 	void CanvasWidget::OnZoom(WPARAM wParam)
@@ -236,7 +236,7 @@ namespace PictureBrowser
 	void CanvasWidget::OnLeftMouseDown(LPARAM lParam)
 	{
 		const POINT point = { LOWORD(lParam), HIWORD(lParam) };
-		_isDragging = DragDetect(_window, point);
+		_isDragging = DragDetect(Self(), point);
 
 		if (!_isDragging)
 		{

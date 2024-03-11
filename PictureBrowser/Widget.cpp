@@ -138,4 +138,14 @@ namespace PictureBrowser
 	void Widget::HandleMessage(UINT, WPARAM, LPARAM)
 	{
 	}
+
+	HWND Widget::Parent() const
+	{
+		return _parent;
+	}
+
+	HWND Widget::Self() const
+	{
+		return _window;
+	}
 }

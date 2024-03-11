@@ -28,6 +28,8 @@ namespace PictureBrowser
 		virtual bool HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
 
 		HINSTANCE Instance() const;
+		
+		HWND Self() const;
 
 		Widget AddWidget(
 			const wchar_t* className,
@@ -40,9 +42,9 @@ namespace PictureBrowser
 			HMENU menu = nullptr,
 			DWORD extraStyle = 0);
 
+	private:
 		volatile HWND _window = nullptr;
 
-	private:
 		CREATESTRUCT _windowStyle;
 	};
 }

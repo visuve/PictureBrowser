@@ -116,6 +116,11 @@ namespace PictureBrowser
 		return _windowStyle.hInstance;
 	}
 
+	HWND Window::Self() const
+	{
+		return _window;
+	}
+
 	Widget Window::AddWidget(const wchar_t* className, const wchar_t* windowName, DWORD style, int x, int y, int w, int h, HMENU menu, DWORD extraStyle)
 	{
 		return Widget(extraStyle, className, windowName, style, x, y, w, h, _window, menu, Instance(), nullptr);
