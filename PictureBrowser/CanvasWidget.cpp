@@ -35,6 +35,44 @@ namespace PictureBrowser
 		}
 	}
 
+	thread_local PAINTSTRUCT Paint;
+
+	class PaintGuard
+	{
+	public:
+		PaintGuard(const BaseWindow* widget, ID2D1HwndRenderTarget* target) :
+			_widget(widget),
+			_target(target)
+#ifdef _DEBUG
+			, _start(std::chrono::high_resolution_clock::now())
+#endif
+		{
+			_ASSERTE(_widget);
+			_ASSERTE(_target);
+
+			_widget->BeginPaint(Paint);
+			_target->BeginDraw();
+		}
+
+		~PaintGuard()
+		{
+			_target->EndDraw();
+			_widget->EndPaint(Paint);
+#ifdef _DEBUG
+			const auto diff = std::chrono::high_resolution_clock::now() - _start;
+			LOGD << std::chrono::duration_cast<std::chrono::microseconds>(diff).count() << L"us";
+#endif
+		}
+
+	private:
+		const BaseWindow* _widget;
+		ID2D1HwndRenderTarget* _target;
+
+#ifdef _DEBUG
+		const std::chrono::high_resolution_clock::time_point _start;
+#endif
+	};
+
 	CanvasWidget::CanvasWidget(HINSTANCE instance, BaseWindow* parent, const std::shared_ptr<ImageCache>& imageCache) :
 		Widget(
 			0,
@@ -139,12 +177,7 @@ namespace PictureBrowser
 
 	void CanvasWidget::OnPaint() const
 	{
-		const auto start = std::chrono::high_resolution_clock::now();
-
-		PAINTSTRUCT ps;
-		BeginPaint(ps);
-
-		_renderTarget->BeginDraw();
+		PaintGuard paintGuard(this, _renderTarget.Get());
 
 		ComPtr<ID2D1Bitmap> bitmap = _imageCache->Current();
 
@@ -172,13 +205,6 @@ namespace PictureBrowser
 				_renderTarget->DrawBitmap(bitmap.Get(), scaled);
 			}
 		}
-
-		_renderTarget->EndDraw();
-
-		EndPaint(ps);
-
-		const auto diff = std::chrono::high_resolution_clock::now() - start;
-		LOGD << std::chrono::duration_cast<std::chrono::microseconds>(diff).count() << L"us";
 	}
 
 	void CanvasWidget::Invalidate() const
