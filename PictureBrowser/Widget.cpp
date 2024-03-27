@@ -37,20 +37,20 @@ namespace PictureBrowser
 		HMENU menu,
 		HINSTANCE instance,
 		void* data) :
-		BaseWindow(CreateWindowExW(
-			extraStyle,
-			className,
-			windowName,
-			style,
-			x,
-			y,
-			w,
-			h,
-			*parent,
-			menu,
-			instance,
-			data)),
-		_parent(parent)
+			BaseWindow(CreateWindowExW(
+				extraStyle,
+				className,
+				windowName,
+				style,
+				x,
+				y,
+				w,
+				h,
+				*parent,
+				menu,
+				instance,
+				data)),
+			_parent(parent)
 	{
 		_ASSERTE(_self != nullptr);
 	}

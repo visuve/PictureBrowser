@@ -28,10 +28,11 @@ namespace PictureBrowser
 
 		static INT_PTR CALLBACK GenericOkDialog(HWND, UINT, WPARAM, LPARAM);
 
-		Widget _zoomOutButton;
-		Widget _zoomInButton;
-		Widget _previousPictureButton;
-		Widget _nextPictureButton;
+		std::unique_ptr<Widget> _zoomOutButton;
+		std::unique_ptr<Widget> _zoomInButton;
+		std::unique_ptr<Widget> _previousPictureButton;
+		std::unique_ptr<Widget> _nextPictureButton;
+
 		RECT _fileListArea = { 0, 0, 0, 0 };
 		RECT _mainArea = { 0, 0, 0, 0 };
 		RECT _canvasArea = { 0, 0, 0, 0 };

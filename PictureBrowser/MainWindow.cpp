@@ -104,7 +104,7 @@ namespace PictureBrowser
 	{
 		RecalculatePaintArea();
 
-		_zoomOutButton = AddWidget(
+		_zoomOutButton.reset(AddWidget(
 			WC_BUTTON,
 			L"-",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
@@ -112,9 +112,9 @@ namespace PictureBrowser
 			_mainArea.top,
 			ButtonWidth,
 			ButtonHeight,
-			reinterpret_cast<HMENU>(IDC_ZOOM_OUT_BUTTON));
+			reinterpret_cast<HMENU>(IDC_ZOOM_OUT_BUTTON)));
 
-		_zoomInButton = AddWidget(
+		_zoomInButton.reset(AddWidget(
 			WC_BUTTON,
 			L"+",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
@@ -122,9 +122,9 @@ namespace PictureBrowser
 			_mainArea.top,
 			ButtonWidth,
 			ButtonHeight,
-			reinterpret_cast<HMENU>(IDC_ZOOM_IN_BUTTON));
+			reinterpret_cast<HMENU>(IDC_ZOOM_IN_BUTTON)));
 
-		_previousPictureButton = AddWidget(
+		_previousPictureButton.reset(AddWidget(
 			WC_BUTTON,
 			L"<",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
@@ -132,9 +132,9 @@ namespace PictureBrowser
 			_mainArea.bottom,
 			ButtonWidth,
 			ButtonHeight,
-			reinterpret_cast<HMENU>(IDC_PREV_BUTTON));
+			reinterpret_cast<HMENU>(IDC_PREV_BUTTON)));
 
-		_nextPictureButton = AddWidget(
+		_nextPictureButton.reset(AddWidget(
 			WC_BUTTON,
 			L">",
 			WS_VISIBLE | WS_CHILD | WS_BORDER,
@@ -142,7 +142,7 @@ namespace PictureBrowser
 			_mainArea.bottom,
 			ButtonWidth,
 			ButtonHeight,
-			reinterpret_cast<HMENU>(IDC_NEXT_BUTTON));
+			reinterpret_cast<HMENU>(IDC_NEXT_BUTTON)));
 
 		const bool useCaching = Registry::Get(L"Software\\PictureBrowser\\UseCaching", true);
 		SetCheckedState(IDM_OPTIONS_USE_CACHING, useCaching ? MFS_CHECKED : MFS_UNCHECKED);
@@ -185,7 +185,7 @@ namespace PictureBrowser
 			_canvasArea.bottom,
 			SWP_NOZORDER);
 
-		_zoomOutButton.SetWindowPos(
+		_zoomOutButton->SetWindowPos(
 			HWND_TOP,
 			_mainArea.left,
 			_mainArea.top,
@@ -193,7 +193,7 @@ namespace PictureBrowser
 			0,
 			SWP_NOSIZE | SWP_NOZORDER);
 
-		_zoomInButton.SetWindowPos(
+		_zoomInButton->SetWindowPos(
 			HWND_TOP,
 			_mainArea.right - ButtonWidth,
 			_mainArea.top,
@@ -201,7 +201,7 @@ namespace PictureBrowser
 			0,
 			SWP_NOSIZE | SWP_NOZORDER);
 
-		_previousPictureButton.SetWindowPos(
+		_previousPictureButton->SetWindowPos(
 			HWND_TOP,
 			_mainArea.left,
 			_mainArea.bottom - ButtonHeight,
@@ -209,7 +209,7 @@ namespace PictureBrowser
 			0,
 			SWP_NOSIZE | SWP_NOZORDER);
 
-		_nextPictureButton.SetWindowPos(
+		_nextPictureButton->SetWindowPos(
 			HWND_TOP,
 			_mainArea.right - ButtonWidth,
 			_mainArea.bottom - ButtonHeight,

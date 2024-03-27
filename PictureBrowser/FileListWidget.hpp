@@ -8,6 +8,7 @@ namespace PictureBrowser
 	class FileListWidget : public Widget
 	{
 	public:
+		FileListWidget() = default;
 		FileListWidget(
 			HINSTANCE instance,
 			BaseWindow* parent,

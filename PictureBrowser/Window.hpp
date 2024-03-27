@@ -30,7 +30,7 @@ namespace PictureBrowser
 
 		HINSTANCE Instance() const;
 
-		Widget AddWidget(
+		Widget* AddWidget(
 			const wchar_t* className,
 			const wchar_t* windowName,
 			DWORD style,

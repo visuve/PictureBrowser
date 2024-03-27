@@ -5,6 +5,7 @@ namespace PictureBrowser
 	class ImageCache
 	{
 	public:
+		ImageCache() = default;
 		ImageCache(bool useCaching);
 		~ImageCache();
 
@@ -24,7 +25,7 @@ namespace PictureBrowser
 	private:
 		ComPtr<ID2D1Bitmap> Load(const std::filesystem::path& path);
 
-		std::map<std::filesystem::path, ComPtr<ID2D1Bitmap>> _cache;
+		std::map<std::filesystem::path, ComPtr<ID2D1Bitmap>> _cache = { { L"", nullptr } };
 		std::filesystem::path _currentImage;
 		bool _useCaching = true;
 

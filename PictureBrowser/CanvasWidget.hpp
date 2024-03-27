@@ -8,6 +8,7 @@ namespace PictureBrowser
 	class CanvasWidget : public Widget
 	{
 	public:
+		CanvasWidget() = default;
 		CanvasWidget(
 			HINSTANCE instance,
 			BaseWindow* parent,

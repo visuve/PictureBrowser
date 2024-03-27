@@ -12,7 +12,8 @@ namespace PictureBrowser
 		HICON icon, 
 		HCURSOR cursor, 
 		HBRUSH brush, 
-		const wchar_t* menuName)
+		const wchar_t* menuName) :
+		BaseWindow(nullptr)
 	{
 		// TODO: add more ctor parameters to allow more flexible usage
 
@@ -35,6 +36,8 @@ namespace PictureBrowser
 		ATOM atom = RegisterClassExW(&windowClass);
 
 		_ASSERTE(atom != 0);
+
+		ZeroInit(_windowStyle);
 
 		_windowStyle.lpCreateParams = this;
 		_windowStyle.hInstance = instance;
@@ -115,9 +118,9 @@ namespace PictureBrowser
 		return _windowStyle.hInstance;
 	}
 
-	Widget Window::AddWidget(const wchar_t* className, const wchar_t* windowName, DWORD style, int x, int y, int w, int h, HMENU menu, DWORD extraStyle)
+	Widget* Window::AddWidget(const wchar_t* className, const wchar_t* windowName, DWORD style, int x, int y, int w, int h, HMENU menu, DWORD extraStyle)
 	{
-		return Widget(extraStyle, className, windowName, style, x, y, w, h, this, menu, Instance(), nullptr);
+		return new Widget(extraStyle, className, windowName, style, x, y, w, h, this, menu, Instance(), nullptr);
 	}
 
 	INT_PTR Window::DialogBoxParamW(const wchar_t* templateName, DLGPROC callback, LPARAM initialParameter) const

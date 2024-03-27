@@ -43,8 +43,7 @@ namespace PictureBrowser
 	}
 
 	ImageCache::ImageCache(bool useCaching) :
-		_useCaching(useCaching),
-		_cache({ { L"", nullptr } })
+		_useCaching(useCaching)
 	{
 		HRESULT hr = CoCreateInstance(
 			CLSID_WICImagingFactory,
