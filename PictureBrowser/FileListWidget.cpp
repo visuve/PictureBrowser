@@ -478,10 +478,14 @@ namespace PictureBrowser
 			return std::filesystem::file_type::none;
 		}
 
-		if (status == std::filesystem::file_type::regular &&
-			!SendMessageW(LB_SELECTSTRING, 0, reinterpret_cast<LPARAM>(path.filename().c_str())))
+		if (status == std::filesystem::file_type::regular)
 		{
-			LOGD << L"Failed to send message LB_SELECTSTRING!";
+			const std::wstring filename = path.filename();
+
+			if (SendMessageW(LB_SELECTSTRING, 0, reinterpret_cast<LPARAM>(filename.c_str())) == LB_ERR)
+			{
+				LOGD << L"Failed to send message LB_SELECTSTRING!";
+			}
 		}
 		else if (SendMessageW(LB_SETCURSEL, 0, 0) == LB_ERR)
 		{
