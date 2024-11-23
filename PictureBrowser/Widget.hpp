@@ -28,7 +28,7 @@ namespace PictureBrowser
 
 		virtual ~Widget() = default;
 		
-		void Intercept(BaseWindow* window);
+		void Intercept(const BaseWindow* window);
 		void Listen();
 
 		virtual void HandleMessage(UINT, WPARAM, LPARAM);

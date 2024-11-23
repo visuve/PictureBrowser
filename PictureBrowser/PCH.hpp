@@ -23,7 +23,7 @@ namespace PictureBrowser
 	constexpr void ZeroInit(T& x)
 	{
 		auto begin = reinterpret_cast<uint8_t*>(&x);
-		auto end = reinterpret_cast<uint8_t*>(&x) + sizeof(T);
+		const auto end = reinterpret_cast<uint8_t*>(&x) + sizeof(T);
 
 		while (begin < end)
 		{
