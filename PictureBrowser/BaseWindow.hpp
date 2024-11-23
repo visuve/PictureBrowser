@@ -13,7 +13,7 @@ namespace PictureBrowser
 		SIZE GetClientSize() const;
 		void DestroyWindow() const;
 		bool DragDetect(const POINT& point) const;
-		void EndPaint(PAINTSTRUCT& ps) const;
+		void EndPaint(const PAINTSTRUCT& ps) const;
 		RECT GetClientRect() const;
 		HMENU GetMenu() const;
 		WINDOWPLACEMENT GetWindowPlacement() const;

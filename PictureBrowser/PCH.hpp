@@ -22,8 +22,8 @@ namespace PictureBrowser
 	template <typename T>
 	constexpr void ZeroInit(T& x)
 	{
-		auto begin = reinterpret_cast<uint8_t*>(&x);
-		auto end = reinterpret_cast<uint8_t*>(&x) + sizeof(T);
+		uint8_t* begin = reinterpret_cast<uint8_t*>(&x);
+		const uint8_t* const end = reinterpret_cast<uint8_t*>(&x) + sizeof(T);
 
 		while (begin < end)
 		{

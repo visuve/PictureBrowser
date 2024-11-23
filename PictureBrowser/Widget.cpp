@@ -55,7 +55,7 @@ namespace PictureBrowser
 		_ASSERTE(_self != nullptr);
 	}
 
-	void Widget::Intercept(BaseWindow* window)
+	void Widget::Intercept(const BaseWindow* window)
 	{
 		window->SetWindowSubclass(SubClassProcedure, ++Identifier, reinterpret_cast<DWORD_PTR>(this));
 	}

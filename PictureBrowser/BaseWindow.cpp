@@ -53,7 +53,7 @@ namespace PictureBrowser
 		return ::DragDetect(_self, point);
 	}
 
-	void BaseWindow::EndPaint(PAINTSTRUCT& ps) const
+	void BaseWindow::EndPaint(const PAINTSTRUCT& ps) const
 	{
 		_ASSERTE(_self);
 
