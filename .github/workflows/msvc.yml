@@ -1,19 +1,34 @@
-name: Compile source code (MSVC)
+name: Compile and create release
 
 on: [push, pull_request]
 
 jobs:
   build:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        targetplatform: [x86, x64]
 
     steps:
     - uses: actions/checkout@v4
-    - uses: microsoft/setup-msbuild@v1.0.3
+    - uses: microsoft/setup-msbuild@v2
+      with:
+        msbuild-architecture: x64
 
-    - name: Build PictureBrowser
-      run: msbuild PictureBrowser.sln /p:Platform=$env:TargetPlatform /p:Configuration=Release
-      env:
-        TargetPlatform: ${{ matrix.targetplatform }}
+    - name: Compile PictureBrowser
+      run: |
+        msbuild PictureBrowser.sln /p:Platform=x86 /p:Configuration=Release
+        msbuild PictureBrowser.sln /p:Platform=x64 /p:Configuration=Release
+
+    - name: Print hashes
+      shell: pwsh
+      run: |
+        Get-ChildItem "out/x64/bin/PictureBrowser.exe" | Get-FileHash -Algorithm SHA256 | Format-List | Tee-Object Checksum.txt
+
+    - name: Create release
+      uses: "marvinpinto/action-automatic-releases@v1.2.1"
+      with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Automated release (latest commit)"
+          files: |
+            Checksum.txt
+            out/x64/bin/PictureBrowser.exe
