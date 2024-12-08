@@ -5,6 +5,33 @@
 
 namespace PictureBrowser
 {
+	// Source: https://en.wikipedia.org/wiki/Raw_image_format
+	// TODO: move these under a registry key. 
+	// This way the whole binary does not have to be rebuilt each time this list is updated
+	constexpr std::wstring_view RawFileExtensions[] =
+	{
+		L".3FR",
+		L".ARI", L".ARW",
+		L".BAY",
+		L".BRAW", L".CRW", L".CR2", L".CR3",
+		L".CAP",
+		L".DATA", L".DCS", L".DCR", L".DNG",
+		L".DRF",
+		L".EIP", L".ERF",
+		L".FFF",
+		L".GPR",
+		L".IIQ",
+		L".K25", L".KDC",
+		L".MDC", L".MEF", L".MOS", L".MRW",
+		L".NEF", L".NRW",
+		L".OBM", L".ORF",
+		L".PEF", L".PTX", L".PXN",
+		L".R3D", L".RAF", L".RAW", L".RWL", L".RW2", L".RWZ",
+		L".SR2", L".SRF", L".SRW",
+		L".TIF",
+		L".X3F"
+	};
+
 	class ItemIdList
 	{
 	public:
@@ -80,7 +107,8 @@ namespace PictureBrowser
 		HINSTANCE instance,
 		BaseWindow* parent,
 		const std::shared_ptr<ImageCache>& imageCache,
-		const std::function<void(std::filesystem::path)>& imageChanged) :
+		const std::function<void(std::filesystem::path)>& imageChanged,
+		bool promptRawFileRemove) :
 		Widget(
 			0,
 			WC_LISTBOX,
@@ -95,7 +123,8 @@ namespace PictureBrowser
 			instance,
 			nullptr),
 		_imageCache(imageCache),
-		_imageChanged(imageChanged)
+		_imageChanged(imageChanged),
+		_promptRawFileRemove(promptRawFileRemove)
 	{
 	}
 
@@ -344,37 +373,52 @@ namespace PictureBrowser
 
 	void FileListWidget::OnDeletePath() const
 	{
-		const std::wstring filename = ImageFromIndex(_contextMenuIndex);
+		std::wstring filename = ImageFromIndex(_contextMenuIndex);
 
 		if (filename.empty())
 		{
 			return;
 		}
 
-		std::wstring message = L"Are you sure you want to delete: " + filename;
+		std::filesystem::path path = _currentDirectory / filename;
+		auto it = std::cbegin(RawFileExtensions);
 
-		if (_parent->MessageBoxW(
-			message.c_str(),
-			L"Confirm Delete",
-			MB_ICONQUESTION | MB_YESNO) != IDYES)
+		do
 		{
-			return;
-		}
+			std::wstring message = L"Are you sure you want to delete: " + filename;
 
-		const std::filesystem::path path = _currentDirectory / filename;
+			if (_parent->MessageBoxW(
+				message.c_str(),
+				L"Confirm Delete",
+				MB_ICONQUESTION | MB_YESNO) != IDYES)
+			{
+				continue;
+			}
 
-		if (_imageCache->Delete(path))
-		{
-			SendMessageW(LB_DELETESTRING, _contextMenuIndex, 0);
-			return;
-		}
+			if (_imageCache->RemoveFile(path))
+			{
+				SendMessageW(LB_DELETESTRING, _contextMenuIndex, 0);
+			}
+			else
+			{
+				message = L"Failed to delete: " + filename;
 
-		message = L"Failed to delete: " + filename;
+				_parent->MessageBoxW(
+					message.c_str(),
+					L"An error occurred!",
+					MB_ICONEXCLAMATION | MB_OK);
+			}
 
-		_parent->MessageBoxW(
-			message.c_str(),
-			L"An error occurred!",
-			MB_ICONEXCLAMATION | MB_OK);
+			for (;it != std::cend(RawFileExtensions); ++it)
+			{
+				if (std::filesystem::exists(path.replace_extension(*it)))
+				{
+					filename = path.filename();
+					break;
+				}
+			}
+
+		} while (_promptRawFileRemove && it != std::cend(RawFileExtensions));
 	}
 
 	std::filesystem::file_type FileListWidget::LoadFileList(const std::filesystem::path& path)

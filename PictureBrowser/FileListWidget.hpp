@@ -12,8 +12,9 @@ namespace PictureBrowser
 		FileListWidget(
 			HINSTANCE instance,
 			BaseWindow* parent,
-			const std::shared_ptr<ImageCache>& imageCache, 
-			const std::function<void(std::filesystem::path)>& imageChanged);
+			const std::shared_ptr<ImageCache>& imageCache,
+			const std::function<void(std::filesystem::path)>& imageChanged,
+			bool promptRawFileRemove);
 
 		void HandleMessage(UINT, WPARAM, LPARAM) override;
 
@@ -41,5 +42,6 @@ namespace PictureBrowser
 		std::filesystem::path _currentDirectory;
 		std::function<void(std::filesystem::path)> _imageChanged;
 		WORD _contextMenuIndex = 0;
+		bool _promptRawFileRemove = false;
 	};
 }

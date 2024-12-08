@@ -156,11 +156,15 @@ namespace PictureBrowser
 
 		_canvasWidget->Intercept(this);
 
+		const bool promptRawFileRemove = Registry::Get(L"Software\\PictureBrowser\\PromptRawFileRemove", true);
+		SetCheckedState(IDM_OPTIONS_PROMPT_RAW_FILE_REMOVE, promptRawFileRemove ? MFS_CHECKED : MFS_UNCHECKED);
+
 		_fileListWidget = std::make_unique<FileListWidget>(
 			Instance(),
 			this,
 			_imageCache,
-			std::bind(&CanvasWidget::OnImageChanged, _canvasWidget.get(), std::placeholders::_1));
+			std::bind(&CanvasWidget::OnImageChanged, _canvasWidget.get(), std::placeholders::_1),
+			promptRawFileRemove);
 
 		_fileListWidget->Intercept(this);
 	}
@@ -243,9 +247,7 @@ namespace PictureBrowser
 			}
 			case IDM_OPTIONS_USE_CACHING:
 			{
-				const UINT checkedState = CheckedState(IDM_OPTIONS_USE_CACHING);
-
-				if (checkedState == MFS_CHECKED)
+				if (CheckedState(IDM_OPTIONS_USE_CACHING) == MFS_CHECKED)
 				{
 					Registry::Set(L"Software\\PictureBrowser\\UseCaching", false);
 					SetCheckedState(IDM_OPTIONS_USE_CACHING, MFS_UNCHECKED);
@@ -254,6 +256,21 @@ namespace PictureBrowser
 				{
 					Registry::Set(L"Software\\PictureBrowser\\UseCaching", true);
 					SetCheckedState(IDM_OPTIONS_USE_CACHING, MFS_CHECKED);
+				}
+
+				break;
+			}
+			case IDM_OPTIONS_PROMPT_RAW_FILE_REMOVE:
+			{
+				if (CheckedState(IDM_OPTIONS_USE_CACHING) == MFS_CHECKED)
+				{
+					Registry::Set(L"Software\\PictureBrowser\\PromptRawFileRemove", false);
+					SetCheckedState(IDM_OPTIONS_PROMPT_RAW_FILE_REMOVE, MFS_UNCHECKED);
+				}
+				else
+				{
+					Registry::Set(L"Software\\PictureBrowser\\PromptRawFileRemove", true);
+					SetCheckedState(IDM_OPTIONS_PROMPT_RAW_FILE_REMOVE, MFS_CHECKED);
 				}
 
 				break;

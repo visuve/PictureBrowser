@@ -114,7 +114,7 @@ namespace PictureBrowser
 		return nullptr;
 	}
 
-	bool ImageCache::Delete(const std::filesystem::path& path)
+	bool ImageCache::RemoveFile(const std::filesystem::path& path)
 	{
 		if (_useCaching)
 		{
