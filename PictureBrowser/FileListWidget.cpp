@@ -395,28 +395,28 @@ namespace PictureBrowser
 			if (_parent->MessageBoxW(
 				message.c_str(),
 				L"Confirm Delete",
-				MB_ICONQUESTION | MB_YESNO) != IDYES)
+				MB_ICONQUESTION | MB_YESNO) == IDYES)
 			{
-				continue;
+				if (_imageCache->RemoveFile(path))
+				{
+					SendMessageW(LB_DELETESTRING, _contextMenuIndex, 0);
+				}
+				else
+				{
+					message = L"Failed to delete: " + filename;
+
+					_parent->MessageBoxW(
+						message.c_str(),
+						L"An error occurred!",
+						MB_ICONEXCLAMATION | MB_OK);
+				}
 			}
 
-			if (_imageCache->RemoveFile(path))
+			while (it != std::cend(RawFileExtensions))
 			{
-				SendMessageW(LB_DELETESTRING, _contextMenuIndex, 0);
-			}
-			else
-			{
-				message = L"Failed to delete: " + filename;
+				const std::wstring_view extension = *it++;
 
-				_parent->MessageBoxW(
-					message.c_str(),
-					L"An error occurred!",
-					MB_ICONEXCLAMATION | MB_OK);
-			}
-
-			for (;it != std::cend(RawFileExtensions); ++it)
-			{
-				if (std::filesystem::exists(path.replace_extension(*it)))
+				if (std::filesystem::exists(path.replace_extension(extension)))
 				{
 					filename = path.filename();
 					break;
