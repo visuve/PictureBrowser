@@ -16,7 +16,7 @@ namespace PictureBrowser
 			const std::function<void(std::filesystem::path)>& imageChanged,
 			bool promptRawFileRemove);
 
-		void HandleMessage(UINT, WPARAM, LPARAM) override;
+		bool HandleMessage(UINT, WPARAM, LPARAM) override;
 
 		void Open(const std::filesystem::path& path);
 		void Clear();

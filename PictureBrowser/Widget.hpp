@@ -31,7 +31,7 @@ namespace PictureBrowser
 		void Intercept(const BaseWindow* window);
 		void Listen();
 
-		virtual void HandleMessage(UINT, WPARAM, LPARAM);
+		virtual bool HandleMessage(UINT, WPARAM, LPARAM);
 
 	protected:
 		BaseWindow* _parent = nullptr;

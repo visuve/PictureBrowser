@@ -128,18 +128,20 @@ namespace PictureBrowser
 	{
 	}
 
-	void FileListWidget::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam)
+	bool FileListWidget::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		switch (message)
 		{
 			case WM_CONTEXTMENU:
+			{
 				if (IsMe(wParam))
 				{
 					OnContextMenu(lParam);
 				}
 				break;
+			}
 			case WM_COMMAND:
-
+			{
 				switch (LOWORD(wParam))
 				{
 					case IDC_PREV_BUTTON:
@@ -169,10 +171,13 @@ namespace PictureBrowser
 				}
 
 				break;
+			}
 			case WM_DROPFILES:
 				OnFileDrop(wParam);
 				break;
 		}
+
+		return Widget::HandleMessage(message, wParam, lParam);
 	}
 
 	void FileListWidget::Open(const std::filesystem::path& path)

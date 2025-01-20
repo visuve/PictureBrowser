@@ -118,7 +118,7 @@ namespace PictureBrowser
 		_renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::DarkGray), &_brush);
 	}
 
-	void CanvasWidget::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam)
+	bool CanvasWidget::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		switch (message)
 		{
@@ -161,6 +161,8 @@ namespace PictureBrowser
 				break;
 			}
 		}
+
+		return Widget::HandleMessage(message, wParam, lParam);
 	}
 
 	void CanvasWidget::Resize()

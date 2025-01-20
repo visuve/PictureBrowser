@@ -15,9 +15,9 @@ namespace PictureBrowser
 		{
 			Widget* self = reinterpret_cast<Widget*>(data);
 
-			if (self)
+			if (self && self->HandleMessage(message, wParam, lParam))
 			{
-				self->HandleMessage(message, wParam, lParam);
+				return S_OK;
 			}
 		}
 
@@ -65,7 +65,8 @@ namespace PictureBrowser
 		Intercept(this);
 	}
 
-	void Widget::HandleMessage(UINT, WPARAM, LPARAM)
+	bool Widget::HandleMessage(UINT, WPARAM, LPARAM)
 	{
+		return false;
 	}
 }
