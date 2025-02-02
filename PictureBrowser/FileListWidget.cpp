@@ -126,6 +126,7 @@ namespace PictureBrowser
 		_imageChanged(imageChanged),
 		_promptRawFileRemove(promptRawFileRemove)
 	{
+		Listen();
 	}
 
 	bool FileListWidget::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam)
@@ -137,6 +138,16 @@ namespace PictureBrowser
 				if (IsMe(wParam))
 				{
 					OnContextMenu(lParam);
+				}
+				break;
+			}
+			case WM_KEYUP:
+			{
+				switch (wParam)
+				{
+					case VK_DELETE:
+						OnDeletePath();
+						return true;
 				}
 				break;
 			}
