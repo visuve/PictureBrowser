@@ -262,7 +262,7 @@ namespace PictureBrowser
 			}
 			case IDM_OPTIONS_PROMPT_RAW_FILE_REMOVE:
 			{
-				if (CheckedState(IDM_OPTIONS_USE_CACHING) == MFS_CHECKED)
+				if (CheckedState(IDM_OPTIONS_PROMPT_RAW_FILE_REMOVE) == MFS_CHECKED)
 				{
 					Registry::Set(L"Software\\PictureBrowser\\PromptRawFileRemove", false);
 					SetCheckedState(IDM_OPTIONS_PROMPT_RAW_FILE_REMOVE, MFS_UNCHECKED);
